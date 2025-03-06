@@ -11,150 +11,223 @@ library(ggplot2)
 library(igraph)
 library(ggraph)
 library(tidygraph)
+library(clipr)
 #__________________________----
 #IMPORT DATA ----
 
-#Set up working Directory
-
-setwd("/Users/elliehowatson/Final_Year_Project/R/data")
-
-# Imported ortholog genes of diseases that show signs of sexual conflict
-
-PCOS_orthologs <- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/diopt_results_PCOS_genes.csv")
-
-human_SA_orthologs <- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/diopt_results.csv")
-
-CAD_orthologs <- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/coronary_artery_disease_orthologs.csv")
-
-osteoporosis_orthologs <- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/osteoporosis_orthologs.csv")
-
-AD_orthologs <- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/alzheimer_disease_orthologs.csv")
-
-parkinsons_orthologs <- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/parkinsons_orthologs.csv")
-
 # Imported list of flybase gene ID text files from sex specific diseases
-
-disease_files <- list.files(path = "/Users/elliehowatson/Final_Year_Project/R/data/Sex specific diseases", pattern = "*.txt", full.names = TRUE)
-
-# Imported dataset for Mishra et al. 2024
-
-DGE_whole_bodies <- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/DGE_whole_bodies.csv")
-
-DGE_gonads <- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/DifferentialGeneExpressionGonads.csv")
-
-DGE_heads <- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/DifferentialGeneExpression.csv")
-
-SBG_whole_bodies <-read_csv("/Users/elliehowatson/Final_Year_Project/R/data/Sex.Biased.Genes.Whole.csv")
-
-SBG_whole_bodies <- SBG_whole_bodies %>%
-  rename("FlyBaseID" = "geneID")
-
-SBG_gonads <-read_csv("/Users/elliehowatson/Final_Year_Project/R/data/Sex.Biased.Genes.Gonads.csv")%>%
-  rename("FlyBaseID" = "geneID")
-
-SBG_heads <-read_csv("/Users/elliehowatson/Final_Year_Project/R/data/Sex.Biased.Genes.Heads.csv")%>%
-  rename("FlyBaseID" = "geneID")
-
-# Imported dataset from Fraisse et al. 2023
-
-Fra <- read.delim(file="/Users/elliehowatson/Final_Year_Project/R/data/FileS7.txt", header=TRUE)
-colnames(Fra)[2] <- "FlyBaseID"
-Fra[sapply(Fra, is.infinite)] <- NA
-
-# Imported dataset from Innocenti and Morrow 2010
-
-ant_genes <- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/Innocenti Antagonistic genes.csv")
-
-female_fitness_genes<- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/Innocenti female fitness ass. genes.csv")
-
-male_fitness_genes<- read_csv("/Users/elliehowatson/Final_Year_Project/R/data/Innocenti male fitness ass. genes.csv")
-
-  
-# Combined disease gene ortholog csv files
-
-read_ortholog_data <- function(file_path, disease_name) {
-  read_csv(file_path) %>%
-    mutate(
-      disease = disease_name,
-      `Fly GeneID` = as.character(`Fly GeneID`)
-    ) %>%
-    select(`Human Symbol`,`Fly Symbol`, `Fly Species Gene ID`, disease,`DIOPT Score`,`Weighted Score`,`Rank`,`Best Score`,`Best Score Reverse`)
-}
-
-PCOS_orthologs         <- read_ortholog_data("/Users/elliehowatson/Final_Year_Project/R/data/diopt_results_PCOS_genes.csv", "PCOS")
-human_SA_orthologs     <- read_ortholog_data("/Users/elliehowatson/Final_Year_Project/R/data/diopt_results.csv", "Human_SA")
-CAD_orthologs          <- read_ortholog_data("/Users/elliehowatson/Final_Year_Project/R/data/coronary_artery_disease_orthologs.csv", "CAD")
-osteoporosis_orthologs <- read_ortholog_data("/Users/elliehowatson/Final_Year_Project/R/data/osteoporosis_orthologs.csv", "Osteoporosis")
-AD_orthologs           <- read_ortholog_data("/Users/elliehowatson/Final_Year_Project/R/data/alzheimer_disease_orthologs.csv", "Alzheimer")
-parkinsons_orthologs   <- read_ortholog_data("/Users/elliehowatson/Final_Year_Project/R/data/parkinsons_orthologs.csv", "Parkinsons")
-
-all_orthologs <- bind_rows(
-  PCOS_orthologs,
-  human_SA_orthologs,
-  CAD_orthologs,
-  osteoporosis_orthologs,
-  AD_orthologs,
-  parkinsons_orthologs
-)
-
+disease_files <- list.files(path = "~/Documents/Omics/Final_Year_Project/R/data/Sex specific diseases", pattern = "*.txt")
 # Compiling list of sex specific disease flybase ids
-
 disease_data <- lapply(disease_files, function(file) {
   disease_genes <- read_lines(file)
   disease_name <- tools::file_path_sans_ext(basename(file))  # Extract disease name from the file name
-  data.frame(flybase_gene_ID = disease_genes, disease = disease_name)
+  data.frame(FlyBaseID = disease_genes, disease = disease_name)
 })
-
 # Combining sex specific disease flybase geneID tsv into one dataframe
-
 all_diseases_data <- bind_rows(disease_data)
+colnames(all_diseases_data)[1] <- "FlyBaseID"
+all_diseases_data %>% summarise(count = n_distinct(FlyBaseID))
+
+
+# Other diseases (literature search)
+PCOS_orthologs <- read.csv("~/Documents/Omics/Final_Year_Project/R/data/diopt_results_PCOS_genes.csv")
+colnames(PCOS_orthologs)[8] <- "FlyBaseID"
+
+human_SA_orthologs <- read.csv("~/Documents/Omics/Final_Year_Project/R/data/diopt_results.csv")
+colnames(human_SA_orthologs)[8] <- "FlyBaseID"
+
+CAD_orthologs <- read.csv("~/Documents/Omics/Final_Year_Project/R/data/coronary_artery_disease_orthologs.csv")
+colnames(CAD_orthologs)[8] <- "FlyBaseID"
+
+osteoporosis_orthologs <- read.csv("~/Documents/Omics/Final_Year_Project/R/data/osteoporosis_orthologs.csv")
+colnames(osteoporosis_orthologs)[8] <- "FlyBaseID"
+
+AD_orthologs <- read.csv("~/Documents/Omics/Final_Year_Project/R/data/alzheimer_disease_orthologs.csv")
+colnames(AD_orthologs)[8] <- "FlyBaseID"
+
+parkinsons_orthologs <- read.csv("~/Documents/Omics/Final_Year_Project/R/data/parkinsons_orthologs.csv")
+colnames(parkinsons_orthologs)[8] <- "FlyBaseID"
+
+
+# Imported dataset for Mishra et al. 2024
+# SBGE contrasts
+SBG_whole_bodies <-read.csv("~/Documents/Omics/Final_Year_Project/R/data/Sex.Biased.Genes.Whole.csv")
+colnames(SBG_whole_bodies)[1] <- "FlyBaseID"
+
+# SBG_gonads <-read.csv("~/Documents/Omics/Final_Year_Project/R/data/Sex.Biased.Genes.Gonads.csv")
+# colnames(SBG_gonads)[1] <- "FlyBaseID"
+# 
+# SBG_heads <-read.csv("~/Documents/Omics/Final_Year_Project/R/data/Sex.Biased.Genes.Heads.csv")
+# colnames(SBG_heads)[1] <- "FlyBaseID"
+
+# ASE contrasts
+# DGE_whole_bodies <- read.csv("/Documents/Omics/Final_Year_Project/R/data/DGE_whole_bodies.csv")
+# DGE_gonads <- read.csv("/Documents/Omics/Final_Year_Project/R/data/DifferentialGeneExpressionGonads.csv")
+# DGE_heads <- read.csv("/Documents/Omics/Final_Year_Project/R/data/DifferentialGeneExpression.csv")
+
+# Imported dataset from Fraisse et al. 2018
+Fra <- read.delim(file="~/Documents/Omics/Final_Year_Project/R/data/FileS7.txt", header=TRUE)
+colnames(Fra)[2] <- "FlyBaseID"
+Fra[sapply(Fra, is.infinite)] <- NA
+
+# Imported dataset from Singh and Agrawal 2023
+Singh <- read.csv(file="~/Documents/Omics/Final_Year_Project/R/data/SBGEandSSSdataForMBE.csv", header=TRUE)
+colnames(Singh)[2] <- "FlyBaseID"
+
+
+# Imported dataset from Innocenti and Morrow 2010
+# ant_genes <- read.csv("~/Documents/Omics/Final_Year_Project/R/data/Innocenti Antagonistic genes.csv")
+# female_fitness_genes<- read.csv("~/Documents/Omics/Final_Year_Project/R/data/Innocenti female fitness ass. genes.csv")
+# male_fitness_genes<- read.csv("~/Documents/Omics/Final_Year_Project/R/data/Innocenti male fitness ass. genes.csv")
+
+
+# Add disease column to each of 
+PCOS_orthologs$disease <- rep(c("PCOS"), dim(PCOS_orthologs)[1])
+human_SA_orthologs$disease <- rep(c("Human_SA"), dim(human_SA_orthologs)[1])
+CAD_orthologs$disease <- rep(c("CAD"), dim(CAD_orthologs)[1])
+osteoporosis_orthologs$disease <- rep(c("Osteoporosis"), dim(osteoporosis_orthologs)[1])
+AD_orthologs$disease <- rep(c("Alzheimer"), dim(AD_orthologs)[1])
+parkinsons_orthologs$disease <- rep(c("Parkinsons"), dim(parkinsons_orthologs)[1])
+
+# rbind those all together
+all_orthologs <- rbind(PCOS_orthologs, human_SA_orthologs, CAD_orthologs, osteoporosis_orthologs, AD_orthologs, parkinsons_orthologs)
+# Check number of uniq FlyBaseIDs
+# all_orthologs %>% summarise(count = n_distinct(FlyBaseID))
+
+
+
 
 #__________________________----
 #CLEAN_DATA ----
 
 # Filtering for the most accurate orthologs ----
-
 filtered_orthologs <-all_orthologs %>%
   filter(
     `Rank` == "high",
-    `Best Score` == "Yes",
-    `Best Score Reverse` == "Yes",
-    `DIOPT Score` >= 3) %>%
-  rename("flybase_gene_id" = "Fly Species Gene ID")
+    `Best.Score` == "Yes",
+    `Best.Score.Reverse` == "Yes",
+    `DIOPT.Score` >= 3)
 
-orthologs <- filtered_orthologs %>%
-  select("Human Symbol","Fly Symbol", "flybase_gene_id", "disease")
+orthologs <- filtered_orthologs[,c("Human.Symbol","Fly.Symbol", "FlyBaseID", "disease")]
+
 
 
 # Assigning gene name to flybase geneIDs ----
-
 ensembl <- useMart("ENSEMBL_MART_ENSEMBL", dataset = "dmelanogaster_gene_ensembl")
 
-flybase_ids <-all_diseases_data$flybase_gene_ID
+FlyBaseID <-all_diseases_data$FlyBaseID
 
 gene_info <- getBM(
   attributes = c("flybase_gene_id","external_gene_name"),
   filters = "flybase_gene_id",
-  values = flybase_ids,
+  values = FlyBaseID,
   mart = ensembl
 )
 
-  
-combined_data <- merge(gene_info, all_diseases_data,
-                       by.x = "flybase_gene_id", 
-                       by.y = "flybase_gene_ID", 
-                       all.x = TRUE)  # Keep all genes, even if no disease info
+
+######################
+# 
+# Stopped here... You'll have to rename the gene_info columns to match the all_diseases dataset before merging
+# 
+# There may be some other column and data frame naming that needs updating or fixing
+# 
+######################
+
+# This could just be overwrite instead of a new df
+combined_data <- merge(gene_info, all_diseases_data, by = "FlyBaseID", all = TRUE) # Keep all genes, even if no disease info
+
+
+
+
+
+
+
+
+
+
+# Now get chromosome locations from reference genome (will be useful later)
+##########
+
+all.genes <- read.delim(file="~/Documents/BIO UEA/Teaching/Module - Data Science and Bioinformatics/Session10/RNA-Seq_Tutorial/ExtractGenes/GeneLists/all.genes.tsv", sep="\t", header=FALSE)
+colnames(all.genes) = c("FlyBaseID")
+
+Xchr <- read.delim(file="~/Documents/BIO UEA/Teaching/Module - Data Science and Bioinformatics/Session10/RNA-Seq_Tutorial/ExtractGenes/GeneLists/X.chromosome.genes.tsv", sep="\t", header=TRUE)
+colnames(Xchr) = c("FlyBaseID")
+Xchr$Chr <- rep("X", dim(Xchr)[1])
+
+Ychr <- read.delim(file="~/Documents/BIO UEA/Teaching/Module - Data Science and Bioinformatics/Session10/RNA-Seq_Tutorial/ExtractGenes/GeneLists/Y.chromosome.genes.tsv", sep="\t", header=TRUE)
+colnames(Ychr) = c("FlyBaseID")
+Ychr$Chr <- rep("Y", dim(Ychr)[1])
+
+chr2L <- read.delim(file="~/Documents/BIO UEA/Teaching/Module - Data Science and Bioinformatics/Session10/RNA-Seq_Tutorial/ExtractGenes/GeneLists/2L.chromosome.genes.tsv", sep="\t", header=FALSE)
+colnames(chr2L) = c("FlyBaseID")
+chr2R <- read.delim(file="~/Documents/BIO UEA/Teaching/Module - Data Science and Bioinformatics/Session10/RNA-Seq_Tutorial/ExtractGenes/GeneLists/2R.chromosome.genes.tsv", sep="\t", header=FALSE)
+colnames(chr2R) = c("FlyBaseID")
+#
+chr2 <- rbind(chr2L, chr2R)
+chr2$Chr <- rep("2", dim(chr2)[1])
+
+chr3L <- read.delim(file="~/Documents/BIO UEA/Teaching/Module - Data Science and Bioinformatics/Session10/RNA-Seq_Tutorial/ExtractGenes/GeneLists/3L.chromosome.genes.tsv", sep="\t", header=FALSE)
+colnames(chr3L) = c("FlyBaseID")
+chr3R <- read.delim(file="~/Documents/BIO UEA/Teaching/Module - Data Science and Bioinformatics/Session10/RNA-Seq_Tutorial/ExtractGenes/GeneLists/3R.chromosome.genes.tsv", sep="\t", header=FALSE)
+colnames(chr3R) = c("FlyBaseID")
+#
+chr3 <- rbind(chr3L, chr3R)
+chr3$Chr <- rep("3", dim(chr3)[1])
+
+Chrs <- rbind(Xchr, Ychr, chr2, chr3) # Not all genes; just X, Y, 2, and 3.
+Chrs$Chr <- as.factor(Chrs$Chr)
+##########
+
+
+
+
+
+
+
+##########
+#
+# GO enrichment for candidate differentially expressed genes
+# 
+##########
+
+# Target set
+write_clip(disease.ortholog.master.list$FlyBaseID) # You decide which genes to use as target set
+# Background set
+write_clip(Chrs$FlyBaseID) 
+# Background set
+# These were used here: https://biit.cs.ut.ee/gprofiler/gost
+# Alternatively, use: https://bioinformatics.sdstate.edu/go/
+##########
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Renaming variables to match ortholog dataset ----
 
 combined_data_renamed <- combined_data %>%
-  rename("Fly Symbol" = "external_gene_name") %>%
-  mutate("Human Symbol" = NA) %>%  # Add missing column with NA
-  select("Human Symbol" , "Fly Symbol", "flybase_gene_id", "disease")
+  rename("Fly.Symbol" = "external_gene_name") %>%
+  mutate("Human.Symbol" = NA) %>%  # Add missing column with NA
+  select("Human.Symbol" , "Fly.Symbol", "FlyBaseID", "disease")
 
 
 final_dataset <- bind_rows(orthologs, combined_data_renamed)%>%
-  rename("FlyBaseID" = "flybase_gene_id")
+  rename("FlyBaseID" = "FlyBaseID")
 
 
 # Merging data frames with Fraisse et al.2023 ----
