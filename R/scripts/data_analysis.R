@@ -211,6 +211,7 @@ final_data_inc_human_genes<- bind_rows(orthologs, gene_info_inc_human)
 final_data<- bind_rows(orthologs, gene_info)%>%
   select( "Fly.Symbol", "FlyBaseID", "disease")
 
+# Retrieving FlyBaseIDs for Innocenti and Morrow (2010) because only has the gene name----
 
 flybase <- useMart("metazoa_mart", dataset = "dmelanogaster_eg_gene", host = "https://metazoa.ensembl.org")
 
