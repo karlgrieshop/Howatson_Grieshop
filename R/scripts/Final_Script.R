@@ -19,11 +19,11 @@ setwd("/Users/elliehowatson/Final_Year_Project/R/data/Sex specific diseases")
 
 # Imported list of flybase gene ID text files from sex specific diseases
 
-disease_files <- list.files(path = "/Users/elliehowatson/Final_Year_Project/R/data/Sex specific diseases", pattern = "*.txt")
+sexspecific_disease_files <- list.files(path = "/Users/elliehowatson/Final_Year_Project/R/data/Sex specific diseases", pattern = "*.txt")
 
 # Compiling list of sex specific disease flybase ids
 
-disease_data <- lapply(disease_files, function(file) {
+sexspecific_disease_data <- lapply(sexspecific_disease_files, function(file) {
   disease_genes <- read_lines(file)
   disease_name <- tools::file_path_sans_ext(basename(file))  # Extract disease name from the file name
   data.frame(FlyBaseID = disease_genes, disease = disease_name)
@@ -31,9 +31,9 @@ disease_data <- lapply(disease_files, function(file) {
 
 # Combining sex specific disease flybase geneID tsv into one dataframe
 
-all_diseases_data <- bind_rows(disease_data)
-colnames(all_diseases_data)[1] <- "FlyBaseID"
-all_diseases_data %>% summarise(count = n_distinct(FlyBaseID))
+all_sexspecific_diseases_data <- bind_rows(sexspecific_disease)
+colnames(all_sexspecific_diseases_data)[1] <- "FlyBaseID"
+all_sexspecific_diseases_data %>% summarise(count = n_distinct(FlyBaseID))
 
 # Other diseases (literature search) ----
 
@@ -92,7 +92,7 @@ parkinsons_orthologs$disease <- rep(c("Parkinsons"), dim(parkinsons_orthologs)[1
 
 # rbind those all together
 
-all_orthologs <- rbind(PCOS_orthologs, human_SA_orthologs, CAD_orthologs, osteoporosis_orthologs, AD_orthologs, parkinsons_orthologs)
+candidate_sexspecific_disease_orthologs <- rbind(PCOS_orthologs, human_SA_orthologs, CAD_orthologs, osteoporosis_orthologs, AD_orthologs, parkinsons_orthologs)
 
 # Check number of uniq FlyBaseIDs
 # all_orthologs %>% summarise(count = n_distinct(FlyBaseID))
@@ -112,25 +112,28 @@ colnames(MishraAI )[1] <- "FlyBaseID"
 #Imported Dataset Grieshop et al. 2025 ----
 Grieshop <- read.csv(file="/Users/elliehowatson/Final_Year_Project/R/data/DE_candidates.csv", header=TRUE)
 
+#Imported Dataset SA candidates ----
+SA_genes <- read.csv(file="/Users/elliehowatson/Final_Year_Project/R/data/gene_hits_snps_90.csv", header=TRUE)
+
 #__________________________----
 #CLEAN DATA ----
 
 # Filtering for the most accurate orthologs ----
 
-filtered_orthologs <-all_orthologs %>%
+filtered_orthologs <-candidate_sexspecific_disease_orthologs%>%
   filter(
     `Rank` == "high",
     `Best.Score` == "Yes",
     `Best.Score.Reverse` == "Yes",
     `DIOPT.Score` >= 3)
 
-orthologs <- filtered_orthologs[,c("Human.Symbol","Fly.Symbol", "FlyBaseID", "disease")]
+sexspecific_disease_orthologs <- filtered_orthologs[,c("Human.Symbol","Fly.Symbol", "FlyBaseID", "disease")]
 
 # Assigning gene name to FlyBase geneIDs ----
 
 ensembl <- useMart("ENSEMBL_MART_ENSEMBL", dataset = "dmelanogaster_gene_ensembl")
 
-FlyBaseID <-all_diseases_data$FlyBaseID
+FlyBaseID <-all_sexspecific_data$FlyBaseID
 
 gene_info <- getBM(
   attributes = c("flybase_gene_id","external_gene_name"),
@@ -143,13 +146,13 @@ gene_info <- getBM(
 
 names(gene_info )[names(gene_info ) == "external_gene_name"] <- "Fly.Symbol"
 names(gene_info )[names(gene_info ) == "flybase_gene_id"] <- "FlyBaseID"
-gene_info <- merge(gene_info, all_diseases_data, by = "FlyBaseID", all = TRUE) 
+gene_info <- merge(gene_info, all_sexspecific_diseases_data, by = "FlyBaseID", all = TRUE) 
 
-orthologs <- orthologs[, c("Fly.Symbol", "FlyBaseID", "disease")]
+sexspecific_disease_orthologs <- sexspecific_disease_orthologs[, c("Fly.Symbol", "FlyBaseID", "disease")]
 names(gene_info)[names(gene_info) == "old_name"] <- "new_name"
 
 
-final_data <- rbind(orthologs, gene_info)
+sexspecific_disease_gene_data <- rbind(sexspecific_disease_orthologs, gene_info)
 
 # Retrieving FlyBaseIDs for Innocenti and Morrow (2010) because only has the gene name----
 
@@ -217,12 +220,12 @@ Chrs <- rbind(Xchr, Ychr, chr2, chr3) # Not all genes; just X, Y, 2, and 3.
 Chrs$Chr <- as.factor(Chrs$Chr)
 
 
-Chrs_disease <- merge(Chrs,final_data)
+Chrs_sexspecific_disease <- merge(Chrs,sexspecific_disease_gene_data)
 
 #GO enrichment for candidate DE genes----
 
 # Target set
-write_clip(Chrs_disease $FlyBaseID)# You decide which genes to use as target set
+write_clip(Chrs_sexspecific_disease $FlyBaseID)# You decide which genes to use as target set
 # Background set
 write_clip(Chrs$FlyBaseID) 
 
@@ -234,19 +237,19 @@ write_clip(Chrs$FlyBaseID)
 
 # Merging disease df with Fraisse et al. (2023) ----
 
-Fra_master_data <- merge(Fra, final_data, by = "FlyBaseID")
+Fra_master_data <- merge(Fra, sexspecific_disease_gene_data, by = "FlyBaseID")
 
 # Reorder columns to put 'disease' first
 cols <- c("disease", setdiff(names(Fra_master_data), "disease"))
 Fra_master_data <- Fra_master_data[, cols]
 
-# Removes disease name to have individual gene
+# Removes sex specific disease name to have individual gene
 Fra_master_data  <- Fra_master_data  %>% distinct()
 
-# Merging disease df with Mishra et al. (2024) ----
+# Merging sex specific disease df with Mishra et al. (2024) ----
 
 SBGE_disease_data <- SBG_whole_bodies %>%
-  inner_join(final_data, by = "FlyBaseID")
+  inner_join(sexspecific_disease_gene_data, by = "FlyBaseID")
 
 # Rename columns 
 SBGE_disease_data<- SBGE_disease_data%>% distinct()
@@ -255,10 +258,18 @@ colnames(SBGE_disease_data) <- c("exp_SBGE_ase","Sex.Bias.Category","FlyBaseID",
 #Remove disease name column
 SBGE_disease_data<- SBGE_disease_data[, names(SBGE_disease_data) != "Disease"]
 
+#Remove disease name column
+SBGE_disease_data<- SBGE_disease_data[, names(SBGE_disease_data) != "Fly.Symbol"]
+
 #Remove duplicates
 SBGE_disease_data  <- SBGE_disease_data  %>% distinct()
 
-# Merging Mishra Sex biased genes and Fraisse et al. (2018) ----
+#saving df
+write.csv(SBGE_disease_data, 
+          "/Users/elliehowatson/Final_Year_Project/R/data/SBGE_disease_data.csv", 
+          row.names = FALSE)
+
+# Merging Mishra  et al. (2024) Sex biased genes and Fraisse et al. (2018) ----
 
 # Inner join by "FlyBaseID"
 mish_fra_SBGE<- merge(SBG_whole_bodies,Fra_master_data, by = "FlyBaseID")
@@ -266,24 +277,470 @@ mish_fra_SBGE<- merge(SBG_whole_bodies,Fra_master_data, by = "FlyBaseID")
 # Removes disease name to have individual gene
 mish_fra_SBGE$disease <- NULL
 
+#saving df
+write.csv(mish_fra_SBGE, 
+          "/Users/elliehowatson/Final_Year_Project/R/data/mish_fra_SBGE.csv", 
+          row.names = FALSE)
+
 # Merging disease genes df with Singh and Agrawal (2023) ----
 
-singh_merge<- final_data %>%
+singh_merge<- sexspecific_disease_gene_data %>%
   inner_join(Singh, by = "FlyBaseID")
 
-# Merge Mishra with Singh and Agrawal (2023) ----
+# Merge Mishra  et al. (2024) with Singh and Agrawal (2023) ----
 
 mish_singh_SBG <- SBG_whole_bodies %>%
   inner_join(Singh, by = "FlyBaseID")
+
+#saving df
+write.csv(mish_singh_SBG, 
+          "/Users/elliehowatson/Final_Year_Project/R/data/mish_singh_SBG.csv", 
+          row.names = FALSE)
 
 # GENERATING CONTROL GENES ----
 
 # Create a control set by excluding disease genes
 
-disease_gene_ids <- unique(Chrs_disease$FlyBaseID)
+sexspecific_disease_gene_ids <- unique(Chrs_sexspecific_disease$FlyBaseID)
 
 control_genes <- Chrs%>%
-  filter(!(FlyBaseID %in% disease_gene_ids))
+  filter(!(FlyBaseID %in% sexspecific_disease_gene_ids))
+
+# Select FlyBaseID and add GeneType column for background genes
+background_genes <- data.frame(
+  FlyBaseID = Fra$FlyBaseID,
+  GeneType = "Background",
+  stringsAsFactors = FALSE
+)
+
+# Get unique FlyBaseID and add GeneType column for disease genes
+sexspecific_disease_genes <- data.frame(
+  FlyBaseID = unique(Chrs_sexspecific_disease$FlyBaseID),
+  GeneType = "Candidate",
+  stringsAsFactors = FALSE
+)
+
+background_and_sexspecific_disease<- bind_rows(background_genes , sexspecific_disease_genes)
+
+# Merging control and sex specific disease genes with Mishra  et al. (2024)
+mishra_merged<- left_join(SBG_whole_bodies, background_and_sexspecific_disease, by = "FlyBaseID")
+
+# Merging Control Genes with Singh and Agrawal ----
+
+# Filter Singh genes that are in Fra
+Singh_filtered <- Singh[Singh$FlyBaseID %in% Fra$FlyBaseID, ]
+
+# Merge control genes with Singh
+control_singh <- merge(control_genes, Singh_filtered, by = "FlyBaseID")
+
+# Add control label and rename columns
+SBGE_control_data <- SBG_whole_bodies
+SBGE_control_data$GeneType <- "Background"
+colnames(SBGE_control_data) <- c("exp_SBGE_ase", "Sex.Bias.Category", "FlyBaseID", "Tissue", "GeneType")
+
+# Add disease label to disease dataset and remove fly symbol column
+SBGE_disease_data$GeneType <- "Disease"
+
+# Bind control and disease rows into one data frame
+SBGE_Mishra_data <- rbind(SBGE_control_data,SBGE_disease_data)
+
+# Merge Control SBGE Data (Mishra) with Control Genes ----
+
+control_mish_SBGE <- merge(SBGE_control_data, control_genes, by = "FlyBaseID")
+control_mish_SBGE_wb <- merge(SBG_whole_bodies, control_genes, by = "FlyBaseID")
+
+# Combine Control Singh and Mishra Data ----
+
+control_singh_mish_SBGE_wb <- merge(control_mish_SBGE_wb, control_singh, by = "FlyBaseID")
+
+# Label and format the control dataset
+control_singh_mish_SBGE_wb$GeneType <- "Background"
+names(control_singh_mish_SBGE_wb)[names(control_singh_mish_SBGE_wb) == "log2FoldChange"] <- "exp_SBGE_ase"
+
+# Remove duplicated chromosome columns if they exist
+control_singh_mish_SBGE_wb <- control_singh_mish_SBGE_wb[, !names(control_singh_mish_SBGE_wb) %in% c("Chr.x", "Chr.y")]
+
+# Align column order and bind with disease data
+mish_singh_SBG<- mish_singh_SBG[ , c("FlyBaseID",setdiff(names(mish_singh_SBG),"FlyBaseID"))]
+mish_singh_SBG$GeneType <- "Disease"
+mish_singh_SBG$FlyBaseID <- mish_singh_SBG$FlyBaseID  # Ensure column order for bind
+control_set_genes_mish_singh_SBGE_wb <- rbind(control_singh_mish_SBGE_wb, mish_singh_SBG)
+
+
+# Merging Control Genes with Fraisse and Mishra ----
+
+# Merge control genes with Fra
+control_Fra <- merge(control_genes, Fra, by = "FlyBaseID")
+control_mish_SBGE_wb <- merge(SBG_whole_bodies, control_genes, by = "FlyBaseID")
+
+# Merge Mishra and Fraisse control genes
+control_Fra_mish_SBGE_wb <- merge(control_mish_SBGE_wb, control_Fra, by = "FlyBaseID")
+
+# Format and label the final Fra+Mishra control dataset
+control_Fra_mish_SBGE_wb$GeneType <- "Background"
+names(control_Fra_mish_SBGE_wb)[names(control_Fra_mish_SBGE_wb) == "log2FoldChange"] <- "exp_SBGE_ase"
+
+# Remove duplicate chromosome columns if they exist
+control_Fra_mish_SBGE_wb <- control_Fra_mish_SBGE_wb[, !names(control_Fra_mish_SBGE_wb) %in% c("Chr.x", "Chr.y")]
+
+# Align and bind with disease dataset
+mish_fra_SBGE<- mish_fra_SBGE[, names(mish_fra_SBGE) != "Fly.Symbol"]
+mish_fra_SBGE$GeneType <- "Disease"
+mish_fra_SBGE$FlyBaseID <- mish_fra_SBGE$FlyBaseID  # Ensure order for bind
+control_set_genes_mish_Fra_SBGE_wb <- rbind(control_Fra_mish_SBGE_wb, mish_fra_SBGE)
+
+
+# Tajimas D Summary table ----
+
+# Change into numerical 
+library(dplyr)
+SBGE_tajDS_compare<- control_set_genes_mish_singh_SBGE_wb%>%
+  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,tajD.S,GeneType)%>% 
+  distinct() # Remove disease variable to avoid repeats
+
+SBGE_tajDS_compare<- SBGE_tajDS_compare %>%
+  mutate(exp_SBGE_ase = as.numeric(exp_SBGE_ase))
+
+# Creating Bins
+
+SBGE_tajDS_bins_compare<-SBGE_tajDS_compare %>%
+  mutate(Sex.Bias.Category = case_when(
+    exp_SBGE_ase >= 2 ~ "Highly male-biased",
+    exp_SBGE_ase >= 0.5 & exp_SBGE_ase < 2 ~ "Moderately male-biased",
+    exp_SBGE_ase >= -0.5 & exp_SBGE_ase < 0.5 ~ "Unbiased",
+    exp_SBGE_ase >= -2 & exp_SBGE_ase < -0.5 ~ "Moderately female-biased",
+    exp_SBGE_ase < -2 ~ "Highly female-biased"
+  ))
+
+SBGE_tajDS_bins_compare <- SBGE_tajDS_bins_compare[!is.na(SBGE_tajDS_bins_compare$tajD.S), ]
+
+# Compute Mean and Standard Error (SE) 
+
+# Calculate mean
+mean_tajD <- aggregate(tajD.S ~ Sex.Bias.Category + GeneType, 
+                       data = SBGE_tajDS_bins_compare, 
+                       FUN = function(x) mean(x, na.rm = TRUE))
+
+# Calculate standard error
+se_tajD <- aggregate(tajD.S ~ Sex.Bias.Category + GeneType, 
+                     data = SBGE_tajDS_bins_compare, 
+                     FUN = function(x) sd(x, na.rm = TRUE) / sqrt(sum(!is.na(x))))
+
+# Combine into one data frame
+summary_tajDS_data_comparative <- merge(mean_tajD, se_tajD, 
+                                        by = c("Sex.Bias.Category", "GeneType"))
+
+# Rename columns
+colnames(summary_tajDS_data_comparative) <- c("Sex.Bias.Category", "GeneType", 
+                                              "Mean_tajD.S", "SE_tajD.S")
+
+sample_sizes_tadj <- as.data.frame(table(SBGE_tajDS_bins_compare$Sex.Bias.Category,
+                                         SBGE_tajDS_bins_compare$GeneType))
+
+# Rename columns
+colnames(sample_sizes_tadj) <- c("Sex.Bias.Category", "GeneType", "SampleSize")
+
+summary_tajDS_data_comparative <- left_join(summary_tajDS_data_comparative, sample_sizes_tadj, by = c("Sex.Bias.Category", "GeneType"))
+
+# Then compute the "All" category stats
+
+split_data<- split(summary_tajDS_data_comparative, summary_tajDS_data_comparative$GeneType)
+
+all_category <- do.call(rbind, lapply(split_data, function(df) {
+  data.frame(
+    GeneType = unique(df$GeneType),
+    Mean_tajD.S = mean(df$Mean_tajD.S, na.rm = TRUE),
+    SE_tajD.S = sqrt(sum(df$SE_tajD.S^2, na.rm = TRUE) / nrow(df)),
+    SampleSize = sum(df$SampleSize, na.rm = TRUE),
+    Sex.Bias.Category = "All"
+  )
+}))
+
+summary_tajDS_data_comparative <- bind_rows(summary_tajDS_data_comparative, all_category)
+
+# rMF Summary table ----
+
+# Change into numerical 
+
+SBGE_rMF_compare<- control_set_genes_mish_singh_SBGE_wb%>%
+  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,Tissue,rmf,GeneType)%>% 
+  distinct() # Remove disease variable to avoid repeats
+
+SBGE_rMF_compare<- SBGE_rMF_compare%>%
+  mutate(exp_SBGE_ase = as.numeric(exp_SBGE_ase))
+
+# Creating Bins
+
+SBGE_rMF_bins_compare<-SBGE_rMF_compare%>%
+  mutate(Sex.Bias.Category = case_when(
+    exp_SBGE_ase >= 2 ~ "Highly male-biased",
+    exp_SBGE_ase >= 0.5 & exp_SBGE_ase < 2 ~ "Moderately male-biased",
+    exp_SBGE_ase >= -0.5 & exp_SBGE_ase < 0.5 ~ "Unbiased",
+    exp_SBGE_ase >= -2 & exp_SBGE_ase < -0.5 ~ "Moderately female-biased",
+    exp_SBGE_ase < -2 ~ "Highly female-biased"
+  ))
+
+SBGE_rMF_bins_compare <- SBGE_rMF_bins_compare[!is.na(SBGE_rMF_bins_compare$rmf), ]
+
+# Compute Mean and Standard Error (SE) 
+
+# Compute mean
+mean_rmf <- aggregate(rmf ~ Sex.Bias.Category + GeneType, 
+                      data = SBGE_rMF_bins_compare, 
+                      FUN = function(x) mean(x, na.rm = TRUE))
+
+# Compute standard error
+se_rmf <- aggregate(rmf ~ Sex.Bias.Category + GeneType, 
+                    data = SBGE_rMF_bins_compare, 
+                    FUN = function(x) sd(x, na.rm = TRUE) / sqrt(sum(!is.na(x))))
+
+# Merge the two summaries
+summary_rMF_data_comparative <- merge(mean_rmf, se_rmf, 
+                                      by = c("Sex.Bias.Category", "GeneType"))
+
+# Rename columns
+colnames(summary_rMF_data_comparative) <- c("Sex.Bias.Category", "GeneType", 
+                                            "Mean_rmf", "SE_rmf")
+
+rMF_sample_sizes <- as.data.frame(table(SBGE_rMF_bins_compare$Sex.Bias.Category,
+                                        SBGE_rMF_bins_compare$GeneType))
+
+# Rename columns 
+colnames(rMF_sample_sizes) <- c("Sex.Bias.Category", "GeneType", "SampleSize")
+summary_rMF_data_comparative <- left_join(summary_rMF_data_comparative, rMF_sample_sizes, by = c("Sex.Bias.Category", "GeneType"))
+
+# Split by GeneType
+split_data_rmf <- split(summary_rMF_data_comparative, summary_rMF_data_comparative$GeneType)
+
+# For each GeneType, compute "All" summary row
+all_category_rmf <- do.call(rbind, lapply(split_data_rmf , function(df) {
+  data.frame(
+    GeneType = unique(df$GeneType),
+    Mean_rmf = mean(df$Mean_rmf, na.rm = TRUE),
+    SE_rmf = sqrt(sum(df$SE_rmf^2, na.rm = TRUE) / nrow(df)),
+    SampleSize = sum(df$SampleSize, na.rm = TRUE),
+    Sex.Bias.Category = "All"
+  )
+}))
+
+summary_rMF_data_comparative <- bind_rows(summary_rMF_data_comparative,all_category_rmf)
+
+# DoS Summary table ----
+# Change into numerical 
+
+SBGE_DoS_compare<- control_set_genes_mish_Fra_SBGE_wb%>%
+  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,DoS,GeneType)%>% 
+  distinct() # Remove disease variable to avoid repeats
+
+SBGE_DoS_compare<- SBGE_DoS_compare%>%
+  mutate(exp_SBGE_ase = as.numeric(exp_SBGE_ase))
+
+# Creating Bins
+
+SBGE_DoS_bins_compare<-SBGE_DoS_compare%>%
+  mutate(Sex.Bias.Category = case_when(
+    exp_SBGE_ase >= 2 ~ "Highly male-biased",
+    exp_SBGE_ase >= 0.5 & exp_SBGE_ase < 2 ~ "Moderately male-biased",
+    exp_SBGE_ase >= -0.5 & exp_SBGE_ase < 0.5 ~ "Unbiased",
+    exp_SBGE_ase >= -2 & exp_SBGE_ase < -0.5 ~ "Moderately female-biased",
+    exp_SBGE_ase < -2 ~ "Highly female-biased"
+  ))
+
+# Compute Mean and Standard Error (SE) 
+
+# Calculate mean
+mean_DoS <- aggregate(DoS ~ Sex.Bias.Category + GeneType, 
+                      data = SBGE_DoS_bins_compare, 
+                      FUN = function(x) mean(x, na.rm = TRUE))
+
+# Calculate standard error
+se_DoS <- aggregate(DoS ~ Sex.Bias.Category + GeneType, 
+                    data = SBGE_DoS_bins_compare, 
+                    FUN = function(x) sd(x, na.rm = TRUE) / sqrt(sum(!is.na(x))))
+
+# Merge both summaries
+summary_DoS_data_comparative <- merge(mean_DoS, se_DoS,
+                                      by = c("Sex.Bias.Category", "GeneType"))
+
+# Rename columns
+colnames(summary_DoS_data_comparative) <- c("Sex.Bias.Category", "GeneType", "Mean_DoS", "SE_DoS")
+
+
+DoS_sample_sizes <- as.data.frame(table(SBGE_DoS_bins_compare$Sex.Bias.Category,
+                                        SBGE_DoS_bins_compare$GeneType))
+
+# Rename columns
+colnames(DoS_sample_sizes) <- c("Sex.Bias.Category", "GeneType", "SampleSize")
+
+summary_DoS_data_comparative <- left_join(summary_DoS_data_comparative, DoS_sample_sizes, by = c("Sex.Bias.Category", "GeneType"))
+
+
+# Split by GeneType
+split_data_DoS <- split(summary_DoS_data_comparative, summary_DoS_data_comparative$GeneType)
+
+# For each GeneType, compute "All" summary row
+all_category_DoS <- do.call(rbind, lapply(split_data_DoS , function(df) {
+  data.frame(
+    GeneType = unique(df$GeneType),
+    Mean_DoS = mean(df$Mean_DoS, na.rm = TRUE),
+    SE_DoS = sqrt(sum(df$SE_DoS^2, na.rm = TRUE) / nrow(df)),
+    SampleSize = sum(df$SampleSize, na.rm = TRUE),
+    Sex.Bias.Category = "All"
+  )
+}))
+
+# Reorder columns to match the expected format
+all_category_DoS<- all_category_DoS [, c("Sex.Bias.Category", "GeneType", "Mean_DoS", "SE_DoS", "SampleSize")]
+
+
+summary_DoS_data_comparative <- bind_rows(summary_DoS_data_comparative,all_category_DoS)
+
+# Tissue Specificity Summary table  ----
+
+# Change into numerical 
+
+SBGE_tissuespec_compare<- control_set_genes_mish_Fra_SBGE_wb%>%
+  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,tissueSpecificityAdults,GeneType)%>% 
+  distinct() # Remove disease variable to avoid repeats
+
+SBGE_tissuespec_compare<- SBGE_tissuespec_compare%>%
+  mutate(exp_SBGE_ase = as.numeric(exp_SBGE_ase))
+
+# Creating Bins
+
+SBGE_tissuespec_bins_compare<-SBGE_tissuespec_compare%>%
+  mutate(Sex.Bias.Category = case_when(
+    exp_SBGE_ase >= 2 ~ "Highly male-biased",
+    exp_SBGE_ase >= 0.5 & exp_SBGE_ase < 2 ~ "Moderately male-biased",
+    exp_SBGE_ase >= -0.5 & exp_SBGE_ase < 0.5 ~ "Unbiased",
+    exp_SBGE_ase >= -2 & exp_SBGE_ase < -0.5 ~ "Moderately female-biased",
+    exp_SBGE_ase < -2 ~ "Highly female-biased"
+  ))
+
+SBGE_tissuespec_bins_compare <- SBGE_tissuespec_bins_compare[!is.na(SBGE_tissuespec_bins_compare$tissueSpecificityAdults), ]
+
+# Compute Mean and Standard Error (SE) 
+
+# Calculate mean
+mean_tissueSpecificityAdults<- aggregate(tissueSpecificityAdults~ Sex.Bias.Category + GeneType, 
+                                         data = SBGE_tissuespec_bins_compare, 
+                                         FUN = function(x) mean(x, na.rm = TRUE))
+
+# Calculate standard error
+se_tissueSpecificityAdults<- aggregate(tissueSpecificityAdults ~ Sex.Bias.Category + GeneType, 
+                                       data = SBGE_tissuespec_bins_compare, 
+                                       FUN = function(x) sd(x, na.rm = TRUE) / sqrt(sum(!is.na(x))))
+
+# Merge both summaries
+summary_tissuespec_data_comparative <- merge(mean_tissueSpecificityAdults,se_tissueSpecificityAdults,
+                                             by = c("Sex.Bias.Category", "GeneType"))
+
+# Rename columns
+colnames(summary_tissuespec_data_comparative) <- c("Sex.Bias.Category", "GeneType", "Mean_tissueSpecificityAdults", "SE_tissueSpecificityAdults")
+
+
+tissuespec_sample_sizes <- as.data.frame(table(SBGE_tissuespec_bins_compare$Sex.Bias.Category,
+                                               SBGE_tissuespec_bins_compare$GeneType))
+
+# Rename columns
+colnames(tissuespec_sample_sizes) <- c("Sex.Bias.Category", "GeneType", "SampleSize")
+
+summary_tissuespec_data_comparative <- left_join(summary_tissuespec_data_comparative, tissuespec_sample_sizes, by = c("Sex.Bias.Category", "GeneType"))
+
+
+# Split by GeneType
+split_data_tissuespec <- split(summary_tissuespec_data_comparative, summary_tissuespec_data_comparative$GeneType)
+
+# For each GeneType, compute "All" summary row
+all_category_tissuespec <- do.call(rbind, lapply(split_data_tissuespec , function(df) {
+  data.frame(
+    GeneType = unique(df$GeneType),
+    Mean_tissueSpecificityAdults = mean(df$Mean_tissueSpecificityAdults, na.rm = TRUE),
+    SE_tissueSpecificityAdults = sqrt(sum(df$SE_tissueSpecificityAdults^2, na.rm = TRUE) / nrow(df)),
+    SampleSize = sum(df$SampleSize, na.rm = TRUE),
+    Sex.Bias.Category = "All"
+  )
+}))
+
+# Reorder columns to match the expected format
+all_category_tissuespec <- all_category_tissuespec[, c("Sex.Bias.Category", "GeneType", "Mean_tissueSpecificityAdults", "SE_tissueSpecificityAdults", "SampleSize")]
+
+
+summary_tissuespec_data_comparative <- bind_rows(summary_tissuespec_data_comparative,all_category_tissuespec)
+
+# Relative Level of Nonsynonymous Diversity Summary table  ----
+
+# Change into numerical 
+
+SBGE_rlnd_compare<- control_set_genes_mish_singh_SBGE_wb%>%
+  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,piNfract,GeneType)%>% 
+  distinct() # Remove disease variable to avoid repeats
+
+SBGE_rlnd_compare<- SBGE_rlnd_compare%>%
+  mutate(exp_SBGE_ase = as.numeric(exp_SBGE_ase))
+
+# Creating Bins
+
+SBGE_rlnd_bins_compare<-SBGE_rlnd_compare%>%
+  mutate(Sex.Bias.Category = case_when(
+    exp_SBGE_ase >= 2 ~ "Highly male-biased",
+    exp_SBGE_ase >= 0.5 & exp_SBGE_ase < 2 ~ "Moderately male-biased",
+    exp_SBGE_ase >= -0.5 & exp_SBGE_ase < 0.5 ~ "Unbiased",
+    exp_SBGE_ase >= -2 & exp_SBGE_ase < -0.5 ~ "Moderately female-biased",
+    exp_SBGE_ase < -2 ~ "Highly female-biased"
+  ))
+
+SBGE_rlnd_bins_compare <- SBGE_rlnd_bins_compare[!is.na(SBGE_rlnd_bins_compare$piNfract), ]
+
+# Compute Mean and Standard Error (SE) 
+
+# Calculate mean
+mean_rlnd<- aggregate(piNfract~ Sex.Bias.Category + GeneType, 
+                      data = SBGE_rlnd_bins_compare, 
+                      FUN = function(x) mean(x, na.rm = TRUE))
+
+# Calculate standard error
+se_rlnd<- aggregate(piNfract ~ Sex.Bias.Category + GeneType, 
+                    data = SBGE_rlnd_bins_compare, 
+                    FUN = function(x) sd(x, na.rm = TRUE) / sqrt(sum(!is.na(x))))
+
+# Merge both summaries
+summary_rlnd_data_comparative <- merge(mean_rlnd,se_rlnd,
+                                       by = c("Sex.Bias.Category", "GeneType"))
+
+# Rename columns
+colnames(summary_rlnd_data_comparative) <- c("Sex.Bias.Category", "GeneType", "Mean_rlnd", "SE_rlnd")
+
+
+rlnd_sample_sizes <- as.data.frame(table(SBGE_rlnd_bins_compare$Sex.Bias.Category,
+                                         SBGE_rlnd_bins_compare$GeneType))
+
+# Rename columns
+colnames(rlnd_sample_sizes) <- c("Sex.Bias.Category", "GeneType", "SampleSize")
+
+summary_rlnd_data_comparative <- left_join(summary_rlnd_data_comparative, rlnd_sample_sizes, by = c("Sex.Bias.Category", "GeneType"))
+
+
+# Split by GeneType
+split_data_rlnd <- split(summary_rlnd_data_comparative, summary_rlnd_data_comparative$GeneType)
+
+# For each GeneType, compute "All" summary row
+all_category_rlnd <- do.call(rbind, lapply(split_data_rlnd , function(df) {
+  data.frame(
+    GeneType = unique(df$GeneType),
+    Mean_rlnd = mean(df$Mean_rlnd, na.rm = TRUE),
+    SE_rlnd = sqrt(sum(df$SE_rlnd^2, na.rm = TRUE) / nrow(df)),
+    SampleSize = sum(df$SampleSize, na.rm = TRUE),
+    Sex.Bias.Category = "All"
+  )
+}))
+
+# Reorder columns to match the expected format
+
+all_category_rlnd<- all_category_rlnd[, c("Sex.Bias.Category", "GeneType", "Mean_rlnd", "SE_rlnd", "SampleSize")]
+
+summary_rlnd_data_comparative <- bind_rows(summary_rlnd_data_comparative,all_category_rlnd)
+
 
 #___________________________-----
 # STATISTICAL ANALYSES----
@@ -292,47 +749,36 @@ control_genes <- Chrs%>%
 
 # Adding logical variable enables function to work
 
-summary_DoS_data_comparative$GeneType_logical <- summary_DoS_data_comparative$GeneType == "Control"
+summary_DoS_data_comparative$GeneType_logical <- summary_DoS_data_comparative$GeneType == "Background"
 str(summary_DoS_data_comparative)
 
-SBGE_DoS_bins_compare$GeneType_logical <- SBGE_DoS_bins_compare$GeneType == "Control"
+SBGE_DoS_bins_compare$GeneType_logical <- SBGE_DoS_bins_compare$GeneType == "Background"
 str(SBGE_DoS_bins_compare)
 
-summary_rMF_data_comparative$GeneType_logical <- summary_rMF_data_comparative$GeneType == "Control"
+summary_rMF_data_comparative$GeneType_logical <- summary_rMF_data_comparative$GeneType == "Background"
 str(summary_rMF_data_comparative)
 
-SBGE_rMF_bins_compare$GeneType_logical <- SBGE_rMF_bins_compare$GeneType == "Control"
+SBGE_rMF_bins_compare$GeneType_logical <- SBGE_rMF_bins_compare$GeneType == "Background"
 str(SBGE_rMF_bins_compare)
 
-summary_tajDS_data_comparative$GeneType_logical <- summary_tajDS_data_comparative$GeneType == "Control"
+summary_tajDS_data_comparative$GeneType_logical <- summary_tajDS_data_comparative$GeneType == "Background"
 str(summary_tajDS_data_comparative)
 
-SBGE_tajDS_bins_compare$GeneType_logical <- SBGE_tajDS_bins_compare$GeneType == "Control"
+SBGE_tajDS_bins_compare$GeneType_logical <- SBGE_tajDS_bins_compare$GeneType == "Background"
 str(SBGE_tajDS_bins_compare)
 
-summary_tissuespec_data_comparative$GeneType_logical <- summary_tissuespec_data_comparative$GeneType == "Control"
+summary_tissuespec_data_comparative$GeneType_logical <- summary_tissuespec_data_comparative$GeneType == "Background"
 str(summary_tissuespec_data_comparative)
 
-SBGE_tissuespec_bins_compare$GeneType_logical <- SBGE_tissuespec_bins_compare$GeneType == "Control"
+SBGE_tissuespec_bins_compare$GeneType_logical <- SBGE_tissuespec_bins_compare$GeneType == "Background"
 str(SBGE_tissuespec_bins_compare)
 
-summary_rlnd_data_comparative$GeneType_logical <- summary_rlnd_data_comparative$GeneType == "Control"
+summary_rlnd_data_comparative$GeneType_logical <- summary_rlnd_data_comparative$GeneType == "Background"
 str(summary_rlnd_data_comparative)
 
-SBGE_rlnd_bins_compare$GeneType_logical <- SBGE_rlnd_bins_compare$GeneType == "Control"
+SBGE_rlnd_bins_compare$GeneType_logical <- SBGE_rlnd_bins_compare$GeneType == "Background"
 str(SBGE_rlnd_bins_compare)
 
-summary_gonads_data_comparative$GeneType_logical <- summary_gonads_data_comparative$GeneType == "Control"
-str(summary_gonads_data_comparative)
-
-SBGE_gonads_bins_compare$GeneType_logical <- SBGE_gonads_bins_compare$GeneType == "Control"
-str(SBGE_gonads_bins_compare)
-
-summary_heads_data_comparative$GeneType_logical <- summary_heads_data_comparative$GeneType == "Control"
-str(summary_heads_data_comparative)
-
-SBGE_heads_bins_compare$GeneType_logical <- SBGE_heads_bins_compare$GeneType == "Control"
-str(SBGE_heads_bins_compare)
 
 # TwoPerm
 # Two sample permutation test for difference in means
@@ -608,6 +1054,7 @@ rlnd_perm_results<- bind_rows(result_rlnd_all , result_rlnd_SBGE_cat )
 #       groupBy = logical column which separates group 1 and group 2
 #       boot_n = number of bootstrap replicates. Default is 1,000
 #       myfun = test stat function. Default is mean
+
 TwoBoot <- function(boot_dat, x_col, groupBy, 
                     boot_n = 1000, 
                     myfun = mean){
@@ -793,6 +1240,15 @@ test_df  <- test_df  %>%
   dplyr::mutate(IsMishraAI = FlyBaseID %in% MishraAI$FlyBaseID) 
 
 
+# Then
+# Get New Sexually Antagonistic gene set 
+
+colnames(SA_genes) <- c("chromosome_name","start_position","end_position","FlyBaseID","external_gene_name","gene_biotype") 
+
+test_df  <- test_df  %>%
+  dplyr::mutate(ISSA_genes = FlyBaseID %in% SA_genes$FlyBaseID) 
+
+
 TestEnrichment <- function(data, df1 = "Sig", df2, xlab = "DE", ylab){
   test <- fisher.test(x = data[[df1]], y = data[[df2]])
   print(test)
@@ -862,6 +1318,10 @@ print(disease.vs.Grieshop)
 disease.vs.Mishra <- TestEnrichment(test_df, df2 = "IsMishraAI", xlab = "Disease", ylab = "MishraAI")
 print(disease.vs.Mishra)
 
+# Testing for enrichment of disease genes in ISSA candidates
+disease.vs.SA_genes<- TestEnrichment(test_df, df2 = "ISSA_genes", xlab = "Disease", ylab = "SA_genes")
+print(disease.vs.SA_genes)
+library(ggstatsplot)
 #___________________----
 #DATA VISUALS----
 
