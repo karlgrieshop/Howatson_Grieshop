@@ -31,7 +31,7 @@ sexspecific_disease_data <- lapply(sexspecific_disease_files, function(file) {
 
 # Combining sex specific disease flybase geneID tsv into one dataframe
 
-all_sexspecific_diseases_data <- bind_rows(sexspecific_disease)
+all_sexspecific_diseases_data <- bind_rows(sexspecific_disease_data)
 colnames(all_sexspecific_diseases_data)[1] <- "FlyBaseID"
 all_sexspecific_diseases_data %>% summarise(count = n_distinct(FlyBaseID))
 
@@ -66,9 +66,10 @@ SBG_whole_bodies <- SBG_whole_bodies %>%
   mutate(Tissue = "Whole Body")
 
 # Select and rename desired columns of SBGE 
-
-SBG_whole_bodies<- data.frame(cbind(SBG_whole_bodies$log2FoldChange, SBG_whole_bodies$Sex.Bias.Category, SBG_whole_bodies$FlyBaseID, SBG_whole_bodies$Tissue))
-colnames(SBG_whole_bodies) <- c("exp_SBGE_ase","Sex.Bias.Category","FlyBaseID","Tissue")
+# NOTE: use select()+rename() not cbind(), which coerces numeric log2FoldChange to character
+SBG_whole_bodies <- SBG_whole_bodies %>%
+  select(FlyBaseID, Sex.Bias.Category, log2FoldChange, Tissue) %>%
+  rename(exp_SBGE_ase = log2FoldChange)
 
 # Imported dataset from Fraisse et al. 2018 File S7 -----
 
@@ -190,11 +191,11 @@ names(InnoMorrow)[names(InnoMorrow) == "Symbol"] <- "FlyBaseID"
 all.genes <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/all.genes.tsv", sep="\t", header=FALSE)
 colnames(all.genes) = c("FlyBaseID")
 
-Xchr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/X.chromosome.genes.tsv", sep="\t", header=TRUE)
+Xchr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/X.chromosome.genes.tsv", sep="\t", header=FALSE)
 colnames(Xchr) = c("FlyBaseID")
 Xchr$Chr <- rep("X", dim(Xchr)[1])
 
-Ychr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/Y.chromosome.genes.tsv", sep="\t", header=TRUE)
+Ychr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/Y.chromosome.genes.tsv", sep="\t", header=FALSE)
 colnames(Ychr) = c("FlyBaseID")
 Ychr$Chr <- rep("Y", dim(Ychr)[1])
 
@@ -307,8 +308,9 @@ control_genes <- Chrs%>%
   filter(!(FlyBaseID %in% sexspecific_disease_gene_ids))
 
 # Select FlyBaseID and add GeneType column for background genes
+# BUG FIX: exclude disease genes so they are not double-counted as Background
 background_genes <- data.frame(
-  FlyBaseID = Fra$FlyBaseID,
+  FlyBaseID = Fra$FlyBaseID[!Fra$FlyBaseID %in% sexspecific_disease_gene_ids],
   GeneType = "Background",
   stringsAsFactors = FALSE
 )
@@ -371,10 +373,25 @@ control_set_genes_mish_singh_SBGE_wb <- rbind(control_singh_mish_SBGE_wb, mish_s
 
 # Merge control genes with Fra
 control_Fra <- merge(control_genes, Fra, by = "FlyBaseID")
-control_mish_SBGE_wb <- merge(SBG_whole_bodies, control_genes, by = "FlyBaseID")
+
+# IMPORTANT: use whole-body SBGE only for tissue-specificity background.
+# Using all 3 tissues (gonads/heads/whole bodies) here would inflate Background ~3x
+# because each gene would appear once per tissue with a different exp_SBGE_ase value,
+# surviving the downstream distinct() call and tripling the effective gene count.
+control_mish_SBGE_wb <- merge(
+  SBG_whole_bodies[SBG_whole_bodies$Tissue == "Whole Body", ],
+  control_genes,
+  by = "FlyBaseID"
+)
 
 # Merge Mishra and Fraisse control genes
 control_Fra_mish_SBGE_wb <- merge(control_mish_SBGE_wb, control_Fra, by = "FlyBaseID")
+
+# Validation: assert one row per gene (catch future multi-tissue contamination)
+stopifnot(
+  "control_Fra_mish_SBGE_wb has duplicate FlyBaseIDs — check that only whole-body SBGE was used" =
+    nrow(control_Fra_mish_SBGE_wb) == length(unique(control_Fra_mish_SBGE_wb$FlyBaseID))
+)
 
 # Format and label the final Fra+Mishra control dataset
 control_Fra_mish_SBGE_wb$GeneType <- "Background"
@@ -384,9 +401,10 @@ names(control_Fra_mish_SBGE_wb)[names(control_Fra_mish_SBGE_wb) == "log2FoldChan
 control_Fra_mish_SBGE_wb <- control_Fra_mish_SBGE_wb[, !names(control_Fra_mish_SBGE_wb) %in% c("Chr.x", "Chr.y")]
 
 # Align and bind with disease dataset
-mish_fra_SBGE<- mish_fra_SBGE[, names(mish_fra_SBGE) != "Fly.Symbol"]
+mish_fra_SBGE <- mish_fra_SBGE[, names(mish_fra_SBGE) != "Fly.Symbol"]
 mish_fra_SBGE$GeneType <- "Disease"
 mish_fra_SBGE$FlyBaseID <- mish_fra_SBGE$FlyBaseID  # Ensure order for bind
+# Deduplicate disease genes (multiple diseases per gene create duplicate rows)
 control_set_genes_mish_Fra_SBGE_wb <- rbind(control_Fra_mish_SBGE_wb, mish_fra_SBGE)
 
 
@@ -599,9 +617,9 @@ summary_DoS_data_comparative <- bind_rows(summary_DoS_data_comparative,all_categ
 
 # Change into numerical 
 
-SBGE_tissuespec_compare<- control_set_genes_mish_Fra_SBGE_wb%>%
-  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,tissueSpecificityAdults,GeneType)%>% 
-  distinct() # Remove disease variable to avoid repeats
+SBGE_tissuespec_compare <- control_set_genes_mish_Fra_SBGE_wb %>%
+  select(FlyBaseID, Sex.Bias.Category, exp_SBGE_ase, tissueSpecificityAdults, GeneType) %>%
+  distinct() # Collapse any remaining per-disease duplicates in disease genes
 
 SBGE_tissuespec_compare<- SBGE_tissuespec_compare%>%
   mutate(exp_SBGE_ase = as.numeric(exp_SBGE_ase))
