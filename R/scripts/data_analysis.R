@@ -240,11 +240,11 @@ names(InnoMorrow )[names(InnoMorrow ) == "Symbol"] <- "FlyBaseID"
 all.genes <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/all.genes.tsv", sep="\t", header=FALSE)
 colnames(all.genes) = c("FlyBaseID")
 
-Xchr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/X.chromosome.genes.tsv", sep="\t", header=TRUE)
+Xchr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/X.chromosome.genes.tsv", sep="\t", header=FALSE)
 colnames(Xchr) = c("FlyBaseID")
 Xchr$Chr <- rep("X", dim(Xchr)[1])
 
-Ychr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/Y.chromosome.genes.tsv", sep="\t", header=TRUE)
+Ychr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/Y.chromosome.genes.tsv", sep="\t", header=FALSE)
 colnames(Ychr) = c("FlyBaseID")
 Ychr$Chr <- rep("Y", dim(Ychr)[1])
 
@@ -373,9 +373,11 @@ control_genes <- Chrs%>%
 
 # Background----
 
+# BUG FIX: exclude disease genes so Background and Disease sets are mutually exclusive
 background_genes <- Fra %>%
-  select(FlyBaseID) %>%           
-  mutate(GeneType = "Background") 
+  filter(!FlyBaseID %in% disease_gene_ids) %>%
+  select(FlyBaseID) %>%
+  mutate(GeneType = "Background")
 
 disease_genes <- Chrs_disease %>%
   distinct(FlyBaseID) %>%             
@@ -454,13 +456,23 @@ control_set_genes_mish_singh_SBGE_wb <- rbind(control_singh_mish_SBGE_wb,mish_si
 control_Fra<- control_genes %>%
   inner_join(Fra, by = "FlyBaseID")
 
-control_mish_SBGE_wb<-SBG_whole_bodies%>%
-  inner_join( control_genes, by = "FlyBaseID")
+# IMPORTANT: use whole-body SBGE only for tissue-specificity background.
+# Multi-tissue data would inflate Background ~3x because each gene would appear
+# once per tissue with a different exp_SBGE_ase value, surviving distinct().
+control_mish_SBGE_wb <- SBG_whole_bodies %>%
+  filter(Tissue == "Whole Body") %>%
+  inner_join(control_genes, by = "FlyBaseID")
 
 # Merging control Mishra genes and control Fraisse genes
 
 control_Fra_mish_SBGE_wb<-control_mish_SBGE_wb%>%
   inner_join(control_Fra, by = "FlyBaseID")
+
+# Validation: assert one row per gene (catches future multi-tissue contamination)
+stopifnot(
+  "control_Fra_mish_SBGE_wb has duplicate FlyBaseIDs" =
+    nrow(control_Fra_mish_SBGE_wb) == length(unique(control_Fra_mish_SBGE_wb$FlyBaseID))
+)
 
 # Add a label to distinguish between control and disease genes
 
@@ -623,8 +635,8 @@ summary_rMF_data_comparative <- bind_rows(summary_rMF_data_comparative,all_categ
 # Change into numerical 
 
 SBGE_DoS_compare<- control_set_genes_mish_Fra_SBGE_wb%>%
-  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,DoS,GeneType,disease)%>% 
-  distinct() # Remove disease variable to avoid repeats
+  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,DoS,GeneType)%>% 
+  distinct() # Collapse per-disease duplicates; do not include 'disease' column here
 
 SBGE_DoS_compare<- SBGE_DoS_compare%>%
   mutate(exp_SBGE_ase = as.numeric(exp_SBGE_ase))
@@ -693,9 +705,9 @@ summary_DoS_data_comparative <- bind_rows(summary_DoS_data_comparative,all_categ
 
 # Change into numerical 
 
-SBGE_tissuespec_compare<- control_set_genes_mish_Fra_SBGE_wb%>%
-  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,tissueSpecificityAdults,GeneType,disease)%>% 
-  distinct() # Remove disease variable to avoid repeats
+SBGE_tissuespec_compare <- control_set_genes_mish_Fra_SBGE_wb %>%
+  select(FlyBaseID, Sex.Bias.Category, exp_SBGE_ase, tissueSpecificityAdults, GeneType) %>%
+  distinct() # Collapse per-disease duplicates; do not include 'disease' column here
 
 SBGE_tissuespec_compare<- SBGE_tissuespec_compare%>%
   mutate(exp_SBGE_ase = as.numeric(exp_SBGE_ase))
@@ -767,8 +779,8 @@ summary_tissuespec_data_comparative <- bind_rows(summary_tissuespec_data_compara
 # Change into numerical 
 
 SBGE_rlnd_compare<- control_set_genes_mish_singh_SBGE_wb%>%
-  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,piNfract,GeneType,disease)%>% 
-  distinct() # Remove disease variable to avoid repeats
+  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,piNfract,GeneType)%>% 
+  distinct() # Collapse per-disease duplicates; do not include 'disease' column here
 
 SBGE_rlnd_compare<- SBGE_rlnd_compare%>%
   mutate(exp_SBGE_ase = as.numeric(exp_SBGE_ase))
