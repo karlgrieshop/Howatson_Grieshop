@@ -470,7 +470,7 @@ control_Fra_mish_SBGE_wb<-control_mish_SBGE_wb%>%
 
 # Validation: assert one row per gene (catches future multi-tissue contamination)
 stopifnot(
-  "control_Fra_mish_SBGE_wb has duplicate FlyBaseIDs" =
+  "control_Fra_mish_SBGE_wb has duplicate FlyBaseIDs - ensure only Whole Body tissue data was used in control_mish_SBGE_wb" =
     nrow(control_Fra_mish_SBGE_wb) == length(unique(control_Fra_mish_SBGE_wb$FlyBaseID))
 )
 
