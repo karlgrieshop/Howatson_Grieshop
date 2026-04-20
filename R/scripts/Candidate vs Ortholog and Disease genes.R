@@ -94,7 +94,7 @@ orthologs_Singh<- orthologs_expr %>%
 # Fraisse -----
 # 1) Add the type labels
 
-orthologs_Fra$GeneType<- "Orthologs"
+orthologs_Fra$GeneType<- "Ortholog"
 
 orthologs_Fra<- orthologs_Fra[, c(1, 3, 2, 4:ncol(orthologs_Fra))]
 
@@ -919,10 +919,10 @@ str(summary_DoS_data_comparative_orth)
 SBGE_DoS_bins_compare_orth$GeneType_logical <- SBGE_DoS_bins_compare_orth$GeneType == "Ortholog"
 str(SBGE_DoS_bins_compare_orth)
 
-summary_tissuespec_data_comparative_orth$GeneType_logical <- summary_tissuespec_data_comparative_orth$GeneType == "Orthologs"
+summary_tissuespec_data_comparative_orth$GeneType_logical <- summary_tissuespec_data_comparative_orth$GeneType == "Ortholog"
 str(summary_tissuespec_data_comparative_orth)
 
-SBGE_tissuespec_bins_compare_orth$GeneType_logical <- SBGE_tissuespec_bins_compare_orth$GeneType == "Orthologs"
+SBGE_tissuespec_bins_compare_orth$GeneType_logical <- SBGE_tissuespec_bins_compare_orth$GeneType == "Ortholog"
 str(SBGE_tissuespec_bins_compare_orth)
 
 summary_rlnd_data_comparative_orth$GeneType_logical <- summary_rlnd_data_comparative_orth$GeneType == "Ortholog"
@@ -1745,7 +1745,7 @@ print(DoS_plot_merge)
 # TissueSpecificty ----
 
 tissuespec_cand_ref <- summary_tissuespec_data_comparative_AD %>% filter(GeneType == "Candidate")
-tissuespec_orth     <- summary_tissuespec_data_comparative_orth %>% filter(GeneType == "Orthologs")
+tissuespec_orth     <- summary_tissuespec_data_comparative_orth %>% filter(GeneType == "Ortholog")
 tissuespec_disease  <- summary_tissuespec_data_comparative_AD %>% filter(GeneType == "Disease")
 tissuespec_background <-summary_tissuespec_data_comparative %>% filter(GeneType == "Background")
 
@@ -1814,7 +1814,7 @@ print(tissuespec_plot_merge)
 
 
 tissuespec_cand_ref <- summary_tissuespec_data_comparative_AD %>% filter(GeneType == "Candidate")
-tissuespec_orth     <- summary_tissuespec_data_comparative_orth %>% filter(GeneType == "Orthologs")
+tissuespec_orth     <- summary_tissuespec_data_comparative_orth %>% filter(GeneType == "Ortholog")
 tissuespec_disease  <- summary_tissuespec_data_comparative_AD %>% filter(GeneType == "Disease")
 
 tissuespec_plot <- bind_rows(tissuespec_cand_ref,tissuespec_orth, tissuespec_disease) %>%
@@ -1823,7 +1823,7 @@ tissuespec_plot <- bind_rows(tissuespec_cand_ref,tissuespec_orth, tissuespec_dis
       Sex.Bias.Category,
       levels = c("All","Highly female-biased","Moderately female-biased","Unbiased","Moderately male-biased","Highly male-biased")
     ),
-    GeneType = factor(GeneType, levels = c("Candidate","Orthologs","Disease"))
+    GeneType = factor(GeneType, levels = c("Candidate","Ortholog","Disease"))
   )
 
 tissuespec_plot_merge <- ggplot(tissuespec_plot, 
@@ -1845,7 +1845,7 @@ tissuespec_plot_merge <- ggplot(tissuespec_plot,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Disease" = "darkgreen", "Candidate" = "purple","Orthologs"= "orange")) +
+  scale_color_manual(values = c("Disease" = "darkgreen", "Candidate" = "purple","Ortholog"= "orange")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = "Tissue Specificity", color = "Gene Type") +
