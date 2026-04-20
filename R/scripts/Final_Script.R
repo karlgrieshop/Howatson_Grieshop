@@ -10,6 +10,22 @@ library(ggplot2) # Data visualisation
 library(clipr) # Copying data between R and other applications
 library(broom) # Statistial analyses
 library(patchwork)
+
+pub_theme <- function(base_size = 14) {
+  theme_classic(base_size = base_size) +
+    theme(
+      axis.text        = element_text(size = base_size, colour = "black"),
+      axis.title       = element_text(size = base_size + 2, face = "bold"),
+      legend.text      = element_text(size = base_size),
+      legend.title     = element_text(size = base_size + 1, face = "bold"),
+      legend.position  = "top",
+      panel.border     = element_rect(colour = "black", fill = NA, linewidth = 0.8),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      plot.margin      = margin(12, 12, 12, 12)
+    )
+}
+
 #__________________________----
 #IMPORTING DATA (GENOMIC METRICS) ----
 
@@ -31,7 +47,7 @@ sexspecific_disease_data <- lapply(sexspecific_disease_files, function(file) {
 
 # Combining sex specific disease flybase geneID tsv into one dataframe
 
-all_sexspecific_diseases_data <- bind_rows(sexspecific_disease)
+all_sexspecific_diseases_data <- bind_rows(sexspecific_disease_data)
 colnames(all_sexspecific_diseases_data)[1] <- "FlyBaseID"
 all_sexspecific_diseases_data %>% summarise(count = n_distinct(FlyBaseID))
 
@@ -66,9 +82,10 @@ SBG_whole_bodies <- SBG_whole_bodies %>%
   mutate(Tissue = "Whole Body")
 
 # Select and rename desired columns of SBGE 
-
-SBG_whole_bodies<- data.frame(cbind(SBG_whole_bodies$log2FoldChange, SBG_whole_bodies$Sex.Bias.Category, SBG_whole_bodies$FlyBaseID, SBG_whole_bodies$Tissue))
-colnames(SBG_whole_bodies) <- c("exp_SBGE_ase","Sex.Bias.Category","FlyBaseID","Tissue")
+# NOTE: use select()+rename() not cbind(), which coerces numeric log2FoldChange to character
+SBG_whole_bodies <- SBG_whole_bodies %>%
+  select(FlyBaseID, Sex.Bias.Category, log2FoldChange, Tissue) %>%
+  rename(exp_SBGE_ase = log2FoldChange)
 
 # Imported dataset from Fraisse et al. 2018 File S7 -----
 
@@ -190,11 +207,11 @@ names(InnoMorrow)[names(InnoMorrow) == "Symbol"] <- "FlyBaseID"
 all.genes <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/all.genes.tsv", sep="\t", header=FALSE)
 colnames(all.genes) = c("FlyBaseID")
 
-Xchr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/X.chromosome.genes.tsv", sep="\t", header=TRUE)
+Xchr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/X.chromosome.genes.tsv", sep="\t", header=FALSE)
 colnames(Xchr) = c("FlyBaseID")
 Xchr$Chr <- rep("X", dim(Xchr)[1])
 
-Ychr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/Y.chromosome.genes.tsv", sep="\t", header=TRUE)
+Ychr <- read.delim(file="~/Final_Year_Project/R/data/GeneLists/Y.chromosome.genes.tsv", sep="\t", header=FALSE)
 colnames(Ychr) = c("FlyBaseID")
 Ychr$Chr <- rep("Y", dim(Ychr)[1])
 
@@ -307,8 +324,9 @@ control_genes <- Chrs%>%
   filter(!(FlyBaseID %in% sexspecific_disease_gene_ids))
 
 # Select FlyBaseID and add GeneType column for background genes
+# BUG FIX: exclude disease genes so they are not double-counted as Background
 background_genes <- data.frame(
-  FlyBaseID = Fra$FlyBaseID,
+  FlyBaseID = Fra$FlyBaseID[!Fra$FlyBaseID %in% sexspecific_disease_gene_ids],
   GeneType = "Background",
   stringsAsFactors = FALSE
 )
@@ -371,10 +389,25 @@ control_set_genes_mish_singh_SBGE_wb <- rbind(control_singh_mish_SBGE_wb, mish_s
 
 # Merge control genes with Fra
 control_Fra <- merge(control_genes, Fra, by = "FlyBaseID")
-control_mish_SBGE_wb <- merge(SBG_whole_bodies, control_genes, by = "FlyBaseID")
+
+# IMPORTANT: use whole-body SBGE only for tissue-specificity background.
+# Using all 3 tissues (gonads/heads/whole bodies) here would inflate Background ~3x
+# because each gene would appear once per tissue with a different exp_SBGE_ase value,
+# surviving the downstream distinct() call and tripling the effective gene count.
+control_mish_SBGE_wb <- merge(
+  SBG_whole_bodies[SBG_whole_bodies$Tissue == "Whole Body", ],
+  control_genes,
+  by = "FlyBaseID"
+)
 
 # Merge Mishra and Fraisse control genes
 control_Fra_mish_SBGE_wb <- merge(control_mish_SBGE_wb, control_Fra, by = "FlyBaseID")
+
+# Validation: assert one row per gene (catch future multi-tissue contamination)
+stopifnot(
+  "control_Fra_mish_SBGE_wb has duplicate FlyBaseIDs — check that only whole-body SBGE was used" =
+    nrow(control_Fra_mish_SBGE_wb) == length(unique(control_Fra_mish_SBGE_wb$FlyBaseID))
+)
 
 # Format and label the final Fra+Mishra control dataset
 control_Fra_mish_SBGE_wb$GeneType <- "Background"
@@ -384,9 +417,10 @@ names(control_Fra_mish_SBGE_wb)[names(control_Fra_mish_SBGE_wb) == "log2FoldChan
 control_Fra_mish_SBGE_wb <- control_Fra_mish_SBGE_wb[, !names(control_Fra_mish_SBGE_wb) %in% c("Chr.x", "Chr.y")]
 
 # Align and bind with disease dataset
-mish_fra_SBGE<- mish_fra_SBGE[, names(mish_fra_SBGE) != "Fly.Symbol"]
+mish_fra_SBGE <- mish_fra_SBGE[, names(mish_fra_SBGE) != "Fly.Symbol"]
 mish_fra_SBGE$GeneType <- "Disease"
 mish_fra_SBGE$FlyBaseID <- mish_fra_SBGE$FlyBaseID  # Ensure order for bind
+# Deduplicate disease genes (multiple diseases per gene create duplicate rows)
 control_set_genes_mish_Fra_SBGE_wb <- rbind(control_Fra_mish_SBGE_wb, mish_fra_SBGE)
 
 
@@ -599,9 +633,9 @@ summary_DoS_data_comparative <- bind_rows(summary_DoS_data_comparative,all_categ
 
 # Change into numerical 
 
-SBGE_tissuespec_compare<- control_set_genes_mish_Fra_SBGE_wb%>%
-  select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,tissueSpecificityAdults,GeneType)%>% 
-  distinct() # Remove disease variable to avoid repeats
+SBGE_tissuespec_compare <- control_set_genes_mish_Fra_SBGE_wb %>%
+  select(FlyBaseID, Sex.Bias.Category, exp_SBGE_ase, tissueSpecificityAdults, GeneType) %>%
+  distinct() # Collapse any remaining per-disease duplicates in disease genes
 
 SBGE_tissuespec_compare<- SBGE_tissuespec_compare%>%
   mutate(exp_SBGE_ase = as.numeric(exp_SBGE_ase))
@@ -1335,24 +1369,16 @@ summary_tajDS_data_comparative$Sex.Bias.Category <- factor(summary_tajDS_data_co
 # --- Tajimas D Plot---
 tajD_plot <- ggplot(summary_tajDS_data_comparative, 
                     aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2)+
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +  # Thicker error bars
+                  linewidth = 1.2) +
   # Sample size labels
   geom_text(aes(y = q95+0.002, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5) ,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Control" = "darkgreen", "Disease" = "purple")) +
+  scale_color_manual(values = c("Control" = "#999999", "Disease" = "#0072B2")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = expression("Tajima's " * italic(D)), color = "Gene Type") +
@@ -1361,24 +1387,12 @@ tajD_plot <- ggplot(summary_tajDS_data_comparative,
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
   
   # Vertical dividers
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
   
   # Theme
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "top")
 
 ggsave("tajD_plot.pdf", width = 13, height = 6, dpi = 300)
 
@@ -1390,24 +1404,16 @@ summary_rMF_data_comparative$Sex.Bias.Category <- factor(summary_rMF_data_compar
                                                                     "Unbiased", "Moderately male-biased", "Highly male-biased"))
 rmf_plot <- ggplot(summary_rMF_data_comparative, 
                    aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2)+
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +  # Thicker error bars
+                  linewidth = 1.2) +
   # Sample size labels
   geom_text(aes(y = q95+0.02, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5) ,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Control" = "darkgreen", "Disease" = "purple")) +
+  scale_color_manual(values = c("Control" = "#999999", "Disease" = "#0072B2")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = expression(italic(r)[mf]), color = "Gene Type") +
@@ -1416,24 +1422,12 @@ rmf_plot <- ggplot(summary_rMF_data_comparative,
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
   
   # Vertical dividers
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
   
   # Theme
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "top")
 
 ggsave("rmf_plot.pdf", width = 13, height = 6, dpi = 300)
 
@@ -1448,24 +1442,16 @@ summary_DoS_data_comparative$Sex.Bias.Category <- factor(summary_DoS_data_compar
 
 DoS_plot <- ggplot(summary_DoS_data_comparative, 
                    aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2)+
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +  # Thicker error bars
+                  linewidth = 1.2) +
   # Sample size labels
   geom_text(aes(y = q95+0.01, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5) ,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Control" = "darkgreen", "Disease" = "purple")) +
+  scale_color_manual(values = c("Control" = "#999999", "Disease" = "#0072B2")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = expression(italic(DoS)), color = "Gene Type") +
@@ -1474,24 +1460,12 @@ DoS_plot <- ggplot(summary_DoS_data_comparative,
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
   
   # Vertical dividers
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
   
   # Theme
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "top")
 
 ggsave("DoS_plot.pdf", width = 13, height = 6, dpi = 300)
 
@@ -1504,24 +1478,16 @@ summary_tissuespec_data_comparative$Sex.Bias.Category <- factor(summary_tissuesp
 
 tissuespec <- ggplot(summary_tissuespec_data_comparative, 
                      aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2)+
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +  # Thicker error bars
+                  linewidth = 1.2) +
   # Sample size labels
   geom_text(aes(y = q95+0.02, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5) ,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Control" = "darkgreen", "Disease" = "purple")) +
+  scale_color_manual(values = c("Control" = "#999999", "Disease" = "#0072B2")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = "Tissue Specificity", color = "Gene Type") +
@@ -1530,24 +1496,12 @@ tissuespec <- ggplot(summary_tissuespec_data_comparative,
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
   
   # Vertical dividers
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
   
   # Theme
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "top")
 
 ggsave("tissuespec.pdf", width = 13, height = 6, dpi = 300)
 
@@ -1562,24 +1516,16 @@ summary_rlnd_data_comparative$Sex.Bias.Category <- factor(summary_rlnd_data_comp
 
 rlnd_plot <- ggplot(summary_rlnd_data_comparative, 
                     aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2)+
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +  # Thicker error bars
+                  linewidth = 1.2) +
   # Sample size labels
   geom_text(aes(y = q95+0.006, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5) ,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Control" = "darkgreen", "Disease" = "purple")) +
+  scale_color_manual(values = c("Control" = "#999999", "Disease" = "#0072B2")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = expression(tilde(pi)[italic(r)*N]), color = "Gene Type") +
@@ -1588,24 +1534,12 @@ rlnd_plot <- ggplot(summary_rlnd_data_comparative,
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
   
   # Vertical dividers
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
   
   # Theme
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "top")
 
 ggsave("rlnd_plot.pdf", width = 13, height = 6, dpi = 300)
 

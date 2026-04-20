@@ -9,6 +9,22 @@ library(ggplot2) # Data visualisation
 library(clipr) # Copying data between R and other applications
 library(broom) # Statistial analyses
 library(patchwork)
+
+pub_theme <- function(base_size = 14) {
+  theme_classic(base_size = base_size) +
+    theme(
+      axis.text        = element_text(size = base_size, colour = "black"),
+      axis.title       = element_text(size = base_size + 2, face = "bold"),
+      legend.text      = element_text(size = base_size),
+      legend.title     = element_text(size = base_size + 1, face = "bold"),
+      legend.position  = "top",
+      panel.border     = element_rect(colour = "black", fill = NA, linewidth = 0.8),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      plot.margin      = margin(12, 12, 12, 12)
+    )
+}
+
 #__________________________----
 #IMPORTING DATA (FlyBase GeneIDs) ----
 
@@ -94,7 +110,7 @@ orthologs_Singh<- orthologs_expr %>%
 # Fraisse -----
 # 1) Add the type labels
 
-orthologs_Fra$GeneType<- "Orthologs"
+orthologs_Fra$GeneType<- "Ortholog"
 
 orthologs_Fra<- orthologs_Fra[, c(1, 3, 2, 4:ncol(orthologs_Fra))]
 
@@ -919,10 +935,10 @@ str(summary_DoS_data_comparative_orth)
 SBGE_DoS_bins_compare_orth$GeneType_logical <- SBGE_DoS_bins_compare_orth$GeneType == "Ortholog"
 str(SBGE_DoS_bins_compare_orth)
 
-summary_tissuespec_data_comparative_orth$GeneType_logical <- summary_tissuespec_data_comparative_orth$GeneType == "Orthologs"
+summary_tissuespec_data_comparative_orth$GeneType_logical <- summary_tissuespec_data_comparative_orth$GeneType == "Ortholog"
 str(summary_tissuespec_data_comparative_orth)
 
-SBGE_tissuespec_bins_compare_orth$GeneType_logical <- SBGE_tissuespec_bins_compare_orth$GeneType == "Orthologs"
+SBGE_tissuespec_bins_compare_orth$GeneType_logical <- SBGE_tissuespec_bins_compare_orth$GeneType == "Ortholog"
 str(SBGE_tissuespec_bins_compare_orth)
 
 summary_rlnd_data_comparative_orth$GeneType_logical <- summary_rlnd_data_comparative_orth$GeneType == "Ortholog"
@@ -1565,24 +1581,16 @@ tajD_plot_4 <- bind_rows(tajD_cand_ref,tajD_orth, tajD_disease,tajD_background) 
 # --- Tajimas D Plot---
 tajD_plot_merge <- ggplot(tajD_plot_4, 
                        aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2)+
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +  # Thicker error bars
+                  linewidth = 1.2) +
   # Sample size labels
   geom_text(aes(y = q95+0.002, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5) ,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Disease" = "darkgreen", "Candidate" = "purple", "Ortholog"= "orange", "Background"= "blue")) +
+  scale_color_manual(values = c("Disease" = "#0072B2", "Candidate" = "#D55E00", "Ortholog" = "#009E73", "Background" = "#999999")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = expression("Tajima's " * italic(D)), color = "Gene Type") +
@@ -1591,24 +1599,12 @@ tajD_plot_merge <- ggplot(tajD_plot_4,
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
   
   # Vertical dividers
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
   
   # Theme
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "top")
 
 print(tajD_plot_merge)
 
@@ -1631,24 +1627,16 @@ rMF_plot_4 <- bind_rows(rMF_cand_ref,rMF_orth, rMF_disease,rMF_background) %>%
 # --- rMF plot ---
 rMF_plot_merge <- ggplot(rMF_plot_4, 
                        aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2)+
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +  # Thicker error bars
+                  linewidth = 1.2) +
   # Sample size labels
   geom_text(aes(y = q95+0.05, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5) ,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Disease" = "darkgreen", "Candidate" = "purple", "Ortholog"= "orange", "Background"= "blue")) +
+  scale_color_manual(values = c("Disease" = "#0072B2", "Candidate" = "#D55E00", "Ortholog" = "#009E73", "Background" = "#999999")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = expression(italic(r)[MF]), color = "Gene Type") +
@@ -1657,24 +1645,12 @@ rMF_plot_merge <- ggplot(rMF_plot_4,
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
   
   # Vertical dividers
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
   
   # Theme
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "top")
 
 print(rMF_plot_merge)
 
@@ -1695,24 +1671,16 @@ DoS_plot_4 <- bind_rows(DoS_cand_ref,DoS_orth, DoS_disease,DoS_background) %>%
 
 DoS_plot_merge <- ggplot(DoS_plot_4 , 
                        aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2)+
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +  # Thicker error bars
+                  linewidth = 1.2) +
   # Sample size labels
   geom_text(aes(y = q95+0.01, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5) ,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Disease" = "darkgreen", "Candidate" = "purple","Ortholog"= "orange","Background"="blue")) +
+  scale_color_manual(values = c("Disease" = "#0072B2", "Candidate" = "#D55E00", "Ortholog" = "#009E73", "Background" = "#999999")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = expression(italic(DoS)), color = "Gene Type") +
@@ -1721,31 +1689,19 @@ DoS_plot_merge <- ggplot(DoS_plot_4 ,
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
   
   # Vertical dividers
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
   
   # Theme
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "top")
 
 print(DoS_plot_merge)
 
 # TissueSpecificty ----
 
 tissuespec_cand_ref <- summary_tissuespec_data_comparative_AD %>% filter(GeneType == "Candidate")
-tissuespec_orth     <- summary_tissuespec_data_comparative_orth %>% filter(GeneType == "Orthologs")
+tissuespec_orth     <- summary_tissuespec_data_comparative_orth %>% filter(GeneType == "Ortholog")
 tissuespec_disease  <- summary_tissuespec_data_comparative_AD %>% filter(GeneType == "Disease")
 tissuespec_background <-summary_tissuespec_data_comparative %>% filter(GeneType == "Background")
 
@@ -1761,24 +1717,16 @@ tissuespec_plot_4 <- bind_rows(tissuespec_cand_ref,tissuespec_orth, tissuespec_d
 # --- tissuespec Plot---
 tissuespec_plot_merge <- ggplot(tissuespec_plot_4, 
                           aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2)+
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +  # Thicker error bars
+                  linewidth = 1.2) +
   # Sample size labels
   geom_text(aes(y = q95+0.002, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5) ,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Disease" = "darkgreen", "Candidate" = "purple", "Ortholog"= "orange", "Background"= "blue")) +
+  scale_color_manual(values = c("Disease" = "#0072B2", "Candidate" = "#D55E00", "Ortholog" = "#009E73", "Background" = "#999999")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = "Tissue Specificity", color = "Gene Type") +
@@ -1787,24 +1735,12 @@ tissuespec_plot_merge <- ggplot(tissuespec_plot_4,
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
   
   # Vertical dividers
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
   
   # Theme
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "top")
 
 print(tissuespec_plot_merge)
 
@@ -1814,7 +1750,7 @@ print(tissuespec_plot_merge)
 
 
 tissuespec_cand_ref <- summary_tissuespec_data_comparative_AD %>% filter(GeneType == "Candidate")
-tissuespec_orth     <- summary_tissuespec_data_comparative_orth %>% filter(GeneType == "Orthologs")
+tissuespec_orth     <- summary_tissuespec_data_comparative_orth %>% filter(GeneType == "Ortholog")
 tissuespec_disease  <- summary_tissuespec_data_comparative_AD %>% filter(GeneType == "Disease")
 
 tissuespec_plot <- bind_rows(tissuespec_cand_ref,tissuespec_orth, tissuespec_disease) %>%
@@ -1823,29 +1759,21 @@ tissuespec_plot <- bind_rows(tissuespec_cand_ref,tissuespec_orth, tissuespec_dis
       Sex.Bias.Category,
       levels = c("All","Highly female-biased","Moderately female-biased","Unbiased","Moderately male-biased","Highly male-biased")
     ),
-    GeneType = factor(GeneType, levels = c("Candidate","Orthologs","Disease"))
+    GeneType = factor(GeneType, levels = c("Candidate","Ortholog","Disease"))
   )
 
 tissuespec_plot_merge <- ggplot(tissuespec_plot, 
                         aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2)+
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +  # Thicker error bars
+                  linewidth = 1.2) +
   # Sample size labels
   geom_text(aes(y = q95+0.02, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5) ,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Disease" = "darkgreen", "Candidate" = "purple","Orthologs"= "orange")) +
+  scale_color_manual(values = c("Disease" = "#0072B2", "Candidate" = "#D55E00", "Ortholog" = "#009E73")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = "Tissue Specificity", color = "Gene Type") +
@@ -1854,24 +1782,12 @@ tissuespec_plot_merge <- ggplot(tissuespec_plot,
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
   
   # Vertical dividers
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
   
   # Theme
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "top")
 
 print(tissuespec_plot_merge)
 
@@ -1894,24 +1810,16 @@ rlnd_plot_4 <- bind_rows(rlnd_cand_ref,rlnd_orth, rlnd_disease,rlnd_background )
 
 rlnd_plot_merge <- ggplot(rlnd_plot_4  , 
                        aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2)+
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +  # Thicker error bars
+                  linewidth = 1.2) +
   # Sample size labels
   geom_text(aes(y = q95+0.006, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5) ,
             color = "black", size = 4) +
   
   # Manual colors & shapes
-  scale_color_manual(values = c("Disease" = "darkgreen", "Candidate" = "purple", "Ortholog"="orange","Background"="blue")) +
+  scale_color_manual(values = c("Disease" = "#0072B2", "Candidate" = "#D55E00", "Ortholog" = "#009E73", "Background" = "#999999")) +
   
   # Axis labels
   labs(x = "Sex Bias Category", y = expression(tilde(pi)[italic(r)*N]), color = "Gene Type") +
@@ -1920,24 +1828,12 @@ rlnd_plot_merge <- ggplot(rlnd_plot_4  ,
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
   
   # Vertical dividers
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
   
   # Theme
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "top")
 
 print(rlnd_plot_merge)
 
@@ -1967,15 +1863,9 @@ rMF_plot_merge_dash <- ggplot(
   subset(rMF_plot_4, GeneType != "Background"), 
   aes(x = Sex.Bias.Category, y = q50, color = GeneType)
 ) +
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95),
                   position = position_dodge(width = 0.5),
-                  size = 1.2) +
-  geom_point(position = position_dodge(width = 0.5), size = 2) +
-  geom_errorbar(aes(ymin = q05, ymax = q95),
-                position = position_dodge(width = 0.5),
-                width = 0.4,
-                size = 1) +
+                  linewidth = 1.2) +
   # Sample sizes
   geom_text(aes(y = q95 + 0.006, label = SampleSize, group = GeneType),
             position = position_dodge(width = 0.5),
@@ -1987,36 +1877,24 @@ rMF_plot_merge_dash <- ggplot(
     aes(x = as.numeric(Sex.Bias.Category) - 0.4,
         xend = as.numeric(Sex.Bias.Category) + 0.4,
         y = q50, yend = q50),
-    color = "black", linetype = "longdash", size = 1.2,
+    color = "black", linetype = "longdash", linewidth = 1.2,
     inherit.aes = FALSE
   ) +
   
   # Colours
-  scale_color_manual(values = c("Disease" = "darkgreen",
-                                "Candidate" = "purple",
-                                "Ortholog" = "orange")) +
+  scale_color_manual(values = c("Disease" = "#0072B2",
+                                "Candidate" = "#D55E00",
+                                "Ortholog" = "#009E73")) +
   
   # Labels and Theme
   labs(x = "Sex Bias Category",
        y = expression(italic(r)[MF]),
        color = "Gene Type") +
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
+  pub_theme() +
+  theme(legend.position = "top")
 
 print(rMF_plot_merge_dash)
 
@@ -2026,15 +1904,9 @@ DoS_plot_merge_dash <- ggplot(
   subset(DoS_plot_4, GeneType != "Background"), 
   aes(x = Sex.Bias.Category, y = q50, color = GeneType)
 ) +
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95),
                   position = position_dodge(width = 0.5),
-                  size = 1.2) +
-  geom_point(position = position_dodge(width = 0.5), size = 2) +
-  geom_errorbar(aes(ymin = q05, ymax = q95),
-                position = position_dodge(width = 0.5),
-                width = 0.4,
-                size = 1) +
+                  linewidth = 1.2) +
   # Sample sizes
   geom_text(aes(y = q95 + 0.006, label = SampleSize, group = GeneType),
             position = position_dodge(width = 0.5),
@@ -2046,36 +1918,24 @@ DoS_plot_merge_dash <- ggplot(
     aes(x = as.numeric(Sex.Bias.Category) - 0.4,
         xend = as.numeric(Sex.Bias.Category) + 0.4,
         y = q50, yend = q50),
-    color = "black", linetype = "longdash", size = 1.2,
+    color = "black", linetype = "longdash", linewidth = 1.2,
     inherit.aes = FALSE
   ) +
   
   # Colours
-  scale_color_manual(values = c("Disease" = "darkgreen",
-                                "Candidate" = "purple",
-                                "Ortholog" = "orange")) +
+  scale_color_manual(values = c("Disease" = "#0072B2",
+                                "Candidate" = "#D55E00",
+                                "Ortholog" = "#009E73")) +
   
   # Labels and Theme
   labs(x = "Sex Bias Category",
        y = expression(italic(DoS)),
        color = "Gene Type") +
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
+  pub_theme() +
+  theme(legend.position = "top")
 
 print(DoS_plot_merge_dash)
 
@@ -2084,15 +1944,9 @@ tajD_plot_merge_dash <- ggplot(
   subset(tajD_plot_4, GeneType != "Background"), 
   aes(x = Sex.Bias.Category, y = q50, color = GeneType)
 ) +
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95),
                   position = position_dodge(width = 0.5),
-                  size = 1.2) +
-  geom_point(position = position_dodge(width = 0.5), size = 2) +
-  geom_errorbar(aes(ymin = q05, ymax = q95),
-                position = position_dodge(width = 0.5),
-                width = 0.4,
-                size = 1) +
+                  linewidth = 1.2) +
   # Sample sizes
   geom_text(aes(y = q95 + 0.006, label = SampleSize, group = GeneType),
             position = position_dodge(width = 0.5),
@@ -2104,36 +1958,24 @@ tajD_plot_merge_dash <- ggplot(
     aes(x = as.numeric(Sex.Bias.Category) - 0.4,
         xend = as.numeric(Sex.Bias.Category) + 0.4,
         y = q50, yend = q50),
-    color = "black", linetype = "longdash", size = 1.2,
+    color = "black", linetype = "longdash", linewidth = 1.2,
     inherit.aes = FALSE
   ) +
   
   # Manual colors for the others
-  scale_color_manual(values = c("Disease" = "darkgreen",
-                                "Candidate" = "purple",
-                                "Ortholog" = "orange")) +
+  scale_color_manual(values = c("Disease" = "#0072B2",
+                                "Candidate" = "#D55E00",
+                                "Ortholog" = "#009E73")) +
   
   # Labels, theme, etc (keep as in your code)
   labs(x = "Sex Bias Category",
        y =  expression("Tajima's " * italic(D)),
        color = "Gene Type") +
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
+  pub_theme() +
+  theme(legend.position = "top")
 
 print(tajD_plot_merge_dash)
 
@@ -2142,15 +1984,9 @@ rlnd_plot_merge_dash <- ggplot(
   subset(rlnd_plot_4, GeneType != "Background"), 
   aes(x = Sex.Bias.Category, y = q50, color = GeneType)
 ) +
-  # Points and error bars
   geom_pointrange(aes(ymin = q05, ymax = q95),
                   position = position_dodge(width = 0.5),
-                  size = 1.2) +
-  geom_point(position = position_dodge(width = 0.5), size = 2) +
-  geom_errorbar(aes(ymin = q05, ymax = q95),
-                position = position_dodge(width = 0.5),
-                width = 0.4,
-                size = 1) +
+                  linewidth = 1.2) +
   # Sample sizes
   geom_text(aes(y = q95 + 0.006, label = SampleSize, group = GeneType),
             position = position_dodge(width = 0.5),
@@ -2162,36 +1998,24 @@ rlnd_plot_merge_dash <- ggplot(
     aes(x = as.numeric(Sex.Bias.Category) - 0.4,
         xend = as.numeric(Sex.Bias.Category) + 0.4,
         y = q50, yend = q50),
-    color = "black", linetype = "longdash", size = 1.2,
+    color = "black", linetype = "longdash", linewidth = 1.2,
     inherit.aes = FALSE
   ) +
   
   # Manual colors for the others
-  scale_color_manual(values = c("Disease" = "darkgreen",
-                                "Candidate" = "purple",
-                                "Ortholog" = "orange")) +
+  scale_color_manual(values = c("Disease" = "#0072B2",
+                                "Candidate" = "#D55E00",
+                                "Ortholog" = "#009E73")) +
   
   # Labels, theme, etc (keep as in your code)
   labs(x = "Sex Bias Category",
        y = expression(tilde(pi)[italic(r)*N]),
        color = "Gene Type") +
   scale_x_discrete(labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")) +
-  geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
-  geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.text = element_text(size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  geom_vline(xintercept = 1.5, color = "black", linewidth = 1.2) +
+  geom_vline(xintercept = 2.5:5.5, color = "grey60", linewidth = 0.5) +
+  pub_theme() +
+  theme(legend.position = "top")
 
 print(rlnd_plot_merge_dash )
 

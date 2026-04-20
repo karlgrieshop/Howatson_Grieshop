@@ -4,6 +4,21 @@
 library(ggplot2)
 library(patchwork)
 
+pub_theme <- function(base_size = 14) {
+  theme_classic(base_size = base_size) +
+    theme(
+      axis.text        = element_text(size = base_size, colour = "black"),
+      axis.title       = element_text(size = base_size + 2, face = "bold"),
+      legend.text      = element_text(size = base_size),
+      legend.title     = element_text(size = base_size + 1, face = "bold"),
+      legend.position  = "top",
+      panel.border     = element_rect(colour = "black", fill = NA, linewidth = 0.8),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      plot.margin      = margin(12, 12, 12, 12)
+    )
+}
+
 
 #Upload Summary Plotting Data----
 
@@ -27,32 +42,16 @@ Fig1A<- ggplot(rlnd_plot_data_clean ,
                aes(x = GeneType, y = q50, color = GeneType)) + 
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2) +
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +
+                  linewidth = 1.2) +
   geom_text(aes(y = q95 + 0.006, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5),
             color = "black", size = 6) +
-  scale_color_manual(values = c("All Disease Orthologues" = "darkgreen", "SSDOs" = "purple", 
-                                "All Orthologues" = "orange", "Background" = "blue")) +
+  scale_color_manual(values = c("SSDOs" = "#D55E00", "All Disease Orthologues" = "#0072B2",
+                                "All Orthologues" = "#009E73", "Background" = "#999999")) +
   labs(x = "Gene Type", 
        y = expression(tilde(pi)[italic(r)*N])) +
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "none",
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "none")
 print(Fig1A)
 
 
@@ -66,32 +65,16 @@ Fig1B<- ggplot(DoS_plot_data_clean ,
                aes(x = GeneType, y = q50, color = GeneType)) + 
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2) +
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +
+                  linewidth = 1.2) +
   geom_text(aes(y = q95 + 0.006, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5),
             color = "black", size = 6) +
-  scale_color_manual(values = c("All Disease Orthologues" = "darkgreen", "SSDOs" = "purple", 
-                                "All Orthologues" = "orange", "Background" = "blue")) +
+  scale_color_manual(values = c("SSDOs" = "#D55E00", "All Disease Orthologues" = "#0072B2",
+                                "All Orthologues" = "#009E73", "Background" = "#999999")) +
   labs(x = "Gene Type", 
        y = expression(italic(DoS))) +
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "none",
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "none")
 
 print(Fig1B)
 # --- rMF ----
@@ -105,32 +88,16 @@ Fig2A<- ggplot(rmf_plot_data_clean ,
                aes(x = GeneType, y = q50, color = GeneType)) + 
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2) +
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +
+                  linewidth = 1.2) +
   geom_text(aes(y = q95 + 0.006, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5),
             color = "black", size = 6) +
-  scale_color_manual(values = c("All Disease Orthologues" = "darkgreen", "SSDOs" = "purple", 
-                                "All Orthologues" = "orange", "Background" = "blue")) +
+  scale_color_manual(values = c("SSDOs" = "#D55E00", "All Disease Orthologues" = "#0072B2",
+                                "All Orthologues" = "#009E73", "Background" = "#999999")) +
   labs(x = "Gene Type", 
        y = expression(italic(r)[MF])) +
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "none",
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "none")
 print(Fig2A)
 
 # ---- Tajimas D ----
@@ -145,32 +112,16 @@ Fig2B<- ggplot(tajD_plot_data_clean ,
                        aes(x = GeneType, y = q50, color = GeneType)) + 
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2) +
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +
+                  linewidth = 1.2) +
   geom_text(aes(y = q95 + 0.006, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5),
             color = "black", size = 6) +
-  scale_color_manual(values = c("All Disease Orthologues" = "darkgreen", "SSDOs" = "purple", 
-                                "All Orthologues" = "orange", "Background" = "blue")) +
+  scale_color_manual(values = c("SSDOs" = "#D55E00", "All Disease Orthologues" = "#0072B2",
+                                "All Orthologues" = "#009E73", "Background" = "#999999")) +
   labs(x = "Gene Type", 
        y = expression("Tajima's " * italic(D))) +
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "none",
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "none")
 print(Fig2B)
 
 
@@ -186,32 +137,16 @@ Fig2C<- ggplot(tissuespec_plot_data_clean ,
                              aes(x = GeneType, y = q50, color = GeneType)) + 
   geom_pointrange(aes(ymin = q05, ymax = q95), 
                   position = position_dodge(width = 0.5), 
-                  size = 1.2) +
-  geom_point(aes(color = GeneType),
-             position = position_dodge(width = 0.5),
-             size = 2) +  
-  geom_errorbar(aes(ymin = q05, ymax = q95), 
-                position = position_dodge(width = 0.5),
-                width = 0.4, 
-                size = 1) +
+                  linewidth = 1.2) +
   geom_text(aes(y = q95 + 0.006, label = SampleSize, group = GeneType), 
             position = position_dodge(width = 0.5),
             color = "black", size = 6) +
-  scale_color_manual(values = c("All Disease Orthologues" = "darkgreen", "SSDOs" = "purple", 
-                                "All Orthologues" = "orange", "Background" = "blue")) +
+  scale_color_manual(values = c("SSDOs" = "#D55E00", "All Disease Orthologues" = "#0072B2",
+                                "All Orthologues" = "#009E73", "Background" = "#999999")) +
   labs(x = "Gene Type", 
        y = "Tissue Specificity") +
-  theme_classic(base_size = 16) +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 14),
-    axis.text.y = element_text(size = 14),
-    axis.title = element_text(size = 16, face = "bold"),
-    legend.position = "none",
-    panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
-    panel.background = element_rect(fill = "white", color = NA),
-    plot.margin = margin(20, 20, 20, 20)
-  )
+  pub_theme() +
+  theme(legend.position = "none")
 print(Fig2C)
 
 
