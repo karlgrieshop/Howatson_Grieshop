@@ -1,0 +1,4 @@
+"Study","Source","UniverseSize","SSDOCount","CandidateCount","OverlapCount","OddsRatio","PValue","ConfLow","ConfHigh","PAdjustBH"
+"Innocenti and Morrow","Mapped from legacy antagonistic-gene symbols",13986,568,917,41,1.11384619926658,0.489134129154775,0.784228755598189,1.54478049785665,0.489134129154775
+"Ruzicka et al.","Legacy Ruzicka candidate gene table",13986,568,435,23,1.33218649887537,0.175744955899534,0.827784538986654,2.04822445013311,0.263617433849301
+"Neal_Truter_Grieshop","gene_hits_snps_90.csv",13986,568,279,23,2.16952954637358,0.00114915455924307,1.33927328345657,3.36277017414393,0.00344746367772922

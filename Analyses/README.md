@@ -1,0 +1,12 @@
+# Analyses
+
+This directory retains broader analytical scripts that are useful context for the project but are not the canonical path for regenerating the core four-category figures.
+
+## Scripts
+
+| Script | Status |
+| --- | --- |
+| `Final_Script.R` | Legacy broader analysis script; not fully updated to the new layout |
+| `data_analysis.R` | Legacy extended analysis script; not fully updated to the new layout |
+| `SA magnitude.R` | Legacy sexually antagonistic SNP workflow; not yet rebuilt around the new data layout |
+| `sa_candidate_enrichment.R` | Current Fisher enrichment workflow for SSDOs versus legacy SA candidate gene sets, including `gene_hits_snps_90.csv` for the Neal_Truter_Grieshop candidate set |

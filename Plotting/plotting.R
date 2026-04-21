@@ -1,0 +1,306 @@
+# Core four-category plotting workflow
+#
+# This script is deliberately self-contained so that the data loading,
+# four-group assignment, summary-table generation, permutation testing,
+# and ggplot figure code all live in one place.
+#
+# Run after:
+#   Rscript Data_wrangling/compile_ssdo_reference_data.R
+
+find_project_root <- function(start = getwd()) {
+  current <- normalizePath(start, winslash = "/", mustWork = TRUE)
+
+  repeat {
+    if (
+      dir.exists(file.path(current, "Data")) &&
+      dir.exists(file.path(current, "Plotting")) &&
+      dir.exists(file.path(current, "Figures")) &&
+      file.exists(file.path(current, "README.md"))
+    ) {
+      return(current)
+    }
+
+    parent <- dirname(current)
+    if (identical(parent, current)) {
+      stop(
+        "Could not locate the project root. Run this script from inside the Final_Year_Project_github repository.",
+        call. = FALSE
+      )
+    }
+
+    current <- parent
+  }
+}
+
+
+project_root <- find_project_root()
+data_path <- function(...) file.path(project_root, "Data", ...)
+figure_path <- function(...) file.path(project_root, "Figures", ...)
+
+
+required_files <- c(
+  data_path("sexspecific_disease_ids.csv"),
+  data_path("all_disease_ortholog_ids.csv"),
+  data_path("all_ortholog_ids.csv"),
+  data_path("FileS7.txt"),
+  data_path("SBGEandSSSdataForMBE.csv")
+)
+
+missing_files <- required_files[!file.exists(required_files)]
+
+if (length(missing_files) > 0) {
+  stop(
+    paste0(
+      "Missing required reference files. Run Data_wrangling/compile_ssdo_reference_data.R first.\n",
+      paste(missing_files, collapse = "\n")
+    ),
+    call. = FALSE
+  )
+}
+
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(ggplot2)
+})
+
+
+ordered_gene_types <- c("SSDOs", "Disease orthologues", "Orthologues", "Background")
+
+gene_type_palette <- c(
+  "SSDOs" = "#D55E00",
+  "Disease orthologues" = "#0072B2",
+  "Orthologues" = "#009E73",
+  "Background" = "#999999"
+)
+
+
+bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "GeneType", n_boot = 5000, seed = 1L) {
+  set.seed(seed)
+
+  split_data <- split(data[[value_col]], data[[group_col]])
+
+  summaries <- lapply(names(split_data), function(group_name) {
+    values <- split_data[[group_name]]
+    values <- values[!is.na(values)]
+
+    if (length(values) == 0) {
+      return(NULL)
+    }
+
+    boot_stats <- replicate(
+      n_boot,
+      mean(sample(values, size = length(values), replace = TRUE))
+    )
+
+    data.frame(
+      GeneType = group_name,
+      q05 = unname(stats::quantile(boot_stats, 0.025)),
+      q50 = unname(stats::quantile(boot_stats, 0.5)),
+      q95 = unname(stats::quantile(boot_stats, 0.975)),
+      SampleSize = length(values),
+      Mean = mean(values),
+      SD = stats::sd(values),
+      stringsAsFactors = FALSE
+    )
+  })
+
+  bind_rows(summaries) |>
+    mutate(GeneType = factor(GeneType, levels = ordered_gene_types)) |>
+    arrange(GeneType)
+}
+
+
+two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
+  x <- x[!is.na(x)]
+  y <- y[!is.na(y)]
+
+  if (length(x) < 2 || length(y) < 2) {
+    return(
+      data.frame(
+        obs_diff = NA_real_,
+        n_group1 = length(x),
+        n_group2 = length(y),
+        p_value = NA_real_,
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+
+  set.seed(seed)
+
+  n_x <- length(x)
+  pooled <- c(x, y)
+  obs_diff <- mean(x) - mean(y)
+
+  perm_diffs <- replicate(n_perm, {
+    shuffled <- sample(pooled, size = length(pooled), replace = FALSE)
+    mean(shuffled[seq_len(n_x)]) - mean(shuffled[-seq_len(n_x)])
+  })
+
+  data.frame(
+    obs_diff = obs_diff,
+    n_group1 = length(x),
+    n_group2 = length(y),
+    p_value = (sum(abs(perm_diffs) >= abs(obs_diff)) + 1) / (n_perm + 1),
+    stringsAsFactors = FALSE
+  )
+}
+
+
+pairwise_tests_against_reference <- function(data, value_col = "Value", group_col = "GeneType", reference_group = "SSDOs") {
+  comparison_groups <- setdiff(unique(as.character(data[[group_col]])), reference_group)
+
+  tests <- lapply(comparison_groups, function(group_name) {
+    reference_values <- data[data[[group_col]] == reference_group, value_col, drop = TRUE]
+    comparison_values <- data[data[[group_col]] == group_name, value_col, drop = TRUE]
+
+    test_result <- two_sample_permutation_test(reference_values, comparison_values)
+    test_result$group_1 <- reference_group
+    test_result$group_2 <- group_name
+    test_result
+  })
+
+  bind_rows(tests) |>
+    mutate(p_adjust_bh = p.adjust(p_value, method = "BH")) |>
+    select(group_1, group_2, everything())
+}
+
+
+publication_theme <- function(base_size = 14) {
+  theme_classic(base_size = base_size) +
+    theme(
+      axis.text = element_text(size = base_size, colour = "black"),
+      axis.title = element_text(size = base_size + 2, face = "bold"),
+      legend.position = "none",
+      panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.8),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.title.x = element_text(margin = margin(t = 12)),
+      plot.margin = margin(12, 12, 12, 12)
+    )
+}
+
+
+plot_metric_distribution <- function(summary_data, y_label) {
+  ggplot(summary_data, aes(x = GeneType, y = q50, colour = GeneType)) +
+    geom_pointrange(aes(ymin = q05, ymax = q95), linewidth = 1.2) +
+    geom_text(
+      aes(y = q95, label = SampleSize),
+      size = 3.8,
+      colour = "black",
+      vjust = -0.75
+    ) +
+    scale_colour_manual(values = gene_type_palette, drop = FALSE) +
+    scale_y_continuous(expand = expansion(mult = c(0.03, 0.14))) +
+    labs(x = "Gene Type", y = y_label, title = NULL) +
+    publication_theme() +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
+}
+
+
+# Load the metric source tables.
+fra <- read.delim(data_path("FileS7.txt"), header = TRUE, stringsAsFactors = FALSE)
+colnames(fra)[2] <- "FlyBaseID"
+fra[sapply(fra, is.infinite)] <- NA
+fra <- distinct(fra, FlyBaseID, .keep_all = TRUE)
+
+singh <- read.csv(data_path("SBGEandSSSdataForMBE.csv"), stringsAsFactors = FALSE)
+colnames(singh)[2] <- "FlyBaseID"
+singh <- distinct(singh, FlyBaseID, .keep_all = TRUE)
+
+
+# Load the canonical gene-set definitions built by Data_wrangling/.
+ssdo_ids <- read.csv(data_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |>
+  transmute(FlyBaseID = as.character(FlyBaseID)) |>
+  distinct()
+
+all_disease_ids <- read.csv(data_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |>
+  transmute(FlyBaseID = as.character(FlyBaseID)) |>
+  distinct()
+
+all_ortholog_ids <- read.csv(data_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |>
+  transmute(FlyBaseID = as.character(FlyBaseID)) |>
+  distinct()
+
+ssdo_gene_ids <- unique(ssdo_ids$FlyBaseID)
+disease_only_gene_ids <- setdiff(unique(all_disease_ids$FlyBaseID), ssdo_gene_ids)
+ortholog_only_gene_ids <- setdiff(
+  unique(all_ortholog_ids$FlyBaseID),
+  union(ssdo_gene_ids, unique(all_disease_ids$FlyBaseID))
+)
+
+
+build_metric_data <- function(metric_data, value_col) {
+  metric_data |>
+    transmute(
+      FlyBaseID = as.character(FlyBaseID),
+      Value = as.numeric(.data[[value_col]])
+    ) |>
+    filter(!is.na(FlyBaseID), nzchar(FlyBaseID)) |>
+    distinct(FlyBaseID, .keep_all = TRUE) |>
+    filter(!is.na(Value), is.finite(Value)) |>
+    mutate(
+      GeneType = case_when(
+        FlyBaseID %in% ssdo_gene_ids ~ "SSDOs",
+        FlyBaseID %in% disease_only_gene_ids ~ "Disease orthologues",
+        FlyBaseID %in% ortholog_only_gene_ids ~ "Orthologues",
+        TRUE ~ "Background"
+      ),
+      GeneType = factor(GeneType, levels = ordered_gene_types)
+    ) |>
+    arrange(GeneType, FlyBaseID)
+}
+
+
+metric_specs <- list(
+  list(name = "tajD", data = singh, value_col = "tajD.S", y_label = expression("Tajima's " * italic(D)), figure_file = "tajD_plot.pdf"),
+  list(name = "rMF", data = singh, value_col = "rmf", y_label = expression(italic(r)[MF]), figure_file = "rmf_plot.pdf"),
+  list(name = "rlnd", data = singh, value_col = "piNfract", y_label = expression(tilde(pi)[italic(r) * N]), figure_file = "rlnd_plot.pdf"),
+  list(name = "DoS", data = fra, value_col = "DoS", y_label = expression(italic(DoS)), figure_file = "DoS_plot.pdf"),
+  list(name = "Tissue Specificity", data = fra, value_col = "tissueSpecificityAdults", y_label = "Tissue Specificity", figure_file = "tissuespec.pdf")
+)
+
+group_counts <- list()
+
+for (metric_spec in metric_specs) {
+  raw_metric_data <- build_metric_data(metric_spec$data, metric_spec$value_col)
+  summary_metric_data <- bootstrap_group_summaries(raw_metric_data)
+  tests_metric_data <- pairwise_tests_against_reference(raw_metric_data)
+  metric_plot <- plot_metric_distribution(summary_metric_data, metric_spec$y_label)
+
+  write.csv(
+    summary_metric_data,
+    data_path("Summary_tables", paste0(metric_spec$name, " Plot Data.csv")),
+    row.names = FALSE
+  )
+  write.csv(
+    raw_metric_data,
+    data_path("Summary_tables", paste0(metric_spec$name, " Raw Data.csv")),
+    row.names = FALSE
+  )
+  write.csv(
+    tests_metric_data,
+    data_path("Summary_tables", paste0(metric_spec$name, " Permutation Tests.csv")),
+    row.names = FALSE
+  )
+
+  ggsave(
+    filename = figure_path(metric_spec$figure_file),
+    plot = metric_plot,
+    width = 7,
+    height = 5,
+    dpi = 300
+  )
+
+  group_counts[[metric_spec$name]] <- cbind(
+    Metric = metric_spec$name,
+    summary_metric_data[, c("GeneType", "SampleSize")]
+  )
+}
+
+write.csv(
+  do.call(rbind, group_counts),
+  data_path("Summary_tables", "Metric Group Sizes.csv"),
+  row.names = FALSE
+)
