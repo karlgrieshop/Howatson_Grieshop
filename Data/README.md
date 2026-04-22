@@ -10,9 +10,12 @@ This directory now separates active reference data from archived or superseded f
 | `sexspecific_disease_ids.csv` | Unique SSDO FlyBase IDs used in the core plots |
 | `all_disease_ortholog_ids.csv` | Canonical disease-orthologue ID set |
 | `all_ortholog_ids.csv` | Canonical orthologue ID set |
+| `Affx_Dros_2.0.csv` | Affymetrix Drosophila 2.0 probe-symbol background used for the study-matched Innocenti enrichment background |
 | `dmel_gene_reference.csv` | Gene-level reference parsed from the GTF |
 | `dmel_transcript_reference.csv` | Transcript-level reference parsed from the GTF |
 | `FileS7.txt` | Fraisse et al. metric source |
+| `Innocenti_and_Morrow_ANTAGONISTIC.csv` | Innocenti and Morrow SA candidate/probability input |
+| `Ruzicka_et_al_pbio.3000244.s008.csv` | Ruzicka candidate-gene enrichment input |
 | `SBGEandSSSdataForMBE.csv` | Singh & Agrawal metric source |
 | `Sex.Biased.Genes.Whole.csv` | Mishra whole-body SBGE table for later stratified analyses |
 | `Summary_tables/` | Current plot-ready tables, raw plot data, and permutation-test outputs |

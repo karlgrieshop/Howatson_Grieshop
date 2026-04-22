@@ -3,7 +3,6 @@
 # This script restores the four-group SA probability plots from the original
 # study-specific inputs now present in `Data/`.
 #
-# - Innocenti and Morrow: legacy antagonistic-gene p-values
 # - Ruzicka et al.: SNP-level p-values from `Assoc_Data.txt`, mapped to genes
 # - Neal_Truter_Grieshop: SNP-level `-log10(p)` values from
 #   `true_cmh_results.txt`, mapped to genes
@@ -24,7 +23,7 @@ find_project_root <- function(start = getwd()) {
     parent <- dirname(current)
     if (identical(parent, current)) {
       stop(
-        "Could not locate the project root. Run this script from inside the Final_Year_Project_github repository.",
+        "Could not locate the project root. Run this script from inside the Final_Year_Project repository.",
         call. = FALSE
       )
     }
@@ -192,43 +191,6 @@ assign_gene_types <- function(raw_values, ssdo_ids, disease_ids, ortholog_ids) {
 }
 
 
-map_symbols_to_flybase <- function(symbols, gene_reference) {
-  symbol_map <- gene_reference |>
-    filter(!is.na(Fly.Symbol), nzchar(Fly.Symbol)) |>
-    select(FlyBaseID, Fly.Symbol) |>
-    distinct() |>
-    add_count(Fly.Symbol, name = "n_ids") |>
-    filter(n_ids == 1) |>
-    select(-n_ids)
-
-  data.frame(Symbol = as.character(symbols), stringsAsFactors = FALSE) |>
-    distinct() |>
-    left_join(symbol_map, by = c("Symbol" = "Fly.Symbol"))
-}
-
-
-build_innocenti_values <- function(gene_reference) {
-  innocenti <- read.csv(
-    data_path("unused", "legacy_data", "Innocenti_and_Morrow_ANTAGONISTIC.csv"),
-    stringsAsFactors = FALSE
-  ) |>
-    transmute(Symbol = as.character(Symbol), p_value = as.numeric(p.val)) |>
-    filter(!is.na(Symbol), nzchar(Symbol), !is.na(p_value), p_value > 0, p_value <= 1)
-
-  mapping <- map_symbols_to_flybase(unique(innocenti$Symbol), gene_reference)
-
-  innocenti |>
-    left_join(mapping, by = "Symbol") |>
-    filter(!is.na(FlyBaseID)) |>
-    group_by(FlyBaseID) |>
-    summarise(
-      Value = max(-log10(p_value), na.rm = TRUE),
-      Source = "Innocenti and Morrow",
-      .groups = "drop"
-    )
-}
-
-
 normalise_chromosome <- function(x) {
   x <- as.character(x)
   x <- gsub("^chr", "", x, ignore.case = TRUE)
@@ -349,7 +311,6 @@ disease_ids <- read.csv(data_path("all_disease_ortholog_ids.csv"), stringsAsFact
 ortholog_ids <- read.csv(data_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 
 study_specs <- list(
-  list(name = "Innocenti and Morrow", values = build_innocenti_values(gene_reference), figure = "innocenti_and_morrow_SA_probability.pdf"),
   list(name = "Ruzicka et al.", values = build_ruzicka_values(gene_reference), figure = "ruzicka_SA_probability.pdf"),
   list(name = "Neal_Truter_Grieshop", values = build_neal_values(gene_reference), figure = "neal_truter_grieshop_SA_probability.pdf")
 )

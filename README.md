@@ -40,6 +40,7 @@ Figures/         output figure PDFs
 2. Run `Plotting/plotting.R`
 3. Run `Analyses/sa_candidate_enrichment.R` for the Fisher enrichment tests
 4. Run `Plotting/sa_probability_plots.R` for the current SA probability figures
+5. Run `Data_wrangling/build_affx_dros_2_array_reference.R` if `Affx_Dros_2.0.csv` needs to be rebuilt for the study-matched Innocenti enrichment background
 
 The compile step now builds a standalone SSDO table directly from the sex-specific disease inputs and literature orthology files, rather than inheriting SSDOs from a Mishra SBGE merge.
 The plotting step is now a single readable script rather than a thin wrapper around helper files.
@@ -64,11 +65,15 @@ The active four-category workflow reads these files from `Data/`:
 | `Data/SBGEandSSSdataForMBE.csv` | Tajima's *D*, `rMF`, and `piNfract` (`rlnd`) |
 | `Data/FileS7.txt` | `DoS` and adult tissue specificity |
 | `Data/Drosophila_melanogaster.BDGP6.54.115.gtf` | Reference gene and transcript identifiers for background and ID harmonization |
+| `Data/Innocenti_and_Morrow_ANTAGONISTIC.csv` | Innocenti and Morrow SA candidate enrichment input |
+| `Data/Ruzicka_et_al_pbio.3000244.s008.csv` | Ruzicka candidate-gene enrichment input |
+| `Data/Affx_Dros_2.0.csv` | Affymetrix Drosophila 2.0 background for the study-matched Innocenti enrichment analysis |
 
 ## Notes
 
 - The core plots now maximise inclusion by assigning SSDOs from the compiled SSDO table, not from a pre-merged SBGE subset.
 - Raw source files that are duplicated, superseded, or not part of the active four-category workflow are kept under `Data/unused/`.
 - `Analyses/Final_Script.R`, `Analyses/data_analysis.R`, and `Analyses/SA magnitude.R` are retained as older analysis scripts and were **not** fully modernized in this re-layout.
-- `Analyses/sa_candidate_enrichment.R` restores the Fisher enrichment tests against legacy SA candidate gene sets using the current canonical SSDO IDs.
-- `Plotting/sa_probability_plots.R` restores the SA probability plots from the original study-specific inputs now present in `Data/`, using gene-level maxima after mapping SNPs onto the local gene reference.
+- `Analyses/sa_candidate_enrichment.R` now reports both the broad whole-genome Fisher enrichment tests and parallel study-matched-universe Fisher enrichment analyses for Innocenti, Ruzicka, and Neal_Truter_Grieshop.
+- `Plotting/sa_probability_plots.R` now produces only the real-data SA probability plots for Ruzicka and Neal_Truter_Grieshop.
+- `Data_wrangling/build_affx_dros_2_array_reference.R` rebuilds the real Affymetrix Drosophila 2.0 probe-symbol background used for the narrower Innocenti enrichment analysis.
