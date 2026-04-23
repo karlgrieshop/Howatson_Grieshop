@@ -10,3 +10,4 @@ This directory retains broader analytical scripts that are useful context for th
 | `data_analysis.R` | Legacy extended analysis script; not fully updated to the new layout |
 | `SA magnitude.R` | Legacy sexually antagonistic SNP workflow; not yet rebuilt around the new data layout |
 | `sa_candidate_enrichment.R` | Current Fisher enrichment workflow for SSDOs versus legacy SA candidate gene sets, including `gene_hits_snps_90.csv` for the Neal_Truter_Grieshop candidate set |
+| `sa_resolution.R` | Current scaffold for future SSDO enrichment tests against SA-resolution gene sets from other studies |

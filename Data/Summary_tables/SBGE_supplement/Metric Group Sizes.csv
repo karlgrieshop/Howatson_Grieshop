@@ -1,0 +1,121 @@
+"Metric","SexBiasPanel","GeneType","SampleSize"
+"tajD","All","SSDOs",495
+"tajD","All","Disease orthologues",2260
+"tajD","All","Orthologues",5152
+"tajD","All","Background",2943
+"tajD","Highly female-biased","SSDOs",70
+"tajD","Highly female-biased","Disease orthologues",325
+"tajD","Highly female-biased","Orthologues",862
+"tajD","Highly female-biased","Background",337
+"tajD","Female-biased","SSDOs",116
+"tajD","Female-biased","Disease orthologues",683
+"tajD","Female-biased","Orthologues",1301
+"tajD","Female-biased","Background",303
+"tajD","Unbiased","SSDOs",83
+"tajD","Unbiased","Disease orthologues",470
+"tajD","Unbiased","Orthologues",693
+"tajD","Unbiased","Background",247
+"tajD","Male-biased","SSDOs",113
+"tajD","Male-biased","Disease orthologues",399
+"tajD","Male-biased","Orthologues",857
+"tajD","Male-biased","Background",551
+"tajD","Highly male-biased","SSDOs",113
+"tajD","Highly male-biased","Disease orthologues",383
+"tajD","Highly male-biased","Orthologues",1439
+"tajD","Highly male-biased","Background",1505
+"rMF","All","SSDOs",473
+"rMF","All","Disease orthologues",2215
+"rMF","All","Orthologues",5059
+"rMF","All","Background",2817
+"rMF","Highly female-biased","SSDOs",73
+"rMF","Highly female-biased","Disease orthologues",347
+"rMF","Highly female-biased","Orthologues",915
+"rMF","Highly female-biased","Background",365
+"rMF","Female-biased","SSDOs",116
+"rMF","Female-biased","Disease orthologues",703
+"rMF","Female-biased","Orthologues",1334
+"rMF","Female-biased","Background",301
+"rMF","Unbiased","SSDOs",81
+"rMF","Unbiased","Disease orthologues",468
+"rMF","Unbiased","Orthologues",708
+"rMF","Unbiased","Background",236
+"rMF","Male-biased","SSDOs",111
+"rMF","Male-biased","Disease orthologues",380
+"rMF","Male-biased","Orthologues",814
+"rMF","Male-biased","Background",498
+"rMF","Highly male-biased","SSDOs",92
+"rMF","Highly male-biased","Disease orthologues",317
+"rMF","Highly male-biased","Orthologues",1288
+"rMF","Highly male-biased","Background",1417
+"rlnd","All","SSDOs",487
+"rlnd","All","Disease orthologues",2203
+"rlnd","All","Orthologues",5023
+"rlnd","All","Background",2917
+"rlnd","Highly female-biased","SSDOs",68
+"rlnd","Highly female-biased","Disease orthologues",316
+"rlnd","Highly female-biased","Orthologues",853
+"rlnd","Highly female-biased","Background",334
+"rlnd","Female-biased","SSDOs",113
+"rlnd","Female-biased","Disease orthologues",671
+"rlnd","Female-biased","Orthologues",1265
+"rlnd","Female-biased","Background",299
+"rlnd","Unbiased","SSDOs",82
+"rlnd","Unbiased","Disease orthologues",458
+"rlnd","Unbiased","Orthologues",676
+"rlnd","Unbiased","Background",236
+"rlnd","Male-biased","SSDOs",113
+"rlnd","Male-biased","Disease orthologues",386
+"rlnd","Male-biased","Orthologues",818
+"rlnd","Male-biased","Background",539
+"rlnd","Highly male-biased","SSDOs",111
+"rlnd","Highly male-biased","Disease orthologues",372
+"rlnd","Highly male-biased","Orthologues",1411
+"rlnd","Highly male-biased","Background",1509
+"DoS","All","SSDOs",410
+"DoS","All","Disease orthologues",1727
+"DoS","All","Orthologues",4374
+"DoS","All","Background",2619
+"DoS","Highly female-biased","SSDOs",60
+"DoS","Highly female-biased","Disease orthologues",246
+"DoS","Highly female-biased","Orthologues",723
+"DoS","Highly female-biased","Background",297
+"DoS","Female-biased","SSDOs",90
+"DoS","Female-biased","Disease orthologues",510
+"DoS","Female-biased","Orthologues",1056
+"DoS","Female-biased","Background",269
+"DoS","Unbiased","SSDOs",65
+"DoS","Unbiased","Disease orthologues",349
+"DoS","Unbiased","Orthologues",606
+"DoS","Unbiased","Background",206
+"DoS","Male-biased","SSDOs",98
+"DoS","Male-biased","Disease orthologues",335
+"DoS","Male-biased","Orthologues",756
+"DoS","Male-biased","Background",493
+"DoS","Highly male-biased","SSDOs",97
+"DoS","Highly male-biased","Disease orthologues",287
+"DoS","Highly male-biased","Orthologues",1233
+"DoS","Highly male-biased","Background",1354
+"Tissue Specificity","All","SSDOs",393
+"Tissue Specificity","All","Disease orthologues",1710
+"Tissue Specificity","All","Orthologues",4035
+"Tissue Specificity","All","Background",2241
+"Tissue Specificity","Highly female-biased","SSDOs",58
+"Tissue Specificity","Highly female-biased","Disease orthologues",246
+"Tissue Specificity","Highly female-biased","Orthologues",708
+"Tissue Specificity","Highly female-biased","Background",287
+"Tissue Specificity","Female-biased","SSDOs",90
+"Tissue Specificity","Female-biased","Disease orthologues",510
+"Tissue Specificity","Female-biased","Orthologues",1055
+"Tissue Specificity","Female-biased","Background",267
+"Tissue Specificity","Unbiased","SSDOs",65
+"Tissue Specificity","Unbiased","Disease orthologues",349
+"Tissue Specificity","Unbiased","Orthologues",603
+"Tissue Specificity","Unbiased","Background",203
+"Tissue Specificity","Male-biased","SSDOs",97
+"Tissue Specificity","Male-biased","Disease orthologues",335
+"Tissue Specificity","Male-biased","Orthologues",750
+"Tissue Specificity","Male-biased","Background",478
+"Tissue Specificity","Highly male-biased","SSDOs",83
+"Tissue Specificity","Highly male-biased","Disease orthologues",270
+"Tissue Specificity","Highly male-biased","Orthologues",919
+"Tissue Specificity","Highly male-biased","Background",1006

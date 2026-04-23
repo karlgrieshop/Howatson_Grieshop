@@ -17,7 +17,7 @@ This directory now separates active reference data from archived or superseded f
 | `Innocenti_and_Morrow_ANTAGONISTIC.csv` | Innocenti and Morrow SA candidate/probability input |
 | `Ruzicka_et_al_pbio.3000244.s008.csv` | Ruzicka candidate-gene enrichment input |
 | `SBGEandSSSdataForMBE.csv` | Singh & Agrawal metric source |
-| `Sex.Biased.Genes.Whole.csv` | Mishra whole-body SBGE table for later stratified analyses |
+| `Sex.Biased.Genes.Whole.csv` | Mishra whole-body SBGE table used for the supplemental SBGE-stratified metric figures |
 | `Summary_tables/` | Current plot-ready tables, raw plot data, and permutation-test outputs |
 
 ## SSDO input sources
