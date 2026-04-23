@@ -1,7 +1,7 @@
 "Study","UniverseType","Source","UniverseSize","SSDOCount","CandidateCount","OverlapCount","OddsRatio","PValue","ConfLow","ConfHigh","PAdjustBH"
-"Innocenti and Morrow","Whole fly genome","Whole-genome / protein-coding background",13986,568,917,41,1.11384619926658,0.489134129154775,0.784228755598189,1.54478049785665,0.489134129154775
-"Ruzicka et al.","Whole fly genome","Whole-genome / protein-coding background",13986,568,435,23,1.33218649887537,0.175744955899534,0.827784538986654,2.04822445013311,0.263617433849301
-"Neal_Truter_Grieshop","Whole fly genome","Whole-genome / protein-coding background",13986,568,279,23,2.16952954637358,0.00114915455924307,1.33927328345657,3.36277017414393,0.00344746367772922
+"Innocenti and Morrow","Whole protein-coding fly genome","Whole-genome / protein-coding background",13986,568,917,41,1.11384619926658,0.489134129154775,0.784228755598189,1.54478049785665,0.489134129154775
+"Ruzicka et al.","Whole protein-coding fly genome","Whole-genome / protein-coding background",13986,568,435,23,1.33218649887537,0.175744955899534,0.827784538986654,2.04822445013311,0.263617433849301
+"Neal_Truter_Grieshop","Whole protein-coding fly genome","Whole-genome / protein-coding background",13986,568,279,23,2.16952954637358,0.00114915455924307,1.33927328345657,3.36277017414393,0.00344746367772922
 "Innocenti and Morrow","Study-matched universe","Affx_Dros_2.0 array-assayed genes",17103,560,915,41,1.41622611656631,0.0441072833795502,0.997018597079725,1.96442087520801,0.0661609250693253
 "Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,540,488,22,1.28732091094784,0.262411933617008,0.791784464711592,1.99415119070617,0.262411933617008
 "Neal_Truter_Grieshop","Study-matched universe","Genes represented by SNPs in true_cmh_results.txt",11574,471,291,23,2.07539782605235,0.00226303663398173,1.27973673152938,3.22096854765639,0.00678910990194518

@@ -34,16 +34,19 @@ find_project_root <- function(start = getwd()) {
 
 
 project_root <- find_project_root()
-data_path <- function(...) file.path(project_root, "Data", ...)
+input_path <- function(...) file.path(project_root, "Data", "inputs", ...)
+output_path <- function(...) file.path(project_root, "Data", "outputs", ...)
+summary_path <- function(...) file.path(project_root, "Data", "Summary_tables", ...)
 figure_path <- function(...) file.path(project_root, "Figures", ...)
 
 
 required_files <- c(
-  data_path("sexspecific_disease_ids.csv"),
-  data_path("all_disease_ortholog_ids.csv"),
-  data_path("all_ortholog_ids.csv"),
-  data_path("FileS7.txt"),
-  data_path("SBGEandSSSdataForMBE.csv")
+  output_path("sexspecific_disease_ids.csv"),
+  output_path("all_disease_ortholog_ids.csv"),
+  output_path("all_ortholog_ids.csv"),
+  output_path("dmel_gene_reference.csv"),
+  input_path("FileS7.txt"),
+  input_path("SBGEandSSSdataForMBE.csv")
 )
 
 missing_files <- required_files[!file.exists(required_files)]
@@ -200,26 +203,33 @@ plot_metric_distribution <- function(summary_data, y_label) {
 
 
 # Load the metric source tables.
-fra <- read.delim(data_path("FileS7.txt"), header = TRUE, stringsAsFactors = FALSE)
+fra <- read.delim(input_path("FileS7.txt"), header = TRUE, stringsAsFactors = FALSE)
 colnames(fra)[2] <- "FlyBaseID"
 fra[sapply(fra, is.infinite)] <- NA
 fra <- distinct(fra, FlyBaseID, .keep_all = TRUE)
 
-singh <- read.csv(data_path("SBGEandSSSdataForMBE.csv"), stringsAsFactors = FALSE)
+singh <- read.csv(input_path("SBGEandSSSdataForMBE.csv"), stringsAsFactors = FALSE)
 colnames(singh)[2] <- "FlyBaseID"
 singh <- distinct(singh, FlyBaseID, .keep_all = TRUE)
 
 
 # Load the canonical gene-set definitions built by Data_wrangling/.
-ssdo_ids <- read.csv(data_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |>
+gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
+protein_coding_gene_ids <- gene_reference |>
+  transmute(FlyBaseID = as.character(FlyBaseID), gene_biotype = as.character(gene_biotype)) |>
+  filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), gene_biotype == "protein_coding") |>
+  pull(FlyBaseID) |>
+  unique()
+
+ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |>
   transmute(FlyBaseID = as.character(FlyBaseID)) |>
   distinct()
 
-all_disease_ids <- read.csv(data_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |>
+all_disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |>
   transmute(FlyBaseID = as.character(FlyBaseID)) |>
   distinct()
 
-all_ortholog_ids <- read.csv(data_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |>
+all_ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |>
   transmute(FlyBaseID = as.character(FlyBaseID)) |>
   distinct()
 
@@ -237,7 +247,7 @@ build_metric_data <- function(metric_data, value_col) {
       FlyBaseID = as.character(FlyBaseID),
       Value = as.numeric(.data[[value_col]])
     ) |>
-    filter(!is.na(FlyBaseID), nzchar(FlyBaseID)) |>
+    filter(!is.na(FlyBaseID), nzchar(FlyBaseID), FlyBaseID %in% protein_coding_gene_ids) |>
     distinct(FlyBaseID, .keep_all = TRUE) |>
     filter(!is.na(Value), is.finite(Value)) |>
     mutate(
@@ -261,8 +271,6 @@ metric_specs <- list(
   list(name = "Tissue Specificity", data = fra, value_col = "tissueSpecificityAdults", y_label = "Tissue Specificity", figure_file = "tissuespec.pdf")
 )
 
-group_counts <- list()
-
 for (metric_spec in metric_specs) {
   raw_metric_data <- build_metric_data(metric_spec$data, metric_spec$value_col)
   summary_metric_data <- bootstrap_group_summaries(raw_metric_data)
@@ -271,17 +279,17 @@ for (metric_spec in metric_specs) {
 
   write.csv(
     summary_metric_data,
-    data_path("Summary_tables", paste0(metric_spec$name, " Plot Data.csv")),
+    summary_path(paste0(metric_spec$name, " Plot Data.csv")),
     row.names = FALSE
   )
   write.csv(
     raw_metric_data,
-    data_path("Summary_tables", paste0(metric_spec$name, " Raw Data.csv")),
+    summary_path(paste0(metric_spec$name, " Raw Data.csv")),
     row.names = FALSE
   )
   write.csv(
     tests_metric_data,
-    data_path("Summary_tables", paste0(metric_spec$name, " Permutation Tests.csv")),
+    summary_path(paste0(metric_spec$name, " Permutation Tests.csv")),
     row.names = FALSE
   )
 
@@ -293,14 +301,4 @@ for (metric_spec in metric_specs) {
     dpi = 300
   )
 
-  group_counts[[metric_spec$name]] <- cbind(
-    Metric = metric_spec$name,
-    summary_metric_data[, c("GeneType", "SampleSize")]
-  )
 }
-
-write.csv(
-  do.call(rbind, group_counts),
-  data_path("Summary_tables", "Metric Group Sizes.csv"),
-  row.names = FALSE
-)

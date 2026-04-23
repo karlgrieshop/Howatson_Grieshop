@@ -5,13 +5,4 @@
 .DS_Store
 
 # Large local-only raw data inputs
-Data/Assoc_Data.txt
-Data/true_cmh_results.txt
-Data/gene_hits_snps_90.csv
-Data/Drosophila_melanogaster.BDGP6.54.115.gtf
-Data/SBGEandSSSdataForMBE.csv
-Data/FileS7.txt
-Data/FileS7.csv
-Data/all_orthologs.csv
-Data/all_disease_orthologs.csv
-Data/Sex.Biased.Genes.Whole.csv
+Data/inputs/

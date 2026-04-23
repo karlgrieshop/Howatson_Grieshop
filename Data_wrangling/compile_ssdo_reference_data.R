@@ -24,8 +24,18 @@ find_project_root_local <- function(start = getwd()) {
 }
 
 
-project_data <- function(..., root = find_project_root_local()) {
-  file.path(root, "Data", ...)
+project_input <- function(..., root = find_project_root_local()) {
+  file.path(root, "Data", "inputs", ...)
+}
+
+
+project_output <- function(..., root = find_project_root_local()) {
+  file.path(root, "Data", "outputs", ...)
+}
+
+
+project_summary <- function(..., root = find_project_root_local()) {
+  file.path(root, "Data", "Summary_tables", ...)
 }
 
 
@@ -97,7 +107,7 @@ read_gtf_reference <- function(gtf_path) {
 
 read_ssdo_text_sources <- function(root) {
   text_files <- list.files(
-    project_data("ssdo_inputs", "sex_specific_diseases", root = root),
+    project_input("ssdo_inputs", "sex_specific_diseases", root = root),
     pattern = "\\.txt$",
     full.names = TRUE
   )
@@ -176,8 +186,11 @@ compile_ssdo_reference_data <- function(project_root = find_project_root_local()
     stop("Missing required R package: dplyr", call. = FALSE)
   }
 
+  dir.create(project_output(root = project_root), recursive = TRUE, showWarnings = FALSE)
+  dir.create(project_summary(root = project_root), recursive = TRUE, showWarnings = FALSE)
+
   gtf_reference <- read_gtf_reference(
-    project_data("Drosophila_melanogaster.BDGP6.54.115.gtf", root = project_root)
+    project_input("Drosophila_melanogaster.BDGP6.54.115.gtf", root = project_root)
   )
 
   text_sources <- read_ssdo_text_sources(project_root) |>
@@ -190,13 +203,18 @@ compile_ssdo_reference_data <- function(project_root = find_project_root_local()
     dplyr::select(-Fly.Symbol.gtf)
 
   literature_sources <- dplyr::bind_rows(
-    read_diopt_source(project_data("ssdo_inputs", "orthology_sources", "diopt_results_PCOS_genes.csv", root = project_root), "PCOS"),
-    read_diopt_source(project_data("ssdo_inputs", "orthology_sources", "diopt_results.csv", root = project_root), "Human_SA"),
-    read_diopt_source(project_data("ssdo_inputs", "orthology_sources", "coronary_artery_disease_orthologs.csv", root = project_root), "CAD"),
-    read_diopt_source(project_data("ssdo_inputs", "orthology_sources", "osteoporosis_orthologs.csv", root = project_root), "Osteoporosis"),
-    read_diopt_source(project_data("ssdo_inputs", "orthology_sources", "alzheimer_disease_orthologs.csv", root = project_root), "Alzheimer"),
-    read_diopt_source(project_data("ssdo_inputs", "orthology_sources", "parkinsons_orthologs.csv", root = project_root), "Parkinsons")
+    read_diopt_source(project_input("ssdo_inputs", "orthology_sources", "diopt_results_PCOS_genes.csv", root = project_root), "PCOS"),
+    read_diopt_source(project_input("ssdo_inputs", "orthology_sources", "diopt_results.csv", root = project_root), "Human_SA"),
+    read_diopt_source(project_input("ssdo_inputs", "orthology_sources", "coronary_artery_disease_orthologs.csv", root = project_root), "CAD"),
+    read_diopt_source(project_input("ssdo_inputs", "orthology_sources", "osteoporosis_orthologs.csv", root = project_root), "Osteoporosis"),
+    read_diopt_source(project_input("ssdo_inputs", "orthology_sources", "alzheimer_disease_orthologs.csv", root = project_root), "Alzheimer"),
+    read_diopt_source(project_input("ssdo_inputs", "orthology_sources", "parkinsons_orthologs.csv", root = project_root), "Parkinsons")
   )
+
+  protein_coding_gene_ids <- gtf_reference$gene_reference |>
+    dplyr::filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), gene_biotype == "protein_coding") |>
+    dplyr::pull(FlyBaseID) |>
+    unique()
 
   sexspecific_disease_gene_data <- dplyr::bind_rows(text_sources, literature_sources) |>
     dplyr::filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
@@ -206,6 +224,7 @@ compile_ssdo_reference_data <- function(project_root = find_project_root_local()
     ) |>
     dplyr::mutate(Fly.Symbol = dplyr::coalesce(Fly.Symbol, Fly.Symbol.gtf)) |>
     dplyr::select(FlyBaseID, Fly.Symbol, Human.Symbol, disease, source_type, source_file) |>
+    dplyr::filter(FlyBaseID %in% protein_coding_gene_ids) |>
     dplyr::distinct() |>
     dplyr::arrange(FlyBaseID, disease, source_type, source_file)
 
@@ -214,8 +233,10 @@ compile_ssdo_reference_data <- function(project_root = find_project_root_local()
     dplyr::distinct() |>
     dplyr::arrange(FlyBaseID)
 
-  raw_disease_ids <- read_fbgn_column(project_data("all_disease_orthologs.csv", root = project_root))
-  raw_ortholog_ids <- read_fbgn_column(project_data("all_orthologs.csv", root = project_root))
+  raw_disease_ids <- read_fbgn_column(project_input("all_disease_orthologs.csv", root = project_root)) |>
+    dplyr::filter(FlyBaseID %in% protein_coding_gene_ids)
+  raw_ortholog_ids <- read_fbgn_column(project_input("all_orthologs.csv", root = project_root)) |>
+    dplyr::filter(FlyBaseID %in% protein_coding_gene_ids)
 
   disease_ids <- dplyr::bind_rows(raw_disease_ids, ssdo_ids) |>
     dplyr::distinct() |>
@@ -257,52 +278,52 @@ compile_ssdo_reference_data <- function(project_root = find_project_root_local()
 
   utils::write.csv(
     sexspecific_disease_gene_data,
-    project_data("sexspecific_disease_gene_data.csv", root = project_root),
+    project_output("sexspecific_disease_gene_data.csv", root = project_root),
     row.names = FALSE
   )
   utils::write.csv(
     ssdo_ids,
-    project_data("sexspecific_disease_ids.csv", root = project_root),
+    project_output("sexspecific_disease_ids.csv", root = project_root),
     row.names = FALSE
   )
   utils::write.csv(
     disease_ids,
-    project_data("all_disease_ortholog_ids.csv", root = project_root),
+    project_output("all_disease_ortholog_ids.csv", root = project_root),
     row.names = FALSE
   )
   utils::write.csv(
     ortholog_ids,
-    project_data("all_ortholog_ids.csv", root = project_root),
+    project_output("all_ortholog_ids.csv", root = project_root),
     row.names = FALSE
   )
   utils::write.csv(
     gtf_reference$gene_reference,
-    project_data("dmel_gene_reference.csv", root = project_root),
+    project_output("dmel_gene_reference.csv", root = project_root),
     row.names = FALSE
   )
   utils::write.csv(
     gtf_reference$transcript_reference,
-    project_data("dmel_transcript_reference.csv", root = project_root),
+    project_output("dmel_transcript_reference.csv", root = project_root),
     row.names = FALSE
   )
   utils::write.csv(
     raw_subset_checks,
-    project_data("reference_subset_checks_raw.csv", root = project_root),
+    project_output("reference_subset_checks_raw.csv", root = project_root),
     row.names = FALSE
   )
   utils::write.csv(
     harmonized_subset_checks,
-    project_data("reference_subset_checks_harmonized.csv", root = project_root),
+    project_output("reference_subset_checks_harmonized.csv", root = project_root),
     row.names = FALSE
   )
   utils::write.csv(
     raw_ssdo_missing,
-    project_data("ssdo_not_in_raw_disease_orthologs.csv", root = project_root),
+    project_output("ssdo_not_in_raw_disease_orthologs.csv", root = project_root),
     row.names = FALSE
   )
   utils::write.csv(
     raw_disease_missing,
-    project_data("raw_disease_not_in_raw_orthologs.csv", root = project_root),
+    project_output("raw_disease_not_in_raw_orthologs.csv", root = project_root),
     row.names = FALSE
   )
 

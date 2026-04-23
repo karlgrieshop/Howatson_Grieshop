@@ -34,8 +34,11 @@ find_project_root <- function(start = getwd()) {
 
 
 project_root <- find_project_root()
-data_path <- function(...) file.path(project_root, "Data", ...)
+input_path <- function(...) file.path(project_root, "Data", "inputs", ...)
+output_path <- function(...) file.path(project_root, "Data", "outputs", ...)
+summary_path <- function(...) file.path(project_root, "Data", "Summary_tables", ...)
 figure_path <- function(...) file.path(project_root, "Figures", ...)
+sup_figure_path <- function(...) file.path(project_root, "Sup_figures", ...)
 
 
 suppressPackageStartupMessages({
@@ -253,7 +256,7 @@ map_snp_metric_to_genes <- function(snp_values, gene_reference, source_label) {
 
 build_ruzicka_values <- function(gene_reference) {
   assoc <- read.delim(
-    data_path("Assoc_Data.txt"),
+    input_path("Assoc_Data.txt"),
     stringsAsFactors = FALSE,
     check.names = FALSE
   ) |>
@@ -275,7 +278,7 @@ build_ruzicka_values <- function(gene_reference) {
 
 build_neal_values <- function(gene_reference) {
   snps <- read.delim(
-    data_path("true_cmh_results.txt"),
+    input_path("true_cmh_results.txt"),
     header = FALSE,
     stringsAsFactors = FALSE
   )
@@ -305,18 +308,19 @@ build_neal_values <- function(gene_reference) {
 }
 
 
-gene_reference <- read.csv(data_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
-ssdo_ids <- read.csv(data_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
-disease_ids <- read.csv(data_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
-ortholog_ids <- read.csv(data_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
+dir.create(file.path(project_root, "Sup_figures"), recursive = TRUE, showWarnings = FALSE)
+
+gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
+protein_coding_gene_reference <- gene_reference |>
+  filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), gene_biotype == "protein_coding")
+ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
+disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
+ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 
 study_specs <- list(
-  list(name = "Ruzicka et al.", values = build_ruzicka_values(gene_reference), figure = "ruzicka_SA_probability.pdf"),
-  list(name = "Neal_Truter_Grieshop", values = build_neal_values(gene_reference), figure = "neal_truter_grieshop_SA_probability.pdf")
+  list(name = "Ruzicka et al.", values = build_ruzicka_values(protein_coding_gene_reference), figure = "ruzicka_SA_probability.pdf"),
+  list(name = "Neal_Truter_Grieshop", values = build_neal_values(protein_coding_gene_reference), figure = "neal_truter_grieshop_SA_probability.pdf")
 )
-
-group_counts <- list()
-source_notes <- list()
 
 for (study_spec in study_specs) {
   raw_data <- assign_gene_types(study_spec$values, ssdo_ids, disease_ids, ortholog_ids)
@@ -329,17 +333,17 @@ for (study_spec in study_specs) {
 
   write.csv(
     raw_data,
-    data_path("Summary_tables", paste0(safe_study_name, "_SA_probability_raw.csv")),
+    summary_path(paste0(safe_study_name, "_SA_probability_raw.csv")),
     row.names = FALSE
   )
   write.csv(
     summary_data,
-    data_path("Summary_tables", paste0(safe_study_name, "_SA_probability_plot_data.csv")),
+    summary_path(paste0(safe_study_name, "_SA_probability_plot_data.csv")),
     row.names = FALSE
   )
   write.csv(
     tests_data,
-    data_path("Summary_tables", paste0(safe_study_name, "_SA_probability_permutation_tests.csv")),
+    summary_path(paste0(safe_study_name, "_SA_probability_permutation_tests.csv")),
     row.names = FALSE
   )
 
@@ -350,23 +354,23 @@ for (study_spec in study_specs) {
     height = 5,
     dpi = 300
   )
-
-  group_counts[[study_spec$name]] <- cbind(Study = study_spec$name, summary_data[, c("GeneType", "SampleSize")])
-  source_notes[[study_spec$name]] <- unique(raw_data$Source)
 }
 
-write.csv(
-  do.call(rbind, group_counts),
-  data_path("Summary_tables", "SA_probability_group_sizes.csv"),
-  row.names = FALSE
+sensitivity_specs <- list(
+  list(name = "Ruzicka et al.", values = build_ruzicka_values(gene_reference), figure = "ruzicka_SA_probability_full_universe_sensitivity.pdf"),
+  list(name = "Neal_Truter_Grieshop", values = build_neal_values(gene_reference), figure = "neal_truter_grieshop_SA_probability_full_universe_sensitivity.pdf")
 )
 
-write.csv(
-  data.frame(
-    Study = names(source_notes),
-    Source = vapply(source_notes, paste, collapse = "; ", character(1)),
-    stringsAsFactors = FALSE
-  ),
-  data_path("Summary_tables", "SA_probability_source_notes.csv"),
-  row.names = FALSE
-)
+for (study_spec in sensitivity_specs) {
+  raw_data <- assign_gene_types(study_spec$values, ssdo_ids, disease_ids, ortholog_ids)
+  summary_data <- bootstrap_group_summaries(raw_data)
+  plot_object <- plot_metric_distribution(summary_data)
+
+  ggsave(
+    filename = sup_figure_path(study_spec$figure),
+    plot = plot_object,
+    width = 7,
+    height = 5,
+    dpi = 300
+  )
+}

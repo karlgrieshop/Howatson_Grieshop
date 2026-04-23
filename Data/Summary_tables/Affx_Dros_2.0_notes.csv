@@ -1,5 +1,0 @@
-"item","value"
-"description","Affymetrix Drosophila Genome 2.0 probe-symbol reference for study-matched Innocenti enrichment sensitivity analyses."
-"rows","21496"
-"unique_symbols","17103"
-"source_method","biomaRt affy_drosophila_2"

@@ -25,7 +25,9 @@ find_project_root <- function(start = getwd()) {
 
 
 project_root <- find_project_root()
-data_path <- function(...) file.path(project_root, "Data", ...)
+input_path <- function(...) file.path(project_root, "Data", "inputs", ...)
+output_path <- function(...) file.path(project_root, "Data", "outputs", ...)
+summary_path <- function(...) file.path(project_root, "Data", "Summary_tables", ...)
 figure_path <- function(...) file.path(project_root, "Figures", ...)
 
 
@@ -116,7 +118,7 @@ map_snp_positions_to_genes <- function(snp_positions, gene_reference) {
 
 load_innocenti_candidates <- function(gene_reference) {
   innocenti_raw <- read.csv(
-    data_path("Innocenti_and_Morrow_ANTAGONISTIC.csv"),
+    input_path("Innocenti_and_Morrow_ANTAGONISTIC.csv"),
     stringsAsFactors = FALSE
   ) |>
     transmute(Symbol = as.character(Symbol)) |>
@@ -136,7 +138,7 @@ load_innocenti_candidates <- function(gene_reference) {
 
 load_innocenti_matched_universe <- function(gene_reference) {
   affx <- read.csv(
-    data_path("Affx_Dros_2.0.csv"),
+    output_path("Affx_Dros_2.0.csv"),
     stringsAsFactors = FALSE
   ) |>
     transmute(Symbol = as.character(Symbol)) |>
@@ -152,7 +154,7 @@ load_innocenti_matched_universe <- function(gene_reference) {
 
 load_ruzicka_candidates <- function() {
   read.csv(
-    data_path("Ruzicka_et_al_pbio.3000244.s008.csv"),
+    input_path("Ruzicka_et_al_pbio.3000244.s008.csv"),
     stringsAsFactors = FALSE,
     check.names = FALSE
   ) |>
@@ -164,7 +166,7 @@ load_ruzicka_candidates <- function() {
 
 load_ruzicka_matched_universe <- function(gene_reference) {
   assoc <- read.delim(
-    data_path("Assoc_Data.txt"),
+    input_path("Assoc_Data.txt"),
     stringsAsFactors = FALSE,
     check.names = FALSE
   ) |>
@@ -179,7 +181,7 @@ load_ruzicka_matched_universe <- function(gene_reference) {
 
 load_neal_candidates <- function() {
   read.csv(
-    data_path("gene_hits_snps_90.csv"),
+    input_path("gene_hits_snps_90.csv"),
     stringsAsFactors = FALSE,
     check.names = FALSE
   ) |>
@@ -191,7 +193,7 @@ load_neal_candidates <- function() {
 
 load_neal_matched_universe <- function(gene_reference) {
   snps <- read.delim(
-    data_path("true_cmh_results.txt"),
+    input_path("true_cmh_results.txt"),
     header = FALSE,
     stringsAsFactors = FALSE
   )
@@ -263,8 +265,8 @@ run_enrichment_test <- function(universe_ids, ssdo_ids, candidate_ids, study_nam
 }
 
 
-gene_reference <- read.csv(data_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
-ssdo_ids <- read.csv(data_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
+gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
+ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 protein_coding_universe <- gene_reference |>
   filter(gene_biotype == "protein_coding") |>
   pull(FlyBaseID) |>
@@ -286,7 +288,7 @@ broad_results <- list(
     ssdo_ids = ssdo_ids,
     candidate_ids = innocenti$ids$FlyBaseID,
     study_name = "Innocenti and Morrow",
-    universe_type = "Whole fly genome",
+    universe_type = "Whole protein-coding fly genome",
     source_note = "Whole-genome / protein-coding background"
   ),
   run_enrichment_test(
@@ -294,7 +296,7 @@ broad_results <- list(
     ssdo_ids = ssdo_ids,
     candidate_ids = ruzicka_ids$FlyBaseID,
     study_name = "Ruzicka et al.",
-    universe_type = "Whole fly genome",
+    universe_type = "Whole protein-coding fly genome",
     source_note = "Whole-genome / protein-coding background"
   ),
   run_enrichment_test(
@@ -302,7 +304,7 @@ broad_results <- list(
     ssdo_ids = ssdo_ids,
     candidate_ids = neal_ids$FlyBaseID,
     study_name = "Neal_Truter_Grieshop",
-    universe_type = "Whole fly genome",
+    universe_type = "Whole protein-coding fly genome",
     source_note = "Whole-genome / protein-coding background"
   )
 )
@@ -346,19 +348,19 @@ overlap_table <- bind_rows(lapply(all_results, `[[`, "overlap"))
 
 write.csv(
   summary_table,
-  data_path("Summary_tables", "SA Candidate Enrichment Tests.csv"),
+  summary_path("SA Candidate Enrichment Tests.csv"),
   row.names = FALSE
 )
 
 write.csv(
   innocenti$mapping,
-  data_path("Summary_tables", "Innocenti Candidate Symbol Mapping.csv"),
+  summary_path("Innocenti Candidate Symbol Mapping.csv"),
   row.names = FALSE
 )
 
 write.csv(
   overlap_table,
-  data_path("Summary_tables", "SA Candidate Enrichment Overlap IDs.csv"),
+  summary_path("SA Candidate Enrichment Overlap IDs.csv"),
   row.names = FALSE
 )
 
@@ -368,7 +370,7 @@ write.csv(
     UniverseSize = vapply(matched_universes, length, integer(1)),
     stringsAsFactors = FALSE
   ),
-  data_path("Summary_tables", "SA Candidate Matched Universes.csv"),
+  summary_path("SA Candidate Matched Universes.csv"),
   row.names = FALSE
 )
 

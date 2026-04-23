@@ -1,0 +1,8 @@
+"Feature","Status","GeneCount","Description"
+"SBGE","ready",10703,"Whole-body SBGE genes from Mishra excluding unbiased genes"
+"Cis","ready",5101,"Sex-reversed AI test genes with p.val.males < 0.05 or p.val.females < 0.05"
+"SS_Cis","ready",3271,"Sex-reversed AI test genes significant in exactly one sex only"
+"DR","ready",176,"Genes with dominance-reversed allelic imbalance from Genes.with.Sex.Reversed.AI.tsv"
+"SSS","ready",2036,"Requested broader sex-specific splicing gene set from MaleLimitedEvo / Michelle Liu"
+"DS","ready",44,"Genes with geneWisePadj < 0.1 in A.f.geno or A.m.geno DS results"
+"Dup","ready",7840,"Genes annotated as having paralogues in the Harper and Morrow duplication analysis"

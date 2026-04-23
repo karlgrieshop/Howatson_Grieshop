@@ -24,8 +24,8 @@ find_project_root <- function(start = getwd()) {
 }
 
 
-project_data <- function(..., root = find_project_root()) {
-  file.path(root, "Data", ...)
+project_output <- function(..., root = find_project_root()) {
+  file.path(root, "Data", "outputs", ...)
 }
 
 
@@ -80,31 +80,11 @@ get_affx_dros_2 <- function() {
 
 build_affx_dros_2_array_reference <- function(project_root = find_project_root()) {
   affx <- get_affx_dros_2()
-
-  notes <- data.frame(
-    item = c(
-      "description",
-      "rows",
-      "unique_symbols",
-      "source_method"
-    ),
-    value = c(
-      "Affymetrix Drosophila Genome 2.0 probe-symbol reference for study-matched Innocenti enrichment sensitivity analyses.",
-      as.character(nrow(affx)),
-      as.character(dplyr::n_distinct(affx$Symbol)),
-      paste(unique(affx$source_method), collapse = "; ")
-    ),
-    stringsAsFactors = FALSE
-  )
+  dir.create(project_output(root = project_root), recursive = TRUE, showWarnings = FALSE)
 
   write.csv(
     affx,
-    project_data("Affx_Dros_2.0.csv", root = project_root),
-    row.names = FALSE
-  )
-  write.csv(
-    notes,
-    project_data("Summary_tables", "Affx_Dros_2.0_notes.csv", root = project_root),
+    project_output("Affx_Dros_2.0.csv", root = project_root),
     row.names = FALSE
   )
 
