@@ -1,7 +1,10 @@
 "Study","UniverseType","Source","UniverseSize","SSDOCount","CandidateCount","OverlapCount","OddsRatio","PValue","ConfLow","ConfHigh","PAdjustBH"
-"Dup","Whole protein-coding fly genome","Grieshop Lab shared/Data/Harper and Morrow 2025/Output/all_paralogs_correct.csv",13986,568,7823,418,2.2626392943869,8.76271624070665e-19,1.86712238608054,2.75386994945473,5.25762974442399e-18
-"Cis","Whole protein-coding fly genome","Data/inputs/Sex.Reversed.AI.test.tsv",13986,568,5026,267,1.61398825400815,3.53590199105207e-08,1.35827066074692,1.91685384555564,1.06077059731562e-07
-"SS_Cis","Whole protein-coding fly genome","Data/inputs/Sex.Reversed.AI.test.tsv",13986,568,3221,176,1.52942745802801,8.94248107169505e-06,1.26696208658544,1.84057975534326,1.78849621433901e-05
-"SBGE","Whole protein-coding fly genome","Data/inputs/Sex.Biased.Genes.Whole.csv",13986,568,9979,447,1.50602849179996,5.47482395540217e-05,1.22481753727361,1.86315855450259,8.21223593310325e-05
-"SSS","Whole protein-coding fly genome","../MaleLimitedEvo/Analyses/DS_analysis/dimorphic.subset.list.txt",13986,568,1955,103,1.38329419594042,0.00445866979400964,1.10008532175475,1.72619520691748,0.00535040375281156
-"DR","Whole protein-coding fly genome","Data/inputs/Genes.with.Sex.Reversed.AI.tsv",13986,568,176,11,1.58615353765501,0.172615915433055,0.772074627310245,2.93544059032598,0.172615915433055
+"Dup","Whole protein-coding fly genome","Grieshop Lab shared/Data/Harper and Morrow 2025/Output/all_paralogs_correct.csv",13986,568,7823,418,2.2626392943869,8.76271624070665e-19,1.86712238608054,2.75386994945473,7.88644461663598e-18
+"Cis","Whole protein-coding fly genome","Data/inputs/Sex.Reversed.AI.test.tsv",13986,568,5026,267,1.61398825400815,3.53590199105207e-08,1.35827066074692,1.91685384555564,1.59115589597343e-07
+"SS_Cis","Whole protein-coding fly genome","Data/inputs/Sex.Reversed.AI.test.tsv",13986,568,3221,176,1.52942745802801,8.94248107169505e-06,1.26696208658544,1.84057975534326,2.26684264442292e-05
+"MB","Whole protein-coding fly genome","Data/inputs/Sex.Biased.Genes.Whole.csv",13986,568,2014,120,1.62969907135155,1.00748561974352e-05,1.31328295235139,2.01024664131264,2.26684264442292e-05
+"SSS","Whole protein-coding fly genome","../MaleLimitedEvo/Analyses/DS_analysis/dimorphic.subset.list.txt",13986,568,1955,103,1.38329419594042,0.00445866979400964,1.10008532175475,1.72619520691748,0.00802560562921734
+"FB","Whole protein-coding fly genome","Data/inputs/Sex.Biased.Genes.Whole.csv",13986,568,2570,126,1.27998139070524,0.02003155834266,1.03657433706778,1.57164214580916,0.0281787486108548
+"HMB","Whole protein-coding fly genome","Data/inputs/Sex.Biased.Genes.Whole.csv",13986,568,3657,125,0.789804294481552,0.0219168044751093,0.63990199863171,0.969128273061608,0.0281787486108548
+"DR","Whole protein-coding fly genome","Data/inputs/Genes.with.Sex.Reversed.AI.tsv",13986,568,176,11,1.58615353765501,0.172615915433055,0.772074627310245,2.93544059032598,0.194192904862186
+"HFB","Whole protein-coding fly genome","Data/inputs/Sex.Biased.Genes.Whole.csv",13986,568,1738,76,1.0926608053668,0.47513827582516,0.841937070451576,1.40193768531346,0.47513827582516

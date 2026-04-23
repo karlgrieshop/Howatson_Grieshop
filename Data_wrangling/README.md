@@ -10,4 +10,4 @@
 
 `build_affx_dros_2_array_reference.R` builds `Data/outputs/Affx_Dros_2.0.csv`, a real Affymetrix Drosophila Genome 2.0 probe-symbol reference used only for the study-matched Innocenti enrichment background.
 
-`build_sa_resolution_inputs.R` assembles the current protein-coding SA-resolution feature table and per-feature gene sets used by `Analyses/sa_resolution.R`, pulling from `Data/inputs/`, the sibling `MaleLimitedEvo` clone, and the shared Harper and Morrow duplication table where available.
+`build_sa_resolution_inputs.R` assembles the current protein-coding SA-resolution feature table and per-feature gene sets used by `Analyses/sa_resolution.R`, including the four biased Mishra SBGE sub-bins (`HFB`, `FB`, `MB`, `HMB`) but not `UB`, and pulling from `Data/inputs/`, the sibling `MaleLimitedEvo` clone, and the shared Harper and Morrow duplication table where available.

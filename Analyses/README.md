@@ -10,4 +10,4 @@ This directory retains broader analytical scripts that are useful context for th
 | `data_analysis.R` | Legacy extended analysis script; not fully updated to the new layout |
 | `SA magnitude.R` | Legacy sexually antagonistic SNP workflow; not yet rebuilt around the new data layout |
 | `sa_candidate_enrichment.R` | Current Fisher enrichment workflow for SSDOs versus legacy SA candidate gene sets; uses the whole protein-coding genome as the default broad universe and keeps the parallel study-matched universes |
-| `sa_resolution.R` | Current SA-resolution Fisher workflow for SSDOs versus assembled feature sets; uses the protein-coding whole-genome universe, excludes DS from the reported outputs because the set is too small, and writes the two-group radar prevalence plot using aggregate SBGE |
+| `sa_resolution.R` | Current SA-resolution Fisher workflow for SSDOs versus assembled feature sets; uses the protein-coding whole-genome universe, reports the four biased SBGE sub-bins (`HFB`, `FB`, `MB`, `HMB`) rather than aggregate `SBGE`, excludes `UB`, and omits `DS` from the reported outputs |

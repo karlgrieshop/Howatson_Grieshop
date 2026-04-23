@@ -25,8 +25,10 @@ find_project_root <- function(start = getwd()) {
 
 
 project_root <- find_project_root()
+input_path <- function(...) file.path(project_root, "Data", "inputs", ...)
 output_path <- function(...) file.path(project_root, "Data", "outputs", ...)
 figure_path <- function(...) file.path(project_root, "Figures", ...)
+sup_figure_path <- function(...) file.path(project_root, "Sup_figures", ...)
 summary_path <- function(...) file.path(project_root, "Data", "Summary_tables", ...)
 
 
@@ -35,12 +37,27 @@ suppressPackageStartupMessages({
 })
 
 
+ordered_gene_types <- c("SSDOs", "Disease orthologues", "Orthologues", "Background")
+gene_type_palette <- c(
+  "SSDOs" = "#D55E00",
+  "Disease orthologues" = "#0072B2",
+  "Orthologues" = "#009E73",
+  "Background" = "#999999"
+)
+
+
 # Run `Data_wrangling/build_sa_resolution_inputs.R` first. That script assembles
 # the genome-wide feature-membership table and records which requested
 # SA-resolution features are ready versus still blocked by missing external
 # sources.
 
 ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |>
+  pull(FlyBaseID) |>
+  unique()
+disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |>
+  pull(FlyBaseID) |>
+  unique()
+ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |>
   pull(FlyBaseID) |>
   unique()
 resolution_membership_path <- output_path("sa_resolution_feature_membership.csv")
@@ -63,7 +80,7 @@ resolution_notes <- read.csv(resolution_notes_path, stringsAsFactors = FALSE)
 available_resolution_features <- resolution_notes |>
   filter(Status == "ready") |>
   pull(Feature)
-reported_resolution_features <- setdiff(available_resolution_features, "DS")
+reported_resolution_features <- available_resolution_features
 
 pending_resolution_features <- resolution_notes |>
   filter(Status != "ready") |>
@@ -116,23 +133,6 @@ run_resolution_enrichment <- function(universe_ids, candidate_ids, study_name, u
 }
 
 
-bh_star_label <- function(adjusted_p) {
-  if (is.na(adjusted_p)) {
-    return("")
-  }
-  if (adjusted_p < 0.001) {
-    return("***")
-  }
-  if (adjusted_p < 0.01) {
-    return("**")
-  }
-  if (adjusted_p < 0.05) {
-    return("*")
-  }
-  ""
-}
-
-
 run_enrichment_family <- function(universe_ids, universe_type_label, source_note_suffix = NULL) {
   results <- bind_rows(lapply(reported_resolution_features, function(feature_name) {
     source_note <- resolution_notes$Source[match(feature_name, resolution_notes$Feature)]
@@ -167,7 +167,153 @@ run_enrichment_family <- function(universe_ids, universe_type_label, source_note
 }
 
 
-build_resolution_radar <- function(data, feature_order, feature_labels) {
+two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
+  x <- x[!is.na(x)]
+  y <- y[!is.na(y)]
+
+  if (length(x) < 2 || length(y) < 2) {
+    return(
+      data.frame(
+        obs_diff = NA_real_,
+        n_group1 = length(x),
+        n_group2 = length(y),
+        p_value = NA_real_,
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+
+  set.seed(seed)
+
+  n_x <- length(x)
+  pooled <- c(x, y)
+  obs_diff <- mean(x) - mean(y)
+
+  perm_diffs <- replicate(n_perm, {
+    shuffled <- sample(pooled, size = length(pooled), replace = FALSE)
+    mean(shuffled[seq_len(n_x)]) - mean(shuffled[-seq_len(n_x)])
+  })
+
+  data.frame(
+    obs_diff = obs_diff,
+    n_group1 = length(x),
+    n_group2 = length(y),
+    p_value = (sum(abs(perm_diffs) >= abs(obs_diff)) + 1) / (n_perm + 1),
+    stringsAsFactors = FALSE
+  )
+}
+
+
+assign_resolution_groups <- function(data) {
+  disease_only_ids <- setdiff(disease_ids, ssdo_ids)
+  ortholog_only_ids <- setdiff(ortholog_ids, union(ssdo_ids, disease_ids))
+
+  data |>
+    mutate(
+      GeneType = case_when(
+        FlyBaseID %in% ssdo_ids ~ "SSDOs",
+        FlyBaseID %in% disease_only_ids ~ "Disease orthologues",
+        FlyBaseID %in% ortholog_only_ids ~ "Orthologues",
+        TRUE ~ "Background"
+      ),
+      GeneType = factor(GeneType, levels = ordered_gene_types)
+    )
+}
+
+
+load_neal_candidate_ids <- function() {
+  read.csv(
+    input_path("gene_hits_snps_90.csv"),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  ) |>
+    transmute(FlyBaseID = as.character(ensembl_gene_id)) |>
+    filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
+    distinct() |>
+    pull(FlyBaseID)
+}
+
+
+load_ruzicka_candidate_ids <- function() {
+  read.csv(
+    input_path("Ruzicka_et_al_pbio.3000244.s008.csv"),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  ) |>
+    transmute(FlyBaseID = as.character(`Flybase gene ID`)) |>
+    filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
+    distinct() |>
+    pull(FlyBaseID)
+}
+
+
+assign_candidate_groups <- function(data, candidate_ids, group_var = "CandidateGroup") {
+  data |>
+    mutate(
+      !!group_var := ifelse(
+        FlyBaseID %in% candidate_ids,
+        "Candidate SA genes",
+        "Background genes"
+      )
+    )
+}
+
+
+run_candidate_resolution_enrichment <- function(universe_ids, focal_ids, feature_ids, study_name, feature_name, source_note) {
+  analysis_df <- data.frame(FlyBaseID = unique(universe_ids), stringsAsFactors = FALSE) |>
+    mutate(
+      IsCandidate = FlyBaseID %in% focal_ids,
+      IsFeature = FlyBaseID %in% feature_ids
+    )
+
+  contingency <- table(analysis_df$IsCandidate, analysis_df$IsFeature)
+  fisher_result <- fisher.test(contingency)
+
+  candidate_feature_count <- sum(analysis_df$IsCandidate & analysis_df$IsFeature)
+  background_feature_count <- sum(!analysis_df$IsCandidate & analysis_df$IsFeature)
+  candidate_count <- sum(analysis_df$IsCandidate)
+  background_count <- sum(!analysis_df$IsCandidate)
+
+  data.frame(
+    Study = study_name,
+    Feature = feature_name,
+    Source = source_note,
+    UniverseSize = nrow(analysis_df),
+    CandidateCount = candidate_count,
+    BackgroundCount = background_count,
+    FeatureCount = sum(analysis_df$IsFeature),
+    CandidateFeatureCount = candidate_feature_count,
+    CandidateFeaturePercent = 100 * candidate_feature_count / candidate_count,
+    BackgroundFeatureCount = background_feature_count,
+    BackgroundFeaturePercent = 100 * background_feature_count / background_count,
+    OddsRatio = unname(fisher_result$estimate),
+    PValue = fisher_result$p.value,
+    ConfLow = fisher_result$conf.int[1],
+    ConfHigh = fisher_result$conf.int[2],
+    stringsAsFactors = FALSE
+  )
+}
+
+
+run_candidate_enrichment_family <- function(universe_ids, focal_ids, study_name) {
+  bind_rows(lapply(reported_resolution_features, function(feature_name) {
+    source_note <- resolution_notes$Source[match(feature_name, resolution_notes$Feature)]
+
+    run_candidate_resolution_enrichment(
+      universe_ids = universe_ids,
+      focal_ids = focal_ids,
+      feature_ids = get_resolution_candidate_ids(feature_name),
+      study_name = study_name,
+      feature_name = feature_name,
+      source_note = source_note
+    )
+  })) |>
+    mutate(PAdjustBH = p.adjust(PValue, method = "BH")) |>
+    arrange(PValue, Feature)
+}
+
+
+build_resolution_radar <- function(data, feature_order, feature_labels, group_var, group_order, group_colours, legend_ncol = 2) {
   if (!requireNamespace("fmsb", quietly = TRUE)) {
     stop("Install the 'fmsb' package to draw the SA-resolution radar chart.", call. = FALSE)
   }
@@ -180,12 +326,12 @@ build_resolution_radar <- function(data, feature_order, feature_labels) {
     )
   }
 
-  radar_summary <- bind_rows(lapply(c(FALSE, TRUE), function(is_ssdo) {
+  radar_summary <- bind_rows(lapply(group_order, function(group_name) {
     subset_df <- data |>
-      filter(IsSSDO == is_ssdo)
+      filter(.data[[group_var]] == group_name)
 
     data.frame(
-      Group = if (is_ssdo) "SSDOs" else "Non-SSDOs",
+      Group = group_name,
       Feature = feature_order,
       FeatureLabel = unname(feature_labels[feature_order]),
       Percent = vapply(feature_order, function(feature_name) {
@@ -198,28 +344,28 @@ build_resolution_radar <- function(data, feature_order, feature_labels) {
   max_percent <- ceiling(max(radar_summary$Percent, na.rm = TRUE) / 10) * 10
   radial_step <- if (max_percent <= 50) 10 else 20
   radial_breaks <- seq(0, max_percent, by = radial_step)
-  group_colours <- c("Non-SSDOs" = "#7A7A7A", "SSDOs" = "#D55E00")
 
   radar_matrix <- rbind(
     rep(max_percent, length(feature_order)),
     rep(0, length(feature_order)),
-    radar_summary |>
-      filter(Group == "Non-SSDOs") |>
-      arrange(match(Feature, feature_order)) |>
-      pull(Percent),
-    radar_summary |>
-      filter(Group == "SSDOs") |>
-      arrange(match(Feature, feature_order)) |>
-      pull(Percent)
+    do.call(
+      rbind,
+      lapply(group_order, function(group_name) {
+        radar_summary |>
+          filter(Group == group_name) |>
+          arrange(match(Feature, feature_order)) |>
+          pull(Percent)
+      })
+    )
   )
 
   radar_df <- as.data.frame(radar_matrix, stringsAsFactors = FALSE)
   colnames(radar_df) <- unname(feature_labels[feature_order])
-  rownames(radar_df) <- c("max", "min", "Non-SSDOs", "SSDOs")
+  rownames(radar_df) <- c("max", "min", group_order)
 
   plot_radar <- function(output_path) {
-    png(filename = output_path, width = 2400, height = 2400, res = 300, bg = "white")
-    op <- par(family = "sans", mar = c(2.5, 2.5, 3.4, 2.5), xpd = NA)
+    png(filename = output_path, width = 2700, height = 2400, res = 300, bg = "white")
+    op <- par(family = "sans", mar = c(3.8, 2.8, 3.2, 2.8), xpd = NA)
     on.exit({
       par(op)
       dev.off()
@@ -228,11 +374,8 @@ build_resolution_radar <- function(data, feature_order, feature_labels) {
     fmsb::radarchart(
       radar_df,
       axistype = 1,
-      pcol = group_colours[c("Non-SSDOs", "SSDOs")],
-      pfcol = c(
-        grDevices::adjustcolor(group_colours["Non-SSDOs"], alpha.f = 0.24),
-        grDevices::adjustcolor(group_colours["SSDOs"], alpha.f = 0.24)
-      ),
+      pcol = group_colours[group_order],
+      pfcol = grDevices::adjustcolor(group_colours[group_order], alpha.f = 0.20),
       plwd = 4,
       plty = 1,
       cglcol = "grey78",
@@ -240,19 +383,25 @@ build_resolution_radar <- function(data, feature_order, feature_labels) {
       axislabcol = "grey45",
       caxislabels = as.character(radial_breaks),
       cglwd = 0.8,
-      vlcex = 1.15
+      calcex = 1.35,
+      vlcex = 1.4
     )
 
     legend(
-      "top",
-      legend = c("Non-SSDOs", "SSDOs"),
-      horiz = TRUE,
+      "bottom",
+      legend = group_order,
+      horiz = FALSE,
       bty = "n",
+      ncol = legend_ncol,
       lty = 1,
-      lwd = 4,
-      col = group_colours[c("Non-SSDOs", "SSDOs")],
-      cex = 1.1,
-      inset = c(0, -0.02)
+      lwd = 5,
+      col = group_colours[group_order],
+      cex = 1.25,
+      pt.cex = 1.4,
+      seg.len = 3,
+      x.intersp = 0.8,
+      y.intersp = 1.1,
+      inset = c(0, -0.08)
     )
   }
 
@@ -261,6 +410,45 @@ build_resolution_radar <- function(data, feature_order, feature_labels) {
     summary = radar_summary |>
       select(Group, Feature, FeatureLabel, Percent)
   )
+}
+
+
+build_resolution_radar_permutation_tests <- function(data, feature_order, seed = 1L) {
+  group_pairs <- combn(ordered_gene_types, 2, simplify = FALSE)
+
+  tests <- bind_rows(lapply(seq_along(feature_order), function(feature_index) {
+    feature_name <- feature_order[[feature_index]]
+
+    bind_rows(lapply(seq_along(group_pairs), function(pair_index) {
+      pair <- group_pairs[[pair_index]]
+      group_1 <- pair[[1]]
+      group_2 <- pair[[2]]
+
+      values_1 <- data[data$GeneType == group_1, feature_name, drop = TRUE]
+      values_2 <- data[data$GeneType == group_2, feature_name, drop = TRUE]
+
+      test_result <- two_sample_permutation_test(
+        x = values_1,
+        y = values_2,
+        seed = seed + feature_index * 100 + pair_index
+      )
+
+      data.frame(
+        Feature = feature_name,
+        group_1 = group_1,
+        group_2 = group_2,
+        group_1_mean = mean(values_1, na.rm = TRUE),
+        group_2_mean = mean(values_2, na.rm = TRUE),
+        stringsAsFactors = FALSE
+      ) |>
+        bind_cols(test_result)
+    }))
+  }))
+
+  tests |>
+    group_by(Feature) |>
+    mutate(p_adjust_bh = p.adjust(p_value, method = "BH")) |>
+    ungroup()
 }
 
 
@@ -273,9 +461,20 @@ whole_genome_family <- run_enrichment_family(
   universe_type_label = "Whole protein-coding fly genome"
 )
 
+resolution_plot_data <- assign_resolution_groups(resolution_membership)
+neal_candidate_ids <- intersect(load_neal_candidate_ids(), resolution_membership$FlyBaseID)
+ruzicka_candidate_ids <- intersect(load_ruzicka_candidate_ids(), resolution_membership$FlyBaseID)
+neal_candidate_plot_data <- assign_candidate_groups(
+  resolution_membership,
+  neal_candidate_ids,
+  group_var = "NealCandidateGroup"
+)
+ruzicka_candidate_plot_data <- assign_candidate_groups(
+  resolution_membership,
+  ruzicka_candidate_ids,
+  group_var = "RuzickaCandidateGroup"
+)
 enrichment_results <- whole_genome_family$results
-whole_genome_results <- enrichment_results
-
 overlap_ids <- whole_genome_family$overlaps
 
 
@@ -292,30 +491,59 @@ write.csv(
 )
 
 
-radar_features <- c("SBGE", "Dup", "SSS", "Cis", "SS_Cis", "DR")
-radar_feature_stars <- setNames(
-  vapply(
-    radar_features,
-    function(feature_name) {
-      bh_star_label(whole_genome_results$PAdjustBH[match(feature_name, whole_genome_results$Study)])
-    },
-    character(1)
-  ),
-  radar_features
-)
+radar_features <- c("HFB", "FB", "MB", "HMB", "Dup", "SSS", "Cis", "SS_Cis", "DR")
 radar_feature_labels <- c(
-  "SBGE" = paste0("SBGE", radar_feature_stars["SBGE"]),
-  "Dup" = paste0("Dup", radar_feature_stars["Dup"]),
-  "SSS" = paste0("SSS", radar_feature_stars["SSS"]),
-  "Cis" = paste0("Cis", radar_feature_stars["Cis"]),
-  "SS_Cis" = paste0("SS-Cis", radar_feature_stars["SS_Cis"]),
-  "DR" = paste0("DR", radar_feature_stars["DR"])
+  "HFB" = "HFB",
+  "FB" = "FB",
+  "MB" = "MB",
+  "HMB" = "HMB",
+  "Dup" = "Dup",
+  "SSS" = "SSS",
+  "Cis" = "Cis",
+  "SS_Cis" = "SS-Cis",
+  "DR" = "DR"
 )
 
 radar_result <- build_resolution_radar(
-  resolution_membership,
+  data = resolution_plot_data,
   feature_order = radar_features,
-  feature_labels = radar_feature_labels
+  feature_labels = radar_feature_labels,
+  group_var = "GeneType",
+  group_order = ordered_gene_types,
+  group_colours = gene_type_palette,
+  legend_ncol = 2
+)
+radar_permutation_tests <- build_resolution_radar_permutation_tests(
+  resolution_plot_data,
+  feature_order = radar_features
+)
+neal_candidate_radar_result <- build_resolution_radar(
+  data = neal_candidate_plot_data,
+  feature_order = radar_features,
+  feature_labels = radar_feature_labels,
+  group_var = "NealCandidateGroup",
+  group_order = c("Candidate SA genes", "Background genes"),
+  group_colours = c("Candidate SA genes" = "#CC79A7", "Background genes" = "#000000"),
+  legend_ncol = 1
+)
+ruzicka_candidate_radar_result <- build_resolution_radar(
+  data = ruzicka_candidate_plot_data,
+  feature_order = radar_features,
+  feature_labels = radar_feature_labels,
+  group_var = "RuzickaCandidateGroup",
+  group_order = c("Candidate SA genes", "Background genes"),
+  group_colours = c("Candidate SA genes" = "#6A3D9A", "Background genes" = "#000000"),
+  legend_ncol = 1
+)
+neal_candidate_enrichment_results <- run_candidate_enrichment_family(
+  universe_ids = whole_genome_universe,
+  focal_ids = neal_candidate_ids,
+  study_name = "Neal_Truter_Grieshop"
+)
+ruzicka_candidate_enrichment_results <- run_candidate_enrichment_family(
+  universe_ids = whole_genome_universe,
+  focal_ids = ruzicka_candidate_ids,
+  study_name = "Ruzicka et al."
 )
 
 write.csv(
@@ -324,7 +552,49 @@ write.csv(
   row.names = FALSE
 )
 
+write.csv(
+  neal_candidate_radar_result$summary,
+  summary_path("SA_resolution_neal_candidate_radar_prevalence.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  ruzicka_candidate_radar_result$summary,
+  summary_path("SA_resolution_ruzicka_candidate_radar_prevalence.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  radar_permutation_tests,
+  summary_path("SA_resolution_radar_permutation_tests.csv"),
+  row.names = FALSE
+)
+
+dir.create(file.path(project_root, "Sup_figures"), recursive = TRUE, showWarnings = FALSE)
+write.csv(
+  neal_candidate_enrichment_results,
+  summary_path("SA_resolution_neal_candidate_enrichment_tests.csv"),
+  row.names = FALSE
+)
+write.csv(
+  neal_candidate_enrichment_results,
+  sup_figure_path("neal_truter_grieshop_candidate_sa_resolution_enrichment_table.csv"),
+  row.names = FALSE
+)
+write.csv(
+  ruzicka_candidate_enrichment_results,
+  summary_path("SA_resolution_ruzicka_candidate_enrichment_tests.csv"),
+  row.names = FALSE
+)
+write.csv(
+  ruzicka_candidate_enrichment_results,
+  sup_figure_path("ruzicka_candidate_sa_resolution_enrichment_table.csv"),
+  row.names = FALSE
+)
+
 radar_result$draw(figure_path("sa_resolution_radar.png"))
+neal_candidate_radar_result$draw(sup_figure_path("neal_truter_grieshop_candidate_sa_resolution_radar.png"))
+ruzicka_candidate_radar_result$draw(sup_figure_path("ruzicka_candidate_sa_resolution_radar.png"))
 
 
 # The current `SSS` column comes from `dimorphic.subset.list.txt`, which is the

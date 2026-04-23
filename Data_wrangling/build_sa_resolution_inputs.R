@@ -52,8 +52,6 @@ required_files <- c(
   input_path("Sex.Biased.Genes.Whole.csv"),
   input_path("Sex.Reversed.AI.test.tsv"),
   input_path("Genes.with.Sex.Reversed.AI.tsv"),
-  male_limited_path("Results", "A.f.geno.DS.results.tsv"),
-  male_limited_path("Results", "A.m.geno.DS.results.tsv"),
   male_limited_path("Analyses", "DS_analysis", "dimorphic.subset.list.txt"),
   harper_dup_path("Output", "all_paralogs_correct.csv")
 )
@@ -109,7 +107,12 @@ load_sbge_sets <- function() {
     filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), !is.na(Category)) |>
     distinct(FlyBaseID, .keep_all = TRUE)
 
-  list(SBGE = sbge$FlyBaseID[sbge$Category != "Unbiased"])
+  list(
+    HFB = sbge$FlyBaseID[sbge$Category == "Highly female-biased"],
+    FB = sbge$FlyBaseID[sbge$Category == "Moderately female-biased"],
+    MB = sbge$FlyBaseID[sbge$Category == "Moderately male-biased"],
+    HMB = sbge$FlyBaseID[sbge$Category == "Highly male-biased"]
+  )
 }
 
 
@@ -137,21 +140,6 @@ load_dr_set <- function() {
   read.delim(input_path("Genes.with.Sex.Reversed.AI.tsv"), stringsAsFactors = FALSE) |>
     transmute(FlyBaseID = as.character(geneID)) |>
     filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
-    distinct(FlyBaseID, .keep_all = TRUE) |>
-    pull(FlyBaseID)
-}
-
-
-load_ds_hits <- function(path) {
-  ds <- read.delim(path, stringsAsFactors = FALSE)
-  colnames(ds)[2] <- "FlyBaseID"
-
-  ds |>
-    transmute(
-      FlyBaseID = as.character(FlyBaseID),
-      geneWisePadj = as.numeric(geneWisePadj)
-    ) |>
-    filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), !is.na(geneWisePadj), geneWisePadj < 0.1) |>
     distinct(FlyBaseID, .keep_all = TRUE) |>
     pull(FlyBaseID)
 }
@@ -185,20 +173,18 @@ sbge_sets <- load_sbge_sets()
 ai_sets <- load_ai_sets()
 dr_set <- load_dr_set()
 sSS_set <- load_sss_set()
-ds_set <- unique(c(
-  load_ds_hits(male_limited_path("Results", "A.f.geno.DS.results.tsv")),
-  load_ds_hits(male_limited_path("Results", "A.m.geno.DS.results.tsv"))
-))
 dup_set <- load_dup_set()
 
 
 available_feature_sets <- list(
-  SBGE = unique(sbge_sets$SBGE),
+  HFB = unique(sbge_sets$HFB),
+  FB = unique(sbge_sets$FB),
+  MB = unique(sbge_sets$MB),
+  HMB = unique(sbge_sets$HMB),
   Cis = unique(ai_sets$Cis),
   SS_Cis = unique(ai_sets$SS_Cis),
   DR = unique(dr_set),
   SSS = unique(sSS_set),
-  DS = unique(ds_set),
   Dup = unique(dup_set)
 )
 
@@ -221,39 +207,44 @@ feature_sets_long <- bind_rows(lapply(names(available_feature_sets), function(fe
 
 
 feature_notes <- data.frame(
-  Feature = c("SBGE", "Cis", "SS_Cis", "DR", "SSS", "DS", "Dup"),
+  Feature = c("HFB", "FB", "MB", "HMB", "Cis", "SS_Cis", "DR", "SSS", "Dup"),
   Description = c(
-    "Whole-body SBGE genes from Mishra excluding unbiased genes",
+    "Highly female-biased whole-body SBGE genes from Mishra",
+    "Female-biased whole-body SBGE genes from Mishra (Moderately female-biased in source file)",
+    "Male-biased whole-body SBGE genes from Mishra (Moderately male-biased in source file)",
+    "Highly male-biased whole-body SBGE genes from Mishra",
     "Sex-reversed AI test genes with p.val.males < 0.05 or p.val.females < 0.05",
     "Sex-reversed AI test genes significant in exactly one sex only",
     "Genes with dominance-reversed allelic imbalance from Genes.with.Sex.Reversed.AI.tsv",
     "Requested broader sex-specific splicing gene set from MaleLimitedEvo / Michelle Liu",
-    "Genes with geneWisePadj < 0.1 in A.f.geno or A.m.geno DS results",
     "Genes annotated as having paralogues in the Harper and Morrow duplication analysis"
   ),
   Source = c(
+    "Data/inputs/Sex.Biased.Genes.Whole.csv",
+    "Data/inputs/Sex.Biased.Genes.Whole.csv",
+    "Data/inputs/Sex.Biased.Genes.Whole.csv",
     "Data/inputs/Sex.Biased.Genes.Whole.csv",
     "Data/inputs/Sex.Reversed.AI.test.tsv",
     "Data/inputs/Sex.Reversed.AI.test.tsv",
     "Data/inputs/Genes.with.Sex.Reversed.AI.tsv",
     "../MaleLimitedEvo/Analyses/DS_analysis/dimorphic.subset.list.txt",
-    "../MaleLimitedEvo/Results/A.f.geno.DS.results.tsv + ../MaleLimitedEvo/Results/A.m.geno.DS.results.tsv",
     "Grieshop Lab shared/Data/Harper and Morrow 2025/Output/all_paralogs_correct.csv"
   ),
-  Status = c(rep("ready", 7)),
+  Status = c(rep("ready", 9)),
   GeneCount = c(
-    length(unique(available_feature_sets$SBGE)),
+    length(unique(available_feature_sets$HFB)),
+    length(unique(available_feature_sets$FB)),
+    length(unique(available_feature_sets$MB)),
+    length(unique(available_feature_sets$HMB)),
     length(unique(available_feature_sets$Cis)),
     length(unique(available_feature_sets$SS_Cis)),
     length(unique(available_feature_sets$DR)),
     length(unique(available_feature_sets$SSS)),
-    length(unique(available_feature_sets$DS)),
     length(unique(available_feature_sets$Dup))
   ),
   Notes = c(
-    rep(NA_character_, 4),
+    rep(NA_character_, 7),
     "Using dimorphic.subset.list.txt as the best available on-disk SSS set because its README describes it as genes with consistent sexual dimorphism in splicing profile across datasets. This yields 2036 genes, which does not match the expected ~3704 and should be checked later against Michelle Liu's original broader list if needed.",
-    "DS is the union of unique FlyBase IDs with geneWisePadj < 0.1 from A.f.geno and A.m.geno. C.m.geno is intentionally excluded.",
     "Dup is defined as genes that appear as FBgn_ID in the shared Harper and Morrow all_paralogs_correct.csv table."
   ),
   stringsAsFactors = FALSE
