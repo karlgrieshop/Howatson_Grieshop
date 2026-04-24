@@ -221,6 +221,15 @@ assign_resolution_groups <- function(data) {
 }
 
 
+assign_collapsed_resolution_groups <- function(data) {
+  data |>
+    mutate(
+      CollapsedGeneType = ifelse(FlyBaseID %in% ssdo_ids, "SSDOs", "Background"),
+      CollapsedGeneType = factor(CollapsedGeneType, levels = c("SSDOs", "Background"))
+    )
+}
+
+
 load_neal_candidate_ids <- function() {
   read.csv(
     input_path("gene_hits_snps_90.csv"),
@@ -254,6 +263,22 @@ assign_candidate_groups <- function(data, candidate_ids, group_var = "CandidateG
         FlyBaseID %in% candidate_ids,
         "Candidate SA genes",
         "Background genes"
+      )
+    )
+}
+
+
+assign_split_candidate_groups <- function(data, candidate_ids, group_var = "CandidateGroup") {
+  disease_only_ids <- setdiff(disease_ids, ssdo_ids)
+  ortholog_only_ids <- setdiff(ortholog_ids, union(ssdo_ids, disease_ids))
+
+  data |>
+    mutate(
+      !!group_var := case_when(
+        FlyBaseID %in% candidate_ids ~ "Candidate SA genes",
+        FlyBaseID %in% disease_only_ids ~ "Disease orthologues",
+        FlyBaseID %in% ortholog_only_ids ~ "Orthologues",
+        TRUE ~ "Background"
       )
     )
 }
@@ -413,8 +438,8 @@ build_resolution_radar <- function(data, feature_order, feature_labels, group_va
 }
 
 
-build_resolution_radar_permutation_tests <- function(data, feature_order, seed = 1L) {
-  group_pairs <- combn(ordered_gene_types, 2, simplify = FALSE)
+build_resolution_radar_permutation_tests <- function(data, feature_order, group_var, group_order, seed = 1L) {
+  group_pairs <- combn(group_order, 2, simplify = FALSE)
 
   tests <- bind_rows(lapply(seq_along(feature_order), function(feature_index) {
     feature_name <- feature_order[[feature_index]]
@@ -424,8 +449,8 @@ build_resolution_radar_permutation_tests <- function(data, feature_order, seed =
       group_1 <- pair[[1]]
       group_2 <- pair[[2]]
 
-      values_1 <- data[data$GeneType == group_1, feature_name, drop = TRUE]
-      values_2 <- data[data$GeneType == group_2, feature_name, drop = TRUE]
+      values_1 <- data[data[[group_var]] == group_1, feature_name, drop = TRUE]
+      values_2 <- data[data[[group_var]] == group_2, feature_name, drop = TRUE]
 
       test_result <- two_sample_permutation_test(
         x = values_1,
@@ -462,6 +487,7 @@ whole_genome_family <- run_enrichment_family(
 )
 
 resolution_plot_data <- assign_resolution_groups(resolution_membership)
+collapsed_resolution_plot_data <- assign_collapsed_resolution_groups(resolution_membership)
 neal_candidate_ids <- intersect(load_neal_candidate_ids(), resolution_membership$FlyBaseID)
 ruzicka_candidate_ids <- intersect(load_ruzicka_candidate_ids(), resolution_membership$FlyBaseID)
 neal_candidate_plot_data <- assign_candidate_groups(
@@ -491,7 +517,7 @@ write.csv(
 )
 
 
-radar_features <- c("HFB", "FB", "MB", "HMB", "Dup", "SSS", "Cis", "SS_Cis", "DR")
+radar_features <- c("HFB", "FB", "MB", "HMB", "Dup", "SSS", "ASE", "SS_ASE", "TS_ASE", "DR")
 radar_feature_labels <- c(
   "HFB" = "HFB",
   "FB" = "FB",
@@ -499,8 +525,9 @@ radar_feature_labels <- c(
   "HMB" = "HMB",
   "Dup" = "Dup",
   "SSS" = "SSS",
-  "Cis" = "Cis",
-  "SS_Cis" = "SS-Cis",
+  "ASE" = "ASE",
+  "SS_ASE" = "SS-ASE",
+  "TS_ASE" = "TS-ASE",
   "DR" = "DR"
 )
 
@@ -514,8 +541,25 @@ radar_result <- build_resolution_radar(
   legend_ncol = 2
 )
 radar_permutation_tests <- build_resolution_radar_permutation_tests(
-  resolution_plot_data,
-  feature_order = radar_features
+  data = resolution_plot_data,
+  feature_order = radar_features,
+  group_var = "GeneType",
+  group_order = ordered_gene_types
+)
+collapsed_radar_result <- build_resolution_radar(
+  data = collapsed_resolution_plot_data,
+  feature_order = radar_features,
+  feature_labels = radar_feature_labels,
+  group_var = "CollapsedGeneType",
+  group_order = c("SSDOs", "Background"),
+  group_colours = c("SSDOs" = "#D55E00", "Background" = "#999999"),
+  legend_ncol = 1
+)
+collapsed_radar_permutation_tests <- build_resolution_radar_permutation_tests(
+  data = collapsed_resolution_plot_data,
+  feature_order = radar_features,
+  group_var = "CollapsedGeneType",
+  group_order = c("SSDOs", "Background")
 )
 neal_candidate_radar_result <- build_resolution_radar(
   data = neal_candidate_plot_data,
@@ -532,7 +576,7 @@ ruzicka_candidate_radar_result <- build_resolution_radar(
   feature_labels = radar_feature_labels,
   group_var = "RuzickaCandidateGroup",
   group_order = c("Candidate SA genes", "Background genes"),
-  group_colours = c("Candidate SA genes" = "#6A3D9A", "Background genes" = "#000000"),
+  group_colours = c("Candidate SA genes" = "#C77CFF", "Background genes" = "#000000"),
   legend_ncol = 1
 )
 neal_candidate_enrichment_results <- run_candidate_enrichment_family(
@@ -553,6 +597,12 @@ write.csv(
 )
 
 write.csv(
+  collapsed_radar_result$summary,
+  summary_path("SA_resolution_collapsed_radar_prevalence.csv"),
+  row.names = FALSE
+)
+
+write.csv(
   neal_candidate_radar_result$summary,
   summary_path("SA_resolution_neal_candidate_radar_prevalence.csv"),
   row.names = FALSE
@@ -567,6 +617,12 @@ write.csv(
 write.csv(
   radar_permutation_tests,
   summary_path("SA_resolution_radar_permutation_tests.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  collapsed_radar_permutation_tests,
+  summary_path("SA_resolution_collapsed_radar_permutation_tests.csv"),
   row.names = FALSE
 )
 
@@ -593,6 +649,7 @@ write.csv(
 )
 
 radar_result$draw(figure_path("sa_resolution_radar.png"))
+collapsed_radar_result$draw(figure_path("sa_resolution_collapsed_radar.png"))
 neal_candidate_radar_result$draw(sup_figure_path("neal_truter_grieshop_candidate_sa_resolution_radar.png"))
 ruzicka_candidate_radar_result$draw(sup_figure_path("ruzicka_candidate_sa_resolution_radar.png"))
 
