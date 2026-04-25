@@ -71,12 +71,12 @@ head(gene_scores, 20)
 
 
 
-write.csv(gene_scores, "/Users/elliehowatson/Final_Year_Project/R/data/gene_SA_magnitude.csv", row.names = FALSE)
+write.csv(gene_scores, "/Users/elliehowatson/Final_Year_Project/R/data/gene_SA_probability.csv", row.names = FALSE)
 
 
 
 
-#merge with snps data to get SA magnitude
+#merge with snps data to get SA probability
 gene_hits_snps$Chromosome <- gene_hits_snps$chromosome_name
 gene_hits_snps$Basepair <- gene_hits_snps$start_position
 
@@ -152,7 +152,7 @@ background_snps <- left_join(gene_hits_snps, candidate_control_SBGE, by = "FlyBa
 
 
 
-# Ortholog SA magnitude Summary table ----
+# Ortholog SA probability Summary table ----
 
 ortholog_snps_compare<- ortholog_snps %>%
   select(FlyBaseID,Sex.Bias.Category,exp_SBGE_ase,tajD.S,GeneType)%>%

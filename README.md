@@ -47,8 +47,9 @@ Sup_figures/     supplemental SBGE-stratified figure PDFs
 3. Run `Sup_plotting/sbge_metric_plots.R` for the supplemental Mishra-SBGE-stratified versions of the same five core metrics
 4. Run `Analyses/sa_candidate_enrichment.R` for the Fisher enrichment tests
 5. Run `Plotting/sa_probability_plots.R` for the current SA probability figures
-6. Run `Data_wrangling/build_sa_resolution_inputs.R` and then `Analyses/sa_resolution.R` for the SA-resolution feature assembly, the protein-coding whole-genome Fisher tests, and the current radar prevalence figures
-7. Run `Data_wrangling/build_affx_dros_2_array_reference.R` if `Affx_Dros_2.0.csv` needs to be rebuilt for the study-matched Innocenti enrichment background
+6. Run `Plotting/sa_magnitude_plots.R` for the analogous SA magnitude figures based on study-specific effect sizes
+7. Run `Data_wrangling/build_sa_resolution_inputs.R` and then `Analyses/sa_resolution.R` for the SA-resolution feature assembly, the protein-coding whole-genome Fisher tests, and the current radar prevalence figures
+8. Run `Data_wrangling/build_affx_dros_2_array_reference.R` if `Affx_Dros_2.0.csv` needs to be rebuilt for the study-matched Innocenti enrichment background
 
 The compile step now builds a standalone SSDO table directly from the sex-specific disease inputs and literature orthology files, rather than inheriting SSDOs from a Mishra SBGE merge.
 The plotting step is now a single readable script rather than a thin wrapper around helper files.
@@ -82,8 +83,9 @@ The active four-category workflow reads compiled reference files from `Data/outp
 - The default “whole-genome” universe used by the active workflows is now the **protein-coding FBgn gene set**.
 - `Sup_plotting/sbge_metric_plots.R` uses the same exclusive four-group definitions as the core plots, then restricts each metric to genes retained after merging to Mishra whole-body SBGE categories.
 - Raw source files now live in `Data/inputs/`, compiled reference tables live in `Data/outputs/`, and duplicated or superseded files are kept under `Data/unused/`.
-- `Analyses/Final_Script.R`, `Analyses/data_analysis.R`, and `Analyses/SA magnitude.R` are retained as older analysis scripts and were **not** fully modernized in this re-layout.
+- `Analyses/Final_Script.R`, `Analyses/data_analysis.R`, and `Analyses/SA probability.R` are retained as older analysis scripts and were **not** fully modernized in this re-layout.
 - `Analyses/sa_candidate_enrichment.R` reports both the whole protein-coding genome Fisher enrichment tests and the study-matched-universe Fisher enrichment analyses for Innocenti, Ruzicka, and Neal_Truter_Grieshop.
 - `Analyses/sa_resolution.R` reports the protein-coding whole-genome Fisher family and the current radar figures, including the main split-background prevalence plot and a collapsed-background prevalence plot, while the Neal and Ruzicka supplemental candidate plots remain in their simpler two-group form. The reported SA-resolution terms are the four biased Mishra SBGE sub-bins (`HFB`, `FB`, `MB`, `HMB`), Mishra-derived `ASE`, `SS-ASE`, `TS-ASE`, and `DR`, `UB` is omitted, and `DS` is excluded from the reported SA-resolution outputs.
-- `Plotting/sa_probability_plots.R` produces the default protein-coding-universe SA probability plots in `Figures/` plus full-universe sensitivity versions in `Sup_figures/`.
+- `Plotting/sa_probability_plots.R` produces the default protein-coding-universe SA probability plots in `Figures/` plus full-universe sensitivity versions in `Sup_figures/` for the Ruzicka and Neal_Truter_Grieshop datasets.
+- `Plotting/sa_magnitude_plots.R` produces the analogous SA magnitude plots and permutation tables for the Ruzicka and Neal_Truter_Grieshop datasets, using `Wald_Stat` for Ruzicka and finite `abs(LogOdds)` for Neal_Truter_Grieshop.
 - `Data_wrangling/build_affx_dros_2_array_reference.R` rebuilds the real Affymetrix Drosophila 2.0 probe-symbol background in `Data/outputs/` for the narrower Innocenti enrichment analysis.

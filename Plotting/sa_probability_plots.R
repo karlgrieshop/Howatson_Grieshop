@@ -66,7 +66,7 @@ publication_theme <- function(base_size = 14) {
       legend.position = "none",
       panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.8),
       axis.title.x = element_text(margin = margin(t = 12)),
-      plot.margin = margin(12, 12, 12, 12)
+      plot.margin = margin(32, 12, 12, 24)
     )
 }
 
@@ -161,15 +161,18 @@ pairwise_tests_against_reference <- function(data, value_col = "Value", group_co
 }
 
 
-plot_metric_distribution <- function(summary_data) {
+plot_metric_distribution <- function(summary_data, y_label) {
   ggplot(summary_data, aes(x = GeneType, y = q50, colour = GeneType)) +
     geom_pointrange(aes(ymin = q05, ymax = q95), linewidth = 1.2) +
     geom_text(aes(y = q95, label = SampleSize), size = 3.8, colour = "black", vjust = -0.75) +
     scale_colour_manual(values = gene_type_palette, drop = FALSE) +
     scale_y_continuous(expand = expansion(mult = c(0.03, 0.14))) +
-    labs(x = "Gene Type", y = "Probability of SA polymorphism", title = NULL) +
+    labs(x = "Gene Type", y = y_label, title = NULL) +
     publication_theme() +
-    theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
+    theme(
+      axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
+      axis.title.y = element_text(hjust = 0.42, margin = margin(r = 12))
+    )
 }
 
 
@@ -318,15 +321,25 @@ disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFa
 ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 
 study_specs <- list(
-  list(name = "Ruzicka et al.", values = build_ruzicka_values(protein_coding_gene_reference), figure = "ruzicka_SA_probability.pdf"),
-  list(name = "Neal_Truter_Grieshop", values = build_neal_values(protein_coding_gene_reference), figure = "neal_truter_grieshop_SA_probability.pdf")
+  list(
+    name = "Ruzicka et al.",
+    values = build_ruzicka_values(protein_coding_gene_reference),
+    figure = "ruzicka_SA_probability.pdf",
+    y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
+  ),
+  list(
+    name = "Neal_Truter_Grieshop",
+    values = build_neal_values(protein_coding_gene_reference),
+    figure = "neal_truter_grieshop_SA_probability.pdf",
+    y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
+  )
 )
 
 for (study_spec in study_specs) {
   raw_data <- assign_gene_types(study_spec$values, ssdo_ids, disease_ids, ortholog_ids)
   summary_data <- bootstrap_group_summaries(raw_data)
   tests_data <- pairwise_tests_against_reference(raw_data)
-  plot_object <- plot_metric_distribution(summary_data)
+  plot_object <- plot_metric_distribution(summary_data, study_spec$y_label)
 
   safe_study_name <- gsub("[^A-Za-z0-9]+", "_", study_spec$name)
   safe_study_name <- gsub("^_|_$", "", safe_study_name)
@@ -351,26 +364,36 @@ for (study_spec in study_specs) {
     filename = figure_path(study_spec$figure),
     plot = plot_object,
     width = 7,
-    height = 5,
+    height = 5.5,
     dpi = 300
   )
 }
 
 sensitivity_specs <- list(
-  list(name = "Ruzicka et al.", values = build_ruzicka_values(gene_reference), figure = "ruzicka_SA_probability_full_universe_sensitivity.pdf"),
-  list(name = "Neal_Truter_Grieshop", values = build_neal_values(gene_reference), figure = "neal_truter_grieshop_SA_probability_full_universe_sensitivity.pdf")
+  list(
+    name = "Ruzicka et al.",
+    values = build_ruzicka_values(gene_reference),
+    figure = "ruzicka_SA_probability_full_universe_sensitivity.pdf",
+    y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
+  ),
+  list(
+    name = "Neal_Truter_Grieshop",
+    values = build_neal_values(gene_reference),
+    figure = "neal_truter_grieshop_SA_probability_full_universe_sensitivity.pdf",
+    y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
+  )
 )
 
 for (study_spec in sensitivity_specs) {
   raw_data <- assign_gene_types(study_spec$values, ssdo_ids, disease_ids, ortholog_ids)
   summary_data <- bootstrap_group_summaries(raw_data)
-  plot_object <- plot_metric_distribution(summary_data)
+  plot_object <- plot_metric_distribution(summary_data, study_spec$y_label)
 
   ggsave(
     filename = sup_figure_path(study_spec$figure),
     plot = plot_object,
     width = 7,
-    height = 5,
+    height = 5.5,
     dpi = 300
   )
 }
