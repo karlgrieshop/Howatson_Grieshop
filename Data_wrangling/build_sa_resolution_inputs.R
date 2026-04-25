@@ -278,8 +278,8 @@ feature_notes <- data.frame(
     "Genes with significant whole-body ASE in exactly one sex only in the filtered Mishra sex-reversed AI table",
     "Genes with significant ASE in exactly one of heads or gonads in the retained Mishra ASE tables",
     "Genes with dominance-reversed allelic imbalance from Genes.with.Sex.Reversed.AI.tsv",
-    "Requested broader sex-specific splicing gene set from MaleLimitedEvo / Michelle Liu",
-    "Genes annotated as having paralogues in the Harper and Morrow duplication analysis"
+    "Consistently sex-specific splicing gene set from MaleLimitedEvo / Michelle Liu",
+    "Genes with one or more paralogues in the Harper and Morrow duplication analysis"
   ),
   Source = c(
     "Data/inputs/Sex.Biased.Genes.Whole.csv",
@@ -308,8 +308,8 @@ feature_notes <- data.frame(
   ),
   Notes = c(
     rep(NA_character_, 8),
-    "Using dimorphic.subset.list.txt as the best available on-disk SSS set because its README describes it as genes with consistent sexual dimorphism in splicing profile across datasets. This yields 2036 genes, which does not match the expected ~3704 and should be checked later against Michelle Liu's original broader list if needed.",
-    "Dup is defined as genes that appear as FBgn_ID in the shared Harper and Morrow all_paralogs_correct.csv table."
+    "Using dimorphic.subset.list.txt as the final consistently sex-specific splicing (SSS) set from MaleLimitedEvo. The accompanying description indicates that these 2036 genes passed cross-dataset consistency filtering for sex-specific splicing profiles.",
+    "Dup is defined here as binary paralogue presence: genes that appear as FBgn_ID in the shared Harper and Morrow all_paralogs_correct.csv table. The current shared table already satisfies the Harper and Morrow paralogue criterion and contains only rows with DIOPT_score >= 2."
   ),
   stringsAsFactors = FALSE
 )

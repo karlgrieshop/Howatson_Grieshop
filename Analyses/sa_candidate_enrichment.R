@@ -217,24 +217,34 @@ load_neal_matched_universe <- function(gene_reference) {
 }
 
 
-run_enrichment_test <- function(universe_ids, ssdo_ids, candidate_ids, study_name, universe_type, source_note) {
+run_enrichment_test <- function(
+  universe_ids,
+  focal_ids,
+  candidate_ids,
+  study_name,
+  universe_type,
+  source_note,
+  focal_group,
+  panel_label
+) {
   analysis_df <- data.frame(FlyBaseID = unique(universe_ids), stringsAsFactors = FALSE) |>
     mutate(
-      IsSSDO = FlyBaseID %in% ssdo_ids,
+      IsFocal = FlyBaseID %in% focal_ids,
       IsCandidate = FlyBaseID %in% candidate_ids
     )
 
-  contingency <- table(analysis_df$IsSSDO, analysis_df$IsCandidate)
+  contingency <- table(analysis_df$IsFocal, analysis_df$IsCandidate)
   fisher_result <- fisher.test(contingency)
 
   summary_row <- data.frame(
+    FocalGroup = focal_group,
     Study = study_name,
     UniverseType = universe_type,
     Source = source_note,
     UniverseSize = nrow(analysis_df),
-    SSDOCount = sum(analysis_df$IsSSDO),
+    FocalCount = sum(analysis_df$IsFocal),
     CandidateCount = sum(analysis_df$IsCandidate),
-    OverlapCount = sum(analysis_df$IsSSDO & analysis_df$IsCandidate),
+    OverlapCount = sum(analysis_df$IsFocal & analysis_df$IsCandidate),
     OddsRatio = unname(fisher_result$estimate),
     PValue = fisher_result$p.value,
     ConfLow = fisher_result$conf.int[1],
@@ -243,8 +253,11 @@ run_enrichment_test <- function(universe_ids, ssdo_ids, candidate_ids, study_nam
   )
 
   plot_df <- analysis_df |>
-    mutate(Group = ifelse(IsSSDO, "SSDOs", "Non-SSDOs")) |>
-    group_by(Group) |>
+    mutate(
+      DisplayGroup = ifelse(IsFocal, "Focal genes", "Other genes"),
+      FillGroup = ifelse(IsFocal, focal_group, "Other genes")
+    ) |>
+    group_by(DisplayGroup, FillGroup) |>
     summarise(
       Candidate = sum(IsCandidate),
       NonCandidate = sum(!IsCandidate),
@@ -252,14 +265,16 @@ run_enrichment_test <- function(universe_ids, ssdo_ids, candidate_ids, study_nam
       .groups = "drop"
     ) |>
     mutate(
+      FocalGroup = focal_group,
+      PanelLabel = panel_label,
       Study = study_name,
       UniverseType = universe_type,
       Label = paste0(Candidate, "/", Candidate + NonCandidate)
     )
 
   overlap <- analysis_df |>
-    filter(IsSSDO, IsCandidate) |>
-    mutate(Study = study_name, UniverseType = universe_type)
+    filter(IsFocal, IsCandidate) |>
+    mutate(FocalGroup = focal_group, Study = study_name, UniverseType = universe_type)
 
   list(summary = summary_row, plot_data = plot_df, overlap = overlap)
 }
@@ -267,10 +282,17 @@ run_enrichment_test <- function(universe_ids, ssdo_ids, candidate_ids, study_nam
 
 gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
 ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
-protein_coding_universe <- gene_reference |>
-  filter(gene_biotype == "protein_coding") |>
-  pull(FlyBaseID) |>
-  unique()
+disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
+ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
+disease_only_ids <- setdiff(disease_ids, ssdo_ids)
+ortholog_only_ids <- setdiff(ortholog_ids, disease_ids)
+study_order <- c("Innocenti and Morrow", "Ruzicka et al.", "Neal_Truter_Grieshop")
+focal_order <- c("SSDOs", "Disease orthologues", "Orthologues")
+panel_order <- c(
+  "SA genes among SSDOs",
+  "SA genes among Disease Orthologues",
+  "SA genes among Orthologues"
+)
 
 innocenti <- load_innocenti_candidates(gene_reference)
 ruzicka_ids <- load_ruzicka_candidates()
@@ -282,69 +304,128 @@ matched_universes <- list(
   "Neal_Truter_Grieshop" = load_neal_matched_universe(gene_reference)$FlyBaseID
 )
 
-broad_results <- list(
-  run_enrichment_test(
-    universe_ids = protein_coding_universe,
-    ssdo_ids = ssdo_ids,
-    candidate_ids = innocenti$ids$FlyBaseID,
-    study_name = "Innocenti and Morrow",
-    universe_type = "Whole protein-coding fly genome",
-    source_note = "Whole-genome / protein-coding background"
-  ),
-  run_enrichment_test(
-    universe_ids = protein_coding_universe,
-    ssdo_ids = ssdo_ids,
-    candidate_ids = ruzicka_ids$FlyBaseID,
-    study_name = "Ruzicka et al.",
-    universe_type = "Whole protein-coding fly genome",
-    source_note = "Whole-genome / protein-coding background"
-  ),
-  run_enrichment_test(
-    universe_ids = protein_coding_universe,
-    ssdo_ids = ssdo_ids,
-    candidate_ids = neal_ids$FlyBaseID,
-    study_name = "Neal_Truter_Grieshop",
-    universe_type = "Whole protein-coding fly genome",
-    source_note = "Whole-genome / protein-coding background"
-  )
-)
-
-matched_results <- list(
+ssdo_results <- list(
   run_enrichment_test(
     universe_ids = matched_universes[["Innocenti and Morrow"]],
-    ssdo_ids = ssdo_ids,
+    focal_ids = ssdo_ids,
     candidate_ids = innocenti$ids$FlyBaseID,
     study_name = "Innocenti and Morrow",
     universe_type = "Study-matched universe",
-    source_note = "Affx_Dros_2.0 array-assayed genes"
+    source_note = "Affx_Dros_2.0 array-assayed genes",
+    focal_group = "SSDOs",
+    panel_label = "SA genes among SSDOs"
   ),
   run_enrichment_test(
     universe_ids = matched_universes[["Ruzicka et al."]],
-    ssdo_ids = ssdo_ids,
+    focal_ids = ssdo_ids,
     candidate_ids = ruzicka_ids$FlyBaseID,
     study_name = "Ruzicka et al.",
     universe_type = "Study-matched universe",
-    source_note = "Genes represented by SNPs in Assoc_Data.txt"
+    source_note = "Genes represented by SNPs in Assoc_Data.txt",
+    focal_group = "SSDOs",
+    panel_label = "SA genes among SSDOs"
   ),
   run_enrichment_test(
     universe_ids = matched_universes[["Neal_Truter_Grieshop"]],
-    ssdo_ids = ssdo_ids,
+    focal_ids = ssdo_ids,
     candidate_ids = neal_ids$FlyBaseID,
     study_name = "Neal_Truter_Grieshop",
     universe_type = "Study-matched universe",
-    source_note = "Genes represented by SNPs in true_cmh_results.txt"
+    source_note = "Genes represented by SNPs in true_cmh_results.txt",
+    focal_group = "SSDOs",
+    panel_label = "SA genes among SSDOs"
   )
 )
 
-all_results <- c(broad_results, matched_results)
+disease_results <- list(
+  run_enrichment_test(
+    universe_ids = matched_universes[["Innocenti and Morrow"]],
+    focal_ids = disease_only_ids,
+    candidate_ids = innocenti$ids$FlyBaseID,
+    study_name = "Innocenti and Morrow",
+    universe_type = "Study-matched universe",
+    source_note = "Affx_Dros_2.0 array-assayed genes",
+    focal_group = "Disease orthologues",
+    panel_label = "SA genes among Disease Orthologues"
+  ),
+  run_enrichment_test(
+    universe_ids = matched_universes[["Ruzicka et al."]],
+    focal_ids = disease_only_ids,
+    candidate_ids = ruzicka_ids$FlyBaseID,
+    study_name = "Ruzicka et al.",
+    universe_type = "Study-matched universe",
+    source_note = "Genes represented by SNPs in Assoc_Data.txt",
+    focal_group = "Disease orthologues",
+    panel_label = "SA genes among Disease Orthologues"
+  ),
+  run_enrichment_test(
+    universe_ids = matched_universes[["Neal_Truter_Grieshop"]],
+    focal_ids = disease_only_ids,
+    candidate_ids = neal_ids$FlyBaseID,
+    study_name = "Neal_Truter_Grieshop",
+    universe_type = "Study-matched universe",
+    source_note = "Genes represented by SNPs in true_cmh_results.txt",
+    focal_group = "Disease orthologues",
+    panel_label = "SA genes among Disease Orthologues"
+  )
+)
+
+orthologue_results <- list(
+  run_enrichment_test(
+    universe_ids = matched_universes[["Innocenti and Morrow"]],
+    focal_ids = ortholog_only_ids,
+    candidate_ids = innocenti$ids$FlyBaseID,
+    study_name = "Innocenti and Morrow",
+    universe_type = "Study-matched universe",
+    source_note = "Affx_Dros_2.0 array-assayed genes",
+    focal_group = "Orthologues",
+    panel_label = "SA genes among Orthologues"
+  ),
+  run_enrichment_test(
+    universe_ids = matched_universes[["Ruzicka et al."]],
+    focal_ids = ortholog_only_ids,
+    candidate_ids = ruzicka_ids$FlyBaseID,
+    study_name = "Ruzicka et al.",
+    universe_type = "Study-matched universe",
+    source_note = "Genes represented by SNPs in Assoc_Data.txt",
+    focal_group = "Orthologues",
+    panel_label = "SA genes among Orthologues"
+  ),
+  run_enrichment_test(
+    universe_ids = matched_universes[["Neal_Truter_Grieshop"]],
+    focal_ids = ortholog_only_ids,
+    candidate_ids = neal_ids$FlyBaseID,
+    study_name = "Neal_Truter_Grieshop",
+    universe_type = "Study-matched universe",
+    source_note = "Genes represented by SNPs in true_cmh_results.txt",
+    focal_group = "Orthologues",
+    panel_label = "SA genes among Orthologues"
+  )
+)
+
+all_results <- c(ssdo_results, disease_results, orthologue_results)
 
 summary_table <- bind_rows(lapply(all_results, `[[`, "summary")) |>
-  group_by(UniverseType) |>
-  mutate(PAdjustBH = p.adjust(PValue, method = "BH")) |>
-  ungroup()
+  mutate(
+    FocalGroup = factor(FocalGroup, levels = focal_order),
+    Study = factor(Study, levels = study_order)
+  ) |>
+  arrange(FocalGroup, Study)
 
-plot_data <- bind_rows(lapply(all_results, `[[`, "plot_data"))
-overlap_table <- bind_rows(lapply(all_results, `[[`, "overlap"))
+plot_data <- bind_rows(lapply(all_results, `[[`, "plot_data")) |>
+  mutate(
+    FocalGroup = factor(FocalGroup, levels = focal_order),
+    PanelLabel = factor(PanelLabel, levels = panel_order),
+    Study = factor(Study, levels = study_order),
+    DisplayGroup = factor(DisplayGroup, levels = c("Focal genes", "Other genes"))
+  )
+
+overlap_table <- bind_rows(lapply(all_results, `[[`, "overlap")) |>
+  mutate(
+    FocalGroup = factor(FocalGroup, levels = focal_order),
+    Study = factor(Study, levels = study_order)
+  ) |>
+  arrange(FocalGroup, Study, FlyBaseID)
 
 write.csv(
   summary_table,
@@ -374,26 +455,49 @@ write.csv(
   row.names = FALSE
 )
 
-sa_enrichment_plot <- ggplot(plot_data, aes(x = Group, y = ProportionCandidate, fill = Group)) +
+sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCandidate, fill = FillGroup)) +
   geom_col(width = 0.6, colour = "black") +
   geom_text(aes(label = Label), vjust = -0.5, size = 3.6) +
-  facet_grid(UniverseType ~ Study) +
-  scale_fill_manual(values = c("SSDOs" = "#D55E00", "Non-SSDOs" = "#999999")) +
+  geom_text(
+    data = summary_table |>
+      mutate(
+        PanelLabel = factor(
+          case_when(
+            FocalGroup == "SSDOs" ~ "SA genes among SSDOs",
+            FocalGroup == "Disease orthologues" ~ "SA genes among Disease Orthologues",
+            TRUE ~ "SA genes among Orthologues"
+          ),
+          levels = panel_order
+        )
+      ) |>
+      filter(PValue < 0.05) |>
+      mutate(x = 1.5, y = max(plot_data$ProportionCandidate) * 1.12, label = "*"),
+    aes(x = x, y = y, label = label),
+    inherit.aes = FALSE,
+    size = 9,
+    fontface = "bold"
+  ) +
+  facet_grid(PanelLabel ~ Study, switch = "y") +
+  scale_fill_manual(values = c("SSDOs" = "#D55E00", "Disease orthologues" = "#0072B2", "Orthologues" = "#009E73", "Other genes" = "#999999")) +
   scale_y_continuous(
     limits = c(0, max(plot_data$ProportionCandidate) * 1.18),
     labels = function(x) paste0(round(100 * x), "%")
   ) +
   labs(
     x = NULL,
-    y = "Candidate SA genes",
+    y = NULL,
     title = NULL
   ) +
-  simple_theme()
+  simple_theme() +
+  theme(
+    strip.placement = "outside",
+    strip.text.y.left = element_text(angle = 90, face = "bold")
+  )
 
 ggsave(
   filename = figure_path("SA_candidate_enrichment.pdf"),
   plot = sa_enrichment_plot,
-  width = 12,
-  height = 7,
+  width = 11,
+  height = 10.1,
   dpi = 300
 )

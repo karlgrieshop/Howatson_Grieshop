@@ -654,7 +654,7 @@ neal_candidate_radar_result$draw(sup_figure_path("neal_truter_grieshop_candidate
 ruzicka_candidate_radar_result$draw(sup_figure_path("ruzicka_candidate_sa_resolution_radar.png"))
 
 
-# The current `SSS` column comes from `dimorphic.subset.list.txt`, which is the
-# best available on-disk proxy for the requested broader SSS set but should be
-# checked later against Michelle Liu's original source if the expected count
-# must be ~3704 rather than 2036.
+# The current `SSS` column comes from `dimorphic.subset.list.txt`, treated here
+# as the final consistently sex-specific splicing set from MaleLimitedEvo.
+# Current documentation indicates that these 2036 genes passed cross-dataset
+# consistency filtering for sex-specific splicing profiles.

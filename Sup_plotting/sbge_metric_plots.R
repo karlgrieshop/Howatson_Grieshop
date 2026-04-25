@@ -362,7 +362,7 @@ metric_specs <- list(
   list(name = "rMF", data = singh, value_col = "rmf", y_label = expression(italic(r)[MF]), figure_file = "sbge_rmf_plot.pdf"),
   list(name = "rlnd", data = singh, value_col = "piNfract", y_label = expression(tilde(pi)[italic(r) * N]), figure_file = "sbge_rlnd_plot.pdf"),
   list(name = "DoS", data = fra, value_col = "DoS", y_label = expression(italic(DoS)), figure_file = "sbge_DoS_plot.pdf"),
-  list(name = "Tissue Specificity", data = fra, value_col = "tissueSpecificityAdults", y_label = "Tissue Specificity", figure_file = "sbge_tissuespec_plot.pdf")
+  list(name = "Tissue Specificity", data = fra, value_col = "tissueSpecificityAdults", y_label = expression("Tissue Specificity (" * tau * ")"), figure_file = "sbge_tissuespec_plot.pdf")
 )
 
 for (metric_spec in metric_specs) {

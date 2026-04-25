@@ -10,8 +10,8 @@
 >
 > | Local repo path | Needed for | Shared source |
 > | --- | --- | --- |
-> | `Data/inputs/SBGEandSSSdataForMBE.csv` | core four-category plots | `.../Data/Singh_and_Agrawal_2023/SBGEandSSSdataForMBE.csv` |
-> | `Data/inputs/FileS7.txt` | core four-category plots | source file is `.../Data/Fraïsse_et_al_2019/FileS7.csv` |
+> | `Data/inputs/SBGEandSSSdataForMBE.csv` | metric plots | `.../Data/Singh_and_Agrawal_2023/SBGEandSSSdataForMBE.csv` |
+> | `Data/inputs/FileS7.txt` | metric plots | source file is `.../Data/Fraïsse_et_al_2019/FileS7.csv` |
 > | `Data/inputs/all_orthologs.csv` | `compile_ssdo_reference_data.R` | `.../Data/Grieshop_and_Howatson_2026/Orthologues/all_orthologs.csv` |
 > | `Data/inputs/all_disease_orthologs.csv` | `compile_ssdo_reference_data.R` | `.../Data/Grieshop_and_Howatson_2026/Orthologues/all_disease_orthologs.csv` |
 > | `Data/inputs/Drosophila_melanogaster.BDGP6.54.115.gtf` | gene/transcript reference and SNP-to-gene mapping | `.../Data/Grieshop_and_Howatson_2026/Dmel_GTF/Drosophila_melanogaster.BDGP6.54.115.gtf` |
@@ -34,13 +34,13 @@ Data/
   unused/
 Data_wrangling/  scripts that compile and harmonize reference datasets
 Analyses/        broader or legacy analytical scripts retained for context
-Plotting/        active plotting workflow for the core four-category figures
+Plotting/        active plotting workflow for metric plots and study-specific SA plots
 Figures/         output figure PDFs
 Sup_plotting/    supplemental SBGE-stratified plotting workflow
 Sup_figures/     supplemental SBGE-stratified figure PDFs
 ```
 
-## Current core workflow
+## Current workflow
 
 1. Run `Data_wrangling/compile_ssdo_reference_data.R`
 2. Run `Plotting/plotting.R`
@@ -84,7 +84,7 @@ The active four-category workflow reads compiled reference files from `Data/outp
 - `Sup_plotting/sbge_metric_plots.R` uses the same exclusive four-group definitions as the core plots, then restricts each metric to genes retained after merging to Mishra whole-body SBGE categories.
 - Raw source files now live in `Data/inputs/`, compiled reference tables live in `Data/outputs/`, and duplicated or superseded files are kept under `Data/unused/`.
 - `Analyses/Final_Script.R`, `Analyses/data_analysis.R`, and `Analyses/SA probability.R` are retained as older analysis scripts and were **not** fully modernized in this re-layout.
-- `Analyses/sa_candidate_enrichment.R` reports both the whole protein-coding genome Fisher enrichment tests and the study-matched-universe Fisher enrichment analyses for Innocenti, Ruzicka, and Neal_Truter_Grieshop.
+- `Analyses/sa_candidate_enrichment.R` reports the study-matched-universe Fisher enrichment analyses for SSDOs, disease orthologues, and orthologues against the Innocenti, Ruzicka, and Neal_Truter_Grieshop candidate SA gene sets.
 - `Analyses/sa_resolution.R` reports the protein-coding whole-genome Fisher family and the current radar figures, including the main split-background prevalence plot and a collapsed-background prevalence plot, while the Neal and Ruzicka supplemental candidate plots remain in their simpler two-group form. The reported SA-resolution terms are the four biased Mishra SBGE sub-bins (`HFB`, `FB`, `MB`, `HMB`), Mishra-derived `ASE`, `SS-ASE`, `TS-ASE`, and `DR`, `UB` is omitted, and `DS` is excluded from the reported SA-resolution outputs.
 - `Plotting/sa_probability_plots.R` produces the default protein-coding-universe SA probability plots in `Figures/` plus full-universe sensitivity versions in `Sup_figures/` for the Ruzicka and Neal_Truter_Grieshop datasets.
 - `Plotting/sa_magnitude_plots.R` produces the analogous SA magnitude plots and permutation tables for the Ruzicka and Neal_Truter_Grieshop datasets, using `Wald_Stat` for Ruzicka and finite `abs(LogOdds)` for Neal_Truter_Grieshop.
