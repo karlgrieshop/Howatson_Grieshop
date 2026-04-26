@@ -1608,7 +1608,7 @@ summary_heads_data_comparative <- bind_rows(summary_heads_data_comparative,all_c
 # #   theme(
 # #     panel.grid.major = element_blank(),  # Remove major gridlines
 # #     panel.grid.minor = element_blank(),  # Remove minor gridlines
-# #     panel.border = element_rect(color = "black", fill = NA, size = 1),  # Add border around plot
+# #     panel.border = element_rect(color = "black", fill = NA, size = 0.5),  # Add border around plot
 # #     axis.text.x = element_text(angle = 45, hjust = 1),
 # #     panel.background = element_blank()
 # #   ) +
@@ -1632,7 +1632,7 @@ summary_heads_data_comparative <- bind_rows(summary_heads_data_comparative,all_c
 # #   theme(
 # #     panel.grid.major = element_blank(),  # Remove major gridlines
 # #     panel.grid.minor = element_blank(),  # Remove minor gridlines
-# #     panel.border = element_rect(color = "black", fill = NA, size = 1),  # Add border around plot
+# #     panel.border = element_rect(color = "black", fill = NA, size = 0.5),  # Add border around plot
 # #     axis.text.x = element_text(angle = 45, hjust = 1),
 # #     panel.background = element_blank()
 # #   ) +
@@ -1689,7 +1689,7 @@ summary_heads_data_comparative <- bind_rows(summary_heads_data_comparative,all_c
 #   theme(
 #     panel.grid.major = element_blank(),  # Remove major gridlines
 #     panel.grid.minor = element_blank(),  # Remove minor gridlines
-#     panel.border = element_rect(color = "black", fill = NA, size = 1),  # Add border
+#     panel.border = element_rect(color = "black", fill = NA, size = 0.5),  # Add border
 #     panel.background = element_blank()
 #   ) +
 #   geom_vline(xintercept = 1.5, color = "black", size = 1.2) +  # Bold divider
@@ -1797,7 +1797,7 @@ summary_heads_data_comparative <- bind_rows(summary_heads_data_comparative,all_c
 #   theme(
 #     panel.grid.major = element_blank(),  # Remove major gridlines
 #     panel.grid.minor = element_blank(),  # Remove minor gridlines
-#     panel.border = element_rect(color = "black", fill = NA, size = 1),  # Add border
+#     panel.border = element_rect(color = "black", fill = NA, size = 0.5),  # Add border
 #     panel.background = element_blank()
 #   )+
 #   geom_vline(xintercept = 1.5, color = "black", size = 1.2) +  # Bold divider
@@ -1899,7 +1899,7 @@ summary_heads_data_comparative <- bind_rows(summary_heads_data_comparative,all_c
 #   theme(
 #     panel.grid.major = element_blank(),  # Remove major gridlines
 #     panel.grid.minor = element_blank(),  # Remove minor gridlines
-#     panel.border = element_rect(color = "black", fill = NA, size = 1),  # Add border
+#     panel.border = element_rect(color = "black", fill = NA, size = 0.5),  # Add border
 #     panel.background = element_blank()
 #   )+
 #   geom_vline(xintercept = 1.5, color = "black", size = 1.2) +  # Bold divider
@@ -2007,7 +2007,7 @@ summary_heads_data_comparative <- bind_rows(summary_heads_data_comparative,all_c
 #         plot.margin = margin(10, 10, 10, 10),
 #     panel.grid.major = element_blank(),  # Remove major gridlines
 #     panel.grid.minor = element_blank(),  # Remove minor gridlines
-#     panel.border = element_rect(color = "black", fill = NA, size = 1),  # Add border
+#     panel.border = element_rect(color = "black", fill = NA, size = 0.5),  # Add border
 #     panel.background = element_blank()
 #   )+
 #   geom_vline(xintercept = 1.5, color = "black", size = 1.2) +  # Bold divider
@@ -2015,7 +2015,7 @@ summary_heads_data_comparative <- bind_rows(summary_heads_data_comparative,all_c
 #   scale_x_discrete(labels = c("All", "Highly FB", "Female-Biased", "Unbiased", "Male-Biased", "Highly MB")) 
 # 
 # 
-# ggsave("tissueSpecificity_plot.pdf", width = 12, height = 7, dpi = 300)
+# ggsave("tissueSpecificity_plot.png", width = 12, height = 7, dpi = 300)
 # 
 # tissueSpecificity_plot2 <- ggplot(summary_tissuespec_data_comparative, 
 #                                  aes(x = Sex.Bias.Category, y = q50, color = GeneType)) + 
@@ -2042,12 +2042,12 @@ summary_heads_data_comparative <- bind_rows(summary_heads_data_comparative,all_c
 #         plot.margin = margin(10, 10, 10, 10),
 #         panel.grid.major = element_blank(),
 #         panel.grid.minor = element_blank(),
-#         panel.border = element_rect(color = "black", fill = NA, size = 1),
+#         panel.border = element_rect(color = "black", fill = NA, size = 0.5),
 #         panel.background = element_blank()) +
 #   geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
 #   geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
 #   scale_x_discrete(labels = c("All", "Highly FB", "Female-Biased", "Unbiased", "Male-Biased", "Highly MB"))
-# ggsave("tissueSpecificity_plot2.pdf", width = 12, height = 7, dpi = 300)
+# ggsave("tissueSpecificity_plot2.png", width = 12, height = 7, dpi = 300)
 
 #___________________________-----
 # STATISTICAL ANALYSES----
@@ -2764,12 +2764,13 @@ tajD_plot <- ggplot(summary_tajDS_data_comparative,
     legend.text = element_text(size = 14),
     legend.title = element_text(size = 14, face = "bold"),
     panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    axis.line = element_blank(),
     panel.background = element_rect(fill = "white", color = NA),
     plot.margin = margin(20, 20, 20, 20)
   )
 
-ggsave("tajD_plot.pdf", width = 13, height = 6, dpi = 300)
+ggsave("tajD_plot.png", width = 13, height = 6, dpi = 300)
 
 # --- rMF Plot----
 summary_rMF_data_comparative <- left_join(summary_rMF_data_comparative, rmf_boot_results, by = c("Sex.Bias.Category", "GeneType"))
@@ -2819,12 +2820,13 @@ rmf_plot <- ggplot(summary_rMF_data_comparative,
     legend.text = element_text(size = 14),
     legend.title = element_text(size = 14, face = "bold"),
     panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    axis.line = element_blank(),
     panel.background = element_rect(fill = "white", color = NA),
     plot.margin = margin(20, 20, 20, 20)
   )
 
-ggsave("rmf_plot.pdf", width = 13, height = 6, dpi = 300)
+ggsave("rmf_plot.png", width = 13, height = 6, dpi = 300)
 
 # DoS Plot----
 
@@ -2877,12 +2879,13 @@ DoS_plot <- ggplot(summary_DoS_data_comparative,
     legend.text = element_text(size = 14),
     legend.title = element_text(size = 14, face = "bold"),
     panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    axis.line = element_blank(),
     panel.background = element_rect(fill = "white", color = NA),
     plot.margin = margin(20, 20, 20, 20)
   )
 
-ggsave("DoS_plot.pdf", width = 13, height = 6, dpi = 300)
+ggsave("DoS_plot.png", width = 13, height = 6, dpi = 300)
 
 # Tissue Specificity Plot ----
 summary_tissuespec_data_comparative<- left_join(summary_tissuespec_data_comparative, TissueSpecificity_boot_results, by = c("Sex.Bias.Category", "GeneType"))
@@ -2933,12 +2936,13 @@ tissuespec <- ggplot(summary_tissuespec_data_comparative,
     legend.text = element_text(size = 14),
     legend.title = element_text(size = 14, face = "bold"),
     panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    axis.line = element_blank(),
     panel.background = element_rect(fill = "white", color = NA),
     plot.margin = margin(20, 20, 20, 20)
   )
 
-ggsave("tissuespec.pdf", width = 13, height = 6, dpi = 300)
+ggsave("tissuespec.png", width = 13, height = 6, dpi = 300)
 
 
 #Relative Level of Nonsynonymous Diveristy Plot ----
@@ -2991,12 +2995,13 @@ rlnd_plot <- ggplot(summary_rlnd_data_comparative,
     legend.text = element_text(size = 14),
     legend.title = element_text(size = 14, face = "bold"),
     panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    axis.line = element_blank(),
     panel.background = element_rect(fill = "white", color = NA),
     plot.margin = margin(20, 20, 20, 20)
   )
 
-ggsave("rlnd_plot.pdf", width = 13, height = 6, dpi = 300)
+ggsave("rlnd_plot.png", width = 13, height = 6, dpi = 300)
 
 
 #TISSUE----
@@ -3030,7 +3035,8 @@ ggplot(summary_gonads_data_comparative,
         plot.margin = margin(10, 10, 10, 10),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "black", fill = NA, size = 1),
+        panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+        axis.line = element_blank(),
         panel.background = element_blank()) +
   geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
   geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
@@ -3065,7 +3071,8 @@ ggplot(summary_heads_data_comparative,
         plot.margin = margin(10, 10, 10, 10),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "black", fill = NA, size = 1),
+        panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+        axis.line = element_blank(),
         panel.background = element_blank()) +
   geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
   geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
@@ -3097,7 +3104,8 @@ ggplot(combined_data_tissue, aes(x = Sex.Bias.Category, y = q50, color = GeneTyp
         plot.margin = margin(10, 10, 10, 10),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-        panel.border = element_rect(color = "black", fill = NA, size = 1),
+        panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+        axis.line = element_blank(),
         panel.background = element_blank()) +
   geom_vline(xintercept = 1.5, color = "black", size = 1.2) +
   geom_vline(xintercept = 2.5:5.5, color = "grey60", size = 0.5) +
@@ -3151,7 +3159,8 @@ tissue_expr<-ggplot(combined_data_tissue, aes(x = Sex.Bias.Category, y = q50, co
     strip.text = element_text(size = 18, face = "bold", color = "#222222"),
     strip.background = element_rect(fill = "grey90", color = "black"),
     panel.grid = element_blank(),
-    panel.border = element_rect(color = "black", fill = NA, size = 1.2),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    axis.line = element_blank(),
     panel.background = element_rect(fill = "white", color = NA),
     plot.margin = margin(20, 20, 20, 20)
   )
@@ -3174,4 +3183,4 @@ combined_plot <- (rmf_plot / DoS_plot / rlnd_plot/ tajD_plot)+
 print(combined_plot)
 
 
-ggsave("combined_plot.pdf", combined_plot, width = 10, height = 17, dpi = 300)
+ggsave("combined_plot.png", combined_plot, width = 10, height = 17, dpi = 300)

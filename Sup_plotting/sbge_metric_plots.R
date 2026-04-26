@@ -35,9 +35,9 @@ required_files <- c(
   output_path("all_disease_ortholog_ids.csv"),
   output_path("all_ortholog_ids.csv"),
   output_path("dmel_gene_reference.csv"),
+  output_path("mishra_whole_body_sbge_bins.csv"),
   input_path("FileS7.txt"),
-  input_path("SBGEandSSSdataForMBE.csv"),
-  input_path("Sex.Biased.Genes.Whole.csv")
+  input_path("SBGEandSSSdataForMBE.csv")
 )
 
 missing_files <- required_files[!file.exists(required_files)]
@@ -46,6 +46,7 @@ if (length(missing_files) > 0) {
   stop(
     paste0(
       "Missing required reference files. Run Data_wrangling/compile_ssdo_reference_data.R first and make sure the Mishra SBGE file is present.\n",
+      "Run Data_wrangling/build_mishra_whole_body_sbge_bins.R to rebuild the active Mishra whole-body SBGE bins.\n",
       paste(missing_files, collapse = "\n")
     ),
     call. = FALSE
@@ -187,11 +188,12 @@ publication_theme <- function(base_size = 12) {
     theme(
       axis.text = element_text(size = base_size, colour = "black"),
       axis.title = element_text(size = base_size + 1, face = "bold"),
+      axis.line = element_blank(),
       strip.text = element_text(size = base_size, face = "bold", colour = "black"),
       legend.title = element_text(size = base_size + 1, face = "bold"),
       legend.text = element_text(size = base_size),
       legend.position = "top",
-      panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.7),
+      panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       axis.title.x = element_text(margin = margin(t = 10)),
@@ -243,8 +245,7 @@ singh <- read.csv(input_path("SBGEandSSSdataForMBE.csv"), stringsAsFactors = FAL
 colnames(singh)[2] <- "FlyBaseID"
 singh <- distinct(singh, FlyBaseID, .keep_all = TRUE)
 
-sbge_whole <- read.csv(input_path("Sex.Biased.Genes.Whole.csv"), stringsAsFactors = FALSE) |>
-  rename(FlyBaseID = 1) |>
+sbge_whole <- read.csv(output_path("mishra_whole_body_sbge_bins.csv"), stringsAsFactors = FALSE) |>
   transmute(
     FlyBaseID = as.character(FlyBaseID),
     SexBiasPanel = recode(Sex.Bias.Category, !!!sbge_label_map),
@@ -358,11 +359,11 @@ test_sbge_panels <- function(panelled_metric_data, seed = 1L) {
 
 
 metric_specs <- list(
-  list(name = "tajD", data = singh, value_col = "tajD.S", y_label = expression("Tajima's " * italic(D)), figure_file = "sbge_tajD_plot.pdf"),
-  list(name = "rMF", data = singh, value_col = "rmf", y_label = expression(italic(r)[MF]), figure_file = "sbge_rmf_plot.pdf"),
-  list(name = "rlnd", data = singh, value_col = "piNfract", y_label = expression(tilde(pi)[italic(r) * N]), figure_file = "sbge_rlnd_plot.pdf"),
-  list(name = "DoS", data = fra, value_col = "DoS", y_label = expression(italic(DoS)), figure_file = "sbge_DoS_plot.pdf"),
-  list(name = "Tissue Specificity", data = fra, value_col = "tissueSpecificityAdults", y_label = expression("Tissue Specificity (" * tau * ")"), figure_file = "sbge_tissuespec_plot.pdf")
+  list(name = "tajD", data = singh, value_col = "tajD.S", y_label = expression("Tajima's " * italic(D)), figure_file = "sbge_tajD_plot.png"),
+  list(name = "rMF", data = singh, value_col = "rmf", y_label = expression(italic(r)[MF]), figure_file = "sbge_rmf_plot.png"),
+  list(name = "rlnd", data = singh, value_col = "piNfract", y_label = expression(tilde(pi)[italic(r) * N]), figure_file = "sbge_rlnd_plot.png"),
+  list(name = "DoS", data = fra, value_col = "DoS", y_label = expression(italic(DoS)), figure_file = "sbge_DoS_plot.png"),
+  list(name = "Tissue Specificity", data = singh, value_col = "tao.FML.FA2", y_label = expression("Tissue Specificity (" * tau * ")"), figure_file = "sbge_tissuespec_plot.png")
 )
 
 for (metric_spec in metric_specs) {

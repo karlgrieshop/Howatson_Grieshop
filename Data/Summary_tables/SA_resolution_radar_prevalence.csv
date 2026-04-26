@@ -1,38 +1,38 @@
 "Group","Feature","FeatureLabel","Percent"
-"SSDOs","HFB","HFB",13.3802816901408
-"SSDOs","FB","FB",22.1830985915493
-"SSDOs","MB","MB",21.1267605633803
-"SSDOs","HMB","HMB",22.0070422535211
+"SSDOs","HFB","HFB",1.76056338028169
+"SSDOs","FB","FB",25.5281690140845
+"SSDOs","MB","MB",31.3380281690141
+"SSDOs","HMB","HMB",4.75352112676056
 "SSDOs","Dup","Dup",73.5915492957747
 "SSDOs","SSS","SSS",18.1338028169014
 "SSDOs","ASE","ASE",23.7676056338028
 "SSDOs","SS_ASE","SS-ASE",15.4929577464789
 "SSDOs","TS_ASE","TS-ASE",15.1408450704225
 "SSDOs","DR","DR",1.93661971830986
-"Disease orthologues","HFB","HFB",14.3648595172141
-"Disease orthologues","FB","FB",29.2441630391769
-"Disease orthologues","MB","MB",16.5017807677087
-"Disease orthologues","HMB","HMB",15.9081915314602
+"Disease orthologues","HFB","HFB",1.06846062524733
+"Disease orthologues","FB","FB",31.8559556786704
+"Disease orthologues","MB","MB",22.8729719034428
+"Disease orthologues","HMB","HMB",2.61179263949347
 "Disease orthologues","Dup","Dup",62.4455876533439
 "Disease orthologues","SSS","SSS",24.2184408389395
 "Disease orthologues","ASE","ASE",27.582113177681
 "Disease orthologues","SS_ASE","SS-ASE",17.1745152354571
 "Disease orthologues","TS_ASE","TS-ASE",16.8579343094579
 "Disease orthologues","DR","DR",1.89948555599525
-"Orthologues","HFB","HFB",15.3658536585366
-"Orthologues","FB","FB",22.6178861788618
-"Orthologues","MB","MB",14.5853658536585
-"Orthologues","HMB","HMB",24.6829268292683
+"Orthologues","HFB","HFB",1.38211382113821
+"Orthologues","FB","FB",29.0406504065041
+"Orthologues","MB","MB",21.1544715447154
+"Orthologues","HMB","HMB",13.2357723577236
 "Orthologues","Dup","Dup",67.2520325203252
 "Orthologues","SSS","SSS",14.4227642276423
 "Orthologues","ASE","ASE",20.7642276422764
 "Orthologues","SS_ASE","SS-ASE",12.6829268292683
 "Orthologues","TS_ASE","TS-ASE",11.4471544715447
 "Orthologues","DR","DR",1.44715447154472
-"Background","HFB","HFB",7.46677916051466
-"Background","FB","FB",6.6230753005695
-"Background","MB","MB",12.2337059692048
-"Background","HMB","HMB",34.0012655557899
+"Background","HFB","HFB",1.87724108837798
+"Background","FB","FB",10.1666315123392
+"Background","MB","MB",20.0379666736975
+"Background","HMB","HMB",22.6956338325248
 "Background","Dup","Dup",35.6675806791816
 "Background","SSS","SSS",7.44568656401603
 "Background","ASE","ASE",9.57603881037756

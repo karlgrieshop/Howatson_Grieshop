@@ -29,6 +29,7 @@ input_path <- function(...) file.path(project_root, "Data", "inputs", ...)
 output_path <- function(...) file.path(project_root, "Data", "outputs", ...)
 summary_path <- function(...) file.path(project_root, "Data", "Summary_tables", ...)
 figure_path <- function(...) file.path(project_root, "Figures", ...)
+sup_figure_path <- function(...) file.path(project_root, "Sup_figures", ...)
 
 
 suppressPackageStartupMessages({
@@ -37,11 +38,14 @@ suppressPackageStartupMessages({
   library(ggplot2)
 })
 
+dir.create(file.path(project_root, "Sup_figures"), recursive = TRUE, showWarnings = FALSE)
+
 
 simple_theme <- function(base_size = 13) {
   theme_classic(base_size = base_size) +
     theme(
-      panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.7),
+      axis.line = element_blank(),
+      panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
       legend.position = "none",
       axis.text = element_text(colour = "black"),
       strip.background = element_blank(),
@@ -287,6 +291,12 @@ ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors =
 disease_only_ids <- setdiff(disease_ids, ssdo_ids)
 ortholog_only_ids <- setdiff(ortholog_ids, disease_ids)
 study_order <- c("Innocenti and Morrow", "Ruzicka et al.", "Neal_Truter_Grieshop")
+study_display_order <- c("Innocenti and Morrow", "Ruzicka et al.", "Neal, Truter, et al. (unpublished)")
+study_display_map <- c(
+  "Innocenti and Morrow" = "Innocenti and Morrow",
+  "Ruzicka et al." = "Ruzicka et al.",
+  "Neal_Truter_Grieshop" = "Neal, Truter, et al. (unpublished)"
+)
 focal_order <- c("SSDOs", "Disease orthologues", "Orthologues")
 panel_order <- c(
   "SA genes among SSDOs",
@@ -417,6 +427,7 @@ plot_data <- bind_rows(lapply(all_results, `[[`, "plot_data")) |>
     FocalGroup = factor(FocalGroup, levels = focal_order),
     PanelLabel = factor(PanelLabel, levels = panel_order),
     Study = factor(Study, levels = study_order),
+    StudyDisplay = factor(recode(as.character(Study), !!!study_display_map), levels = study_display_order),
     DisplayGroup = factor(DisplayGroup, levels = c("Focal genes", "Other genes"))
   )
 
@@ -429,7 +440,7 @@ overlap_table <- bind_rows(lapply(all_results, `[[`, "overlap")) |>
 
 write.csv(
   summary_table,
-  summary_path("SA Candidate Enrichment Tests.csv"),
+  summary_path("TableS1_SA_Candidate_Enrichment_Tests.csv"),
   row.names = FALSE
 )
 
@@ -468,7 +479,8 @@ sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCand
             TRUE ~ "SA genes among Orthologues"
           ),
           levels = panel_order
-        )
+        ),
+        StudyDisplay = factor(recode(as.character(Study), !!!study_display_map), levels = study_display_order)
       ) |>
       filter(PValue < 0.05) |>
       mutate(x = 1.5, y = max(plot_data$ProportionCandidate) * 1.12, label = "*"),
@@ -477,7 +489,7 @@ sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCand
     size = 9,
     fontface = "bold"
   ) +
-  facet_grid(PanelLabel ~ Study, switch = "y") +
+  facet_grid(PanelLabel ~ StudyDisplay, switch = "y") +
   scale_fill_manual(values = c("SSDOs" = "#D55E00", "Disease orthologues" = "#0072B2", "Orthologues" = "#009E73", "Other genes" = "#999999")) +
   scale_y_continuous(
     limits = c(0, max(plot_data$ProportionCandidate) * 1.18),
@@ -495,7 +507,7 @@ sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCand
   )
 
 ggsave(
-  filename = figure_path("SA_candidate_enrichment.pdf"),
+  filename = sup_figure_path("FigS1_SA_Candidate_Enrichment.png"),
   plot = sa_enrichment_plot,
   width = 11,
   height = 10.1,

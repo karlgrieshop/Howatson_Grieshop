@@ -1,18 +1,18 @@
 "Group","Feature","FeatureLabel","Percent"
-"Candidate SA genes","HFB","HFB",11.9540229885057
-"Candidate SA genes","FB","FB",19.0804597701149
-"Candidate SA genes","MB","MB",17.2413793103448
-"Candidate SA genes","HMB","HMB",27.5862068965517
+"Candidate SA genes","HFB","HFB",2.29885057471264
+"Candidate SA genes","FB","FB",21.1494252873563
+"Candidate SA genes","MB","MB",29.1954022988506
+"Candidate SA genes","HMB","HMB",9.42528735632184
 "Candidate SA genes","Dup","Dup",57.9310344827586
 "Candidate SA genes","SSS","SSS",14.2528735632184
 "Candidate SA genes","ASE","ASE",20.6896551724138
 "Candidate SA genes","SS_ASE","SS-ASE",12.8735632183908
 "Candidate SA genes","TS_ASE","TS-ASE",14.2528735632184
 "Candidate SA genes","DR","DR",1.83908045977011
-"Background genes","HFB","HFB",12.44188620766
-"Background genes","FB","FB",18.3528890856763
-"Background genes","MB","MB",14.3089070917275
-"Background genes","HMB","HMB",26.1013947310162
+"Background genes","HFB","HFB",1.48328536639362
+"Background genes","FB","FB",23.0684082355546
+"Background genes","MB","MB",21.2530440557892
+"Background genes","HMB","HMB",14.3310456792857
 "Background genes","Dup","Dup",55.8704154674932
 "Background genes","SSS","SSS",13.9694487491698
 "Background genes","ASE","ASE",18.2495756770718

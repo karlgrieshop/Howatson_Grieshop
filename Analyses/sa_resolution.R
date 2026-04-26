@@ -650,8 +650,6 @@ write.csv(
 
 radar_result$draw(figure_path("sa_resolution_radar.png"))
 collapsed_radar_result$draw(figure_path("sa_resolution_collapsed_radar.png"))
-neal_candidate_radar_result$draw(sup_figure_path("neal_truter_grieshop_candidate_sa_resolution_radar.png"))
-ruzicka_candidate_radar_result$draw(sup_figure_path("ruzicka_candidate_sa_resolution_radar.png"))
 
 
 # The current `SSS` column comes from `dimorphic.subset.list.txt`, treated here

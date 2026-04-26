@@ -19,7 +19,8 @@ pub_theme <- function(base_size = 14) {
       legend.text      = element_text(size = base_size),
       legend.title     = element_text(size = base_size + 1, face = "bold"),
       legend.position  = "top",
-      panel.border     = element_rect(colour = "black", fill = NA, linewidth = 0.8),
+      axis.line        = element_blank(),
+      panel.border     = element_rect(colour = "black", fill = NA, linewidth = 0.5),
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       plot.margin      = margin(12, 12, 12, 12)
@@ -1394,7 +1395,7 @@ tajD_plot <- ggplot(summary_tajDS_data_comparative,
   pub_theme() +
   theme(legend.position = "top")
 
-ggsave("tajD_plot.pdf", width = 13, height = 6, dpi = 300)
+ggsave("tajD_plot.png", width = 13, height = 6, dpi = 300)
 
 # --- rMF Plot----
 summary_rMF_data_comparative <- left_join(summary_rMF_data_comparative, rmf_boot_results, by = c("Sex.Bias.Category", "GeneType"))
@@ -1429,7 +1430,7 @@ rmf_plot <- ggplot(summary_rMF_data_comparative,
   pub_theme() +
   theme(legend.position = "top")
 
-ggsave("rmf_plot.pdf", width = 13, height = 6, dpi = 300)
+ggsave("rmf_plot.png", width = 13, height = 6, dpi = 300)
 
 # DoS Plot----
 
@@ -1467,7 +1468,7 @@ DoS_plot <- ggplot(summary_DoS_data_comparative,
   pub_theme() +
   theme(legend.position = "top")
 
-ggsave("DoS_plot.pdf", width = 13, height = 6, dpi = 300)
+ggsave("DoS_plot.png", width = 13, height = 6, dpi = 300)
 
 # Tissue Specificity Plot ----
 summary_tissuespec_data_comparative<- left_join(summary_tissuespec_data_comparative, TissueSpecificity_boot_results, by = c("Sex.Bias.Category", "GeneType"))
@@ -1503,7 +1504,7 @@ tissuespec <- ggplot(summary_tissuespec_data_comparative,
   pub_theme() +
   theme(legend.position = "top")
 
-ggsave("tissuespec.pdf", width = 13, height = 6, dpi = 300)
+ggsave("tissuespec.png", width = 13, height = 6, dpi = 300)
 
 
 #Relative Level of Nonsynonymous Diveristy Plot ----
@@ -1541,7 +1542,7 @@ rlnd_plot <- ggplot(summary_rlnd_data_comparative,
   pub_theme() +
   theme(legend.position = "top")
 
-ggsave("rlnd_plot.pdf", width = 13, height = 6, dpi = 300)
+ggsave("rlnd_plot.png", width = 13, height = 6, dpi = 300)
 
 
 #Combining 4 genomic signatures plots ----
@@ -1559,5 +1560,4 @@ combined_plot <- (rmf_plot / DoS_plot / rlnd_plot/ tajD_plot)+
 print(combined_plot)
 
 
-ggsave("combined_plot.pdf", combined_plot, width = 10, height = 17, dpi = 300)
-
+ggsave("combined_plot.png", combined_plot, width = 10, height = 17, dpi = 300)

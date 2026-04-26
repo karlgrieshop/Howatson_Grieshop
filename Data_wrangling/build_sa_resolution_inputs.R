@@ -51,7 +51,7 @@ suppressPackageStartupMessages({
 required_files <- c(
   output_path("dmel_gene_reference.csv"),
   output_path("sexspecific_disease_ids.csv"),
-  input_path("Sex.Biased.Genes.Whole.csv"),
+  output_path("mishra_whole_body_sbge_bins.csv"),
   shared_parent_path("Genes.for.analysis.final.tsv"),
   mishra_ase_path("Data_for_R_scripts", "Sex.Reversed.AI", "Sex.Reversed.AI.test.tsv"),
   mishra_ase_path("Data_for_R_scripts", "GLM.outputs", "FDR.Sex.Effects.in.AI", "Whole.bodies.FDR.test.for.AI.tsv"),
@@ -103,10 +103,7 @@ load_ssdo_ids <- function() {
 
 
 load_sbge_sets <- function() {
-  sbge <- read.csv(input_path("Sex.Biased.Genes.Whole.csv"), stringsAsFactors = FALSE)
-  colnames(sbge)[1] <- "FlyBaseID"
-
-  sbge <- sbge |>
+  sbge <- read.csv(output_path("mishra_whole_body_sbge_bins.csv"), stringsAsFactors = FALSE) |>
     transmute(
       FlyBaseID = as.character(FlyBaseID),
       Category = as.character(Sex.Bias.Category)
@@ -270,10 +267,10 @@ feature_sets_long <- bind_rows(lapply(names(available_feature_sets), function(fe
 feature_notes <- data.frame(
   Feature = c("HFB", "FB", "MB", "HMB", "ASE", "SS_ASE", "TS_ASE", "DR", "SSS", "Dup"),
   Description = c(
-    "Highly female-biased whole-body SBGE genes from Mishra",
-    "Female-biased whole-body SBGE genes from Mishra (Moderately female-biased in source file)",
-    "Male-biased whole-body SBGE genes from Mishra (Moderately male-biased in source file)",
-    "Highly male-biased whole-body SBGE genes from Mishra",
+    "Highly female-biased whole-body SBGE genes from Mishra rebuilt with the MaleLimitedEvo x1 = 1, x2 = 5, y0 = 1, lfcSE rules",
+    "Female-biased whole-body SBGE genes from Mishra rebuilt with the MaleLimitedEvo x1 = 1, x2 = 5, y0 = 1, lfcSE rules (Moderately female-biased bin)",
+    "Male-biased whole-body SBGE genes from Mishra rebuilt with the MaleLimitedEvo x1 = 1, x2 = 5, y0 = 1, lfcSE rules (Moderately male-biased bin)",
+    "Highly male-biased whole-body SBGE genes from Mishra rebuilt with the MaleLimitedEvo x1 = 1, x2 = 5, y0 = 1, lfcSE rules",
     "Genes with allelic imbalance in the filtered Mishra whole-body sex-reversed AI table (males or females significant)",
     "Genes with significant whole-body ASE in exactly one sex only in the filtered Mishra sex-reversed AI table",
     "Genes with significant ASE in exactly one of heads or gonads in the retained Mishra ASE tables",
@@ -282,10 +279,10 @@ feature_notes <- data.frame(
     "Genes with one or more paralogues in the Harper and Morrow duplication analysis"
   ),
   Source = c(
-    "Data/inputs/Sex.Biased.Genes.Whole.csv",
-    "Data/inputs/Sex.Biased.Genes.Whole.csv",
-    "Data/inputs/Sex.Biased.Genes.Whole.csv",
-    "Data/inputs/Sex.Biased.Genes.Whole.csv",
+    "Data/outputs/mishra_whole_body_sbge_bins.csv",
+    "Data/outputs/mishra_whole_body_sbge_bins.csv",
+    "Data/outputs/mishra_whole_body_sbge_bins.csv",
+    "Data/outputs/mishra_whole_body_sbge_bins.csv",
     "../Mishra_et_al_Drosophila_ASE/Data_for_R_scripts/Sex.Reversed.AI/Sex.Reversed.AI.test.tsv filtered to ../Genes.for.analysis.final.tsv",
     "../Mishra_et_al_Drosophila_ASE/Data_for_R_scripts/Sex.Reversed.AI/Sex.Reversed.AI.test.tsv filtered to ../Genes.for.analysis.final.tsv",
     "../Mishra_et_al_Drosophila_ASE/Data_for_R_scripts/GLM.outputs/FDR.Sex.Effects.in.AI/{Heads,Gonads}.FDR.test.for.AI.tsv filtered to ../Genes.for.analysis.final.tsv",

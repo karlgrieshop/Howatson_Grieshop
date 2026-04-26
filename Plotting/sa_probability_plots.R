@@ -38,7 +38,6 @@ input_path <- function(...) file.path(project_root, "Data", "inputs", ...)
 output_path <- function(...) file.path(project_root, "Data", "outputs", ...)
 summary_path <- function(...) file.path(project_root, "Data", "Summary_tables", ...)
 figure_path <- function(...) file.path(project_root, "Figures", ...)
-sup_figure_path <- function(...) file.path(project_root, "Sup_figures", ...)
 
 
 suppressPackageStartupMessages({
@@ -63,8 +62,9 @@ publication_theme <- function(base_size = 14) {
     theme(
       axis.text = element_text(size = base_size, colour = "black"),
       axis.title = element_text(size = base_size + 2, face = "bold"),
+      axis.line = element_blank(),
       legend.position = "none",
-      panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.8),
+      panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
       axis.title.x = element_text(margin = margin(t = 12)),
       plot.margin = margin(32, 12, 12, 24)
     )
@@ -311,8 +311,6 @@ build_neal_values <- function(gene_reference) {
 }
 
 
-dir.create(file.path(project_root, "Sup_figures"), recursive = TRUE, showWarnings = FALSE)
-
 gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
 protein_coding_gene_reference <- gene_reference |>
   filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), gene_biotype == "protein_coding")
@@ -324,13 +322,13 @@ study_specs <- list(
   list(
     name = "Ruzicka et al.",
     values = build_ruzicka_values(protein_coding_gene_reference),
-    figure = "ruzicka_SA_probability.pdf",
+    figure = "ruzicka_SA_probability.png",
     y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
   ),
   list(
     name = "Neal_Truter_Grieshop",
     values = build_neal_values(protein_coding_gene_reference),
-    figure = "neal_truter_grieshop_SA_probability.pdf",
+    figure = "neal_truter_grieshop_SA_probability.png",
     y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
   )
 )
@@ -362,35 +360,6 @@ for (study_spec in study_specs) {
 
   ggsave(
     filename = figure_path(study_spec$figure),
-    plot = plot_object,
-    width = 7,
-    height = 5.5,
-    dpi = 300
-  )
-}
-
-sensitivity_specs <- list(
-  list(
-    name = "Ruzicka et al.",
-    values = build_ruzicka_values(gene_reference),
-    figure = "ruzicka_SA_probability_full_universe_sensitivity.pdf",
-    y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
-  ),
-  list(
-    name = "Neal_Truter_Grieshop",
-    values = build_neal_values(gene_reference),
-    figure = "neal_truter_grieshop_SA_probability_full_universe_sensitivity.pdf",
-    y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
-  )
-)
-
-for (study_spec in sensitivity_specs) {
-  raw_data <- assign_gene_types(study_spec$values, ssdo_ids, disease_ids, ortholog_ids)
-  summary_data <- bootstrap_group_summaries(raw_data)
-  plot_object <- plot_metric_distribution(summary_data, study_spec$y_label)
-
-  ggsave(
-    filename = sup_figure_path(study_spec$figure),
     plot = plot_object,
     width = 7,
     height = 5.5,

@@ -175,8 +175,9 @@ publication_theme <- function(base_size = 14) {
     theme(
       axis.text = element_text(size = base_size, colour = "black"),
       axis.title = element_text(size = base_size + 2, face = "bold"),
+      axis.line = element_blank(),
       legend.position = "none",
-      panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.8),
+      panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       axis.title.x = element_text(margin = margin(t = 12)),
@@ -264,11 +265,11 @@ build_metric_data <- function(metric_data, value_col) {
 
 
 metric_specs <- list(
-  list(name = "tajD", data = singh, value_col = "tajD.S", y_label = expression("Tajima's " * italic(D)), figure_file = "tajD_plot.pdf"),
-  list(name = "rMF", data = singh, value_col = "rmf", y_label = expression(italic(r)[MF]), figure_file = "rmf_plot.pdf"),
-  list(name = "rlnd", data = singh, value_col = "piNfract", y_label = expression(tilde(pi)[italic(r) * N]), figure_file = "rlnd_plot.pdf"),
-  list(name = "DoS", data = fra, value_col = "DoS", y_label = expression(italic(DoS)), figure_file = "DoS_plot.pdf"),
-  list(name = "Tissue Specificity", data = fra, value_col = "tissueSpecificityAdults", y_label = expression("Tissue Specificity (" * tau * ")"), figure_file = "tissuespec.pdf")
+  list(name = "tajD", data = singh, value_col = "tajD.S", y_label = expression("Tajima's " * italic(D)), figure_file = "tajD_plot.png"),
+  list(name = "rMF", data = singh, value_col = "rmf", y_label = expression(italic(r)[MF]), figure_file = "rmf_plot.png"),
+  list(name = "rlnd", data = singh, value_col = "piNfract", y_label = expression(tilde(pi)[italic(r) * N]), figure_file = "rlnd_plot.png"),
+  list(name = "DoS", data = fra, value_col = "DoS", y_label = expression(italic(DoS)), figure_file = "DoS_plot.png"),
+  list(name = "Tissue Specificity", data = singh, value_col = "tao.FML.FA2", y_label = expression("Tissue Specificity (" * tau * ")"), figure_file = "tissuespec.png")
 )
 
 for (metric_spec in metric_specs) {
