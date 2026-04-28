@@ -14,7 +14,7 @@ find_project_root_local <- function(start = getwd()) {
     parent <- dirname(current)
     if (identical(parent, current)) {
       stop(
-        "Could not locate the project root. Run this script from the Final_Year_Project_github repository.",
+        "Could not locate the project root. Run this script from inside the repository root or one of its subdirectories.",
         call. = FALSE
       )
     }
@@ -246,36 +246,6 @@ compile_ssdo_reference_data <- function(project_root = find_project_root_local()
     dplyr::distinct() |>
     dplyr::arrange(FlyBaseID)
 
-  raw_subset_checks <- data.frame(
-    check = c(
-      "SSDOs subset raw disease orthologues",
-      "Raw disease orthologues subset raw orthologues"
-    ),
-    passed = c(
-      all(ssdo_ids$FlyBaseID %in% raw_disease_ids$FlyBaseID),
-      all(raw_disease_ids$FlyBaseID %in% raw_ortholog_ids$FlyBaseID)
-    ),
-    stringsAsFactors = FALSE
-  )
-
-  harmonized_subset_checks <- data.frame(
-    check = c(
-      "SSDOs subset canonical disease orthologues",
-      "Canonical disease orthologues subset canonical orthologues"
-    ),
-    passed = c(
-      all(ssdo_ids$FlyBaseID %in% disease_ids$FlyBaseID),
-      all(disease_ids$FlyBaseID %in% ortholog_ids$FlyBaseID)
-    ),
-    stringsAsFactors = FALSE
-  )
-
-  raw_ssdo_missing <- ssdo_ids |>
-    dplyr::filter(!(FlyBaseID %in% raw_disease_ids$FlyBaseID))
-
-  raw_disease_missing <- raw_disease_ids |>
-    dplyr::filter(!(FlyBaseID %in% raw_ortholog_ids$FlyBaseID))
-
   utils::write.csv(
     sexspecific_disease_gene_data,
     project_output("sexspecific_disease_gene_data.csv", root = project_root),
@@ -306,26 +276,6 @@ compile_ssdo_reference_data <- function(project_root = find_project_root_local()
     project_output("dmel_transcript_reference.csv", root = project_root),
     row.names = FALSE
   )
-  utils::write.csv(
-    raw_subset_checks,
-    project_output("reference_subset_checks_raw.csv", root = project_root),
-    row.names = FALSE
-  )
-  utils::write.csv(
-    harmonized_subset_checks,
-    project_output("reference_subset_checks_harmonized.csv", root = project_root),
-    row.names = FALSE
-  )
-  utils::write.csv(
-    raw_ssdo_missing,
-    project_output("ssdo_not_in_raw_disease_orthologs.csv", root = project_root),
-    row.names = FALSE
-  )
-  utils::write.csv(
-    raw_disease_missing,
-    project_output("raw_disease_not_in_raw_orthologs.csv", root = project_root),
-    row.names = FALSE
-  )
 
   message("Compiled SSDO rows: ", nrow(sexspecific_disease_gene_data))
   message("Unique SSDO FlyBase IDs: ", nrow(ssdo_ids))
@@ -337,9 +287,7 @@ compile_ssdo_reference_data <- function(project_root = find_project_root_local()
       sexspecific_disease_gene_data = sexspecific_disease_gene_data,
       ssdo_ids = ssdo_ids,
       disease_ids = disease_ids,
-      ortholog_ids = ortholog_ids,
-      raw_subset_checks = raw_subset_checks,
-      harmonized_subset_checks = harmonized_subset_checks
+      ortholog_ids = ortholog_ids
     )
   )
 }

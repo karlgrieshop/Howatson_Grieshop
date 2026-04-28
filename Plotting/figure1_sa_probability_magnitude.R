@@ -14,7 +14,7 @@ find_project_root <- function(start = getwd()) {
     parent <- dirname(current)
     if (identical(parent, current)) {
       stop(
-        "Could not locate the project root. Run this script from inside the Final_Year_Project repository.",
+        "Could not locate the project root. Run this script from inside the repository root or one of its subdirectories.",
         call. = FALSE
       )
     }
@@ -27,6 +27,7 @@ find_project_root <- function(start = getwd()) {
 project_root <- find_project_root()
 input_path <- function(...) file.path(project_root, "Data", "inputs", ...)
 output_path <- function(...) file.path(project_root, "Data", "outputs", ...)
+summary_path <- function(...) file.path(project_root, "Data", "Summary_tables", ...)
 figure_path <- function(...) file.path(project_root, "Figures", ...)
 
 
@@ -327,6 +328,13 @@ plot_metric_panel <- function(
 }
 
 
+read_saved_summary <- function(filename) {
+  read.csv(summary_path(filename), stringsAsFactors = FALSE) |>
+    mutate(GeneType = factor(GeneType, levels = ordered_gene_types)) |>
+    arrange(GeneType)
+}
+
+
 gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
 protein_coding_gene_reference <- gene_reference |>
   filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), gene_biotype == "protein_coding")
@@ -334,21 +342,37 @@ ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactor
 disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 
-ruz_prob_summary <- build_ruzicka_probability_values(protein_coding_gene_reference) |>
-  assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
-  bootstrap_group_summaries()
+ruz_prob_summary <- if (file.exists(summary_path("Ruzicka_et_al_SA_probability_plot_data.csv"))) {
+  read_saved_summary("Ruzicka_et_al_SA_probability_plot_data.csv")
+} else {
+  build_ruzicka_probability_values(protein_coding_gene_reference) |>
+    assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
+    bootstrap_group_summaries()
+}
 
-neal_prob_summary <- build_neal_probability_values(protein_coding_gene_reference) |>
-  assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
-  bootstrap_group_summaries()
+neal_prob_summary <- if (file.exists(summary_path("Neal_Truter_Grieshop_SA_probability_plot_data.csv"))) {
+  read_saved_summary("Neal_Truter_Grieshop_SA_probability_plot_data.csv")
+} else {
+  build_neal_probability_values(protein_coding_gene_reference) |>
+    assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
+    bootstrap_group_summaries()
+}
 
-ruz_mag_summary <- build_ruzicka_magnitude_values(protein_coding_gene_reference) |>
-  assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
-  bootstrap_group_summaries()
+ruz_mag_summary <- if (file.exists(summary_path("Ruzicka_et_al_SA_magnitude_plot_data.csv"))) {
+  read_saved_summary("Ruzicka_et_al_SA_magnitude_plot_data.csv")
+} else {
+  build_ruzicka_magnitude_values(protein_coding_gene_reference) |>
+    assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
+    bootstrap_group_summaries()
+}
 
-neal_mag_summary <- build_neal_magnitude_values(protein_coding_gene_reference) |>
-  assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
-  bootstrap_group_summaries()
+neal_mag_summary <- if (file.exists(summary_path("Neal_Truter_Grieshop_SA_magnitude_plot_data.csv"))) {
+  read_saved_summary("Neal_Truter_Grieshop_SA_magnitude_plot_data.csv")
+} else {
+  build_neal_magnitude_values(protein_coding_gene_reference) |>
+    assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
+    bootstrap_group_summaries()
+}
 
 panel_a <- plot_metric_panel(
   summary_data = ruz_prob_summary,

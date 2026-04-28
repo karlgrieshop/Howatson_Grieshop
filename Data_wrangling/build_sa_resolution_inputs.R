@@ -13,7 +13,7 @@ find_project_root <- function(start = getwd()) {
     parent <- dirname(current)
     if (identical(parent, current)) {
       stop(
-        "Could not locate the project root. Run this script from inside the Final_Year_Project repository.",
+        "Could not locate the project root. Run this script from inside the repository root or one of its subdirectories.",
         call. = FALSE
       )
     }
@@ -48,19 +48,49 @@ suppressPackageStartupMessages({
 })
 
 
+prefer_local_input <- function(local_name, fallback_path) {
+  local_path <- input_path(local_name)
+  if (file.exists(local_path)) local_path else fallback_path
+}
+
+
+genes_for_analysis_path <- prefer_local_input(
+  "Genes.for.analysis.final.tsv",
+  shared_parent_path("Genes.for.analysis.final.tsv")
+)
+sex_reversed_ai_path <- prefer_local_input(
+  "Sex.Reversed.AI.test.tsv",
+  mishra_ase_path("Data_for_R_scripts", "Sex.Reversed.AI", "Sex.Reversed.AI.test.tsv")
+)
+heads_fdr_path <- prefer_local_input(
+  "Heads.FDR.test.for.AI.tsv",
+  mishra_ase_path("Data_for_R_scripts", "GLM.outputs", "FDR.Sex.Effects.in.AI", "Heads.FDR.test.for.AI.tsv")
+)
+gonads_fdr_path <- prefer_local_input(
+  "Gonads.FDR.test.for.AI.tsv",
+  mishra_ase_path("Data_for_R_scripts", "GLM.outputs", "FDR.Sex.Effects.in.AI", "Gonads.FDR.test.for.AI.tsv")
+)
+dimorphic_subset_path <- prefer_local_input(
+  "dimorphic.subset.list.txt",
+  male_limited_path("Analyses", "DS_analysis", "dimorphic.subset.list.txt")
+)
+duplication_table_path <- prefer_local_input(
+  "all_paralogs_correct.csv",
+  harper_dup_path("Output", "all_paralogs_correct.csv")
+)
+
+
 required_files <- c(
   output_path("dmel_gene_reference.csv"),
   output_path("sexspecific_disease_ids.csv"),
   output_path("mishra_whole_body_sbge_bins.csv"),
-  shared_parent_path("Genes.for.analysis.final.tsv"),
-  mishra_ase_path("Data_for_R_scripts", "Sex.Reversed.AI", "Sex.Reversed.AI.test.tsv"),
-  mishra_ase_path("Data_for_R_scripts", "GLM.outputs", "FDR.Sex.Effects.in.AI", "Whole.bodies.FDR.test.for.AI.tsv"),
-  mishra_ase_path("Data_for_R_scripts", "GLM.outputs", "FDR.Sex.Effects.in.AI", "Reciprocal.whole.bodies.FDR.test.for.AI.tsv"),
-  mishra_ase_path("Data_for_R_scripts", "GLM.outputs", "FDR.Sex.Effects.in.AI", "Heads.FDR.test.for.AI.tsv"),
-  mishra_ase_path("Data_for_R_scripts", "GLM.outputs", "FDR.Sex.Effects.in.AI", "Gonads.FDR.test.for.AI.tsv"),
+  genes_for_analysis_path,
+  sex_reversed_ai_path,
+  heads_fdr_path,
+  gonads_fdr_path,
   input_path("Genes.with.Sex.Reversed.AI.tsv"),
-  male_limited_path("Analyses", "DS_analysis", "dimorphic.subset.list.txt"),
-  harper_dup_path("Output", "all_paralogs_correct.csv")
+  dimorphic_subset_path,
+  duplication_table_path
 )
 
 missing_files <- required_files[!file.exists(required_files)]
@@ -121,7 +151,7 @@ load_sbge_sets <- function() {
 
 
 load_mishra_retained_ids <- function() {
-  read.delim(shared_parent_path("Genes.for.analysis.final.tsv"), stringsAsFactors = FALSE) |>
+  read.delim(genes_for_analysis_path, stringsAsFactors = FALSE) |>
     transmute(FlyBaseID = as.character(geneID)) |>
     filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
     distinct() |>
@@ -131,7 +161,7 @@ load_mishra_retained_ids <- function() {
 
 read_mishra_sex_reversed_ai <- function(retained_ids) {
   read.delim(
-    mishra_ase_path("Data_for_R_scripts", "Sex.Reversed.AI", "Sex.Reversed.AI.test.tsv"),
+    sex_reversed_ai_path,
     stringsAsFactors = FALSE
   ) |>
     transmute(
@@ -150,7 +180,7 @@ read_mishra_sex_reversed_ai <- function(retained_ids) {
 
 read_mishra_sex_ai_fdr <- function(file_name, retained_ids) {
   read.delim(
-    mishra_ase_path("Data_for_R_scripts", "GLM.outputs", "FDR.Sex.Effects.in.AI", file_name),
+    file_name,
     stringsAsFactors = FALSE
   ) |>
     transmute(
@@ -169,8 +199,8 @@ read_mishra_sex_ai_fdr <- function(file_name, retained_ids) {
 
 load_ai_sets <- function(retained_ids) {
   whole_body_ai <- read_mishra_sex_reversed_ai(retained_ids)
-  heads <- read_mishra_sex_ai_fdr("Heads.FDR.test.for.AI.tsv", retained_ids)
-  gonads <- read_mishra_sex_ai_fdr("Gonads.FDR.test.for.AI.tsv", retained_ids)
+  heads <- read_mishra_sex_ai_fdr(heads_fdr_path, retained_ids)
+  gonads <- read_mishra_sex_ai_fdr(gonads_fdr_path, retained_ids)
 
   head_gonad_ai <- full_join(
     heads |>
@@ -203,7 +233,7 @@ load_dr_set <- function() {
 
 load_sss_set <- function() {
   read.delim(
-    male_limited_path("Analyses", "DS_analysis", "dimorphic.subset.list.txt"),
+    dimorphic_subset_path,
     header = FALSE,
     stringsAsFactors = FALSE
   ) |>
@@ -215,7 +245,7 @@ load_sss_set <- function() {
 
 
 load_dup_set <- function() {
-  read.csv(harper_dup_path("Output", "all_paralogs_correct.csv"), stringsAsFactors = FALSE) |>
+  read.csv(duplication_table_path, stringsAsFactors = FALSE) |>
     transmute(FlyBaseID = as.character(FBgn_ID)) |>
     filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
     distinct(FlyBaseID, .keep_all = TRUE) |>
@@ -283,12 +313,12 @@ feature_notes <- data.frame(
     "Data/outputs/mishra_whole_body_sbge_bins.csv",
     "Data/outputs/mishra_whole_body_sbge_bins.csv",
     "Data/outputs/mishra_whole_body_sbge_bins.csv",
-    "../Mishra_et_al_Drosophila_ASE/Data_for_R_scripts/Sex.Reversed.AI/Sex.Reversed.AI.test.tsv filtered to ../Genes.for.analysis.final.tsv",
-    "../Mishra_et_al_Drosophila_ASE/Data_for_R_scripts/Sex.Reversed.AI/Sex.Reversed.AI.test.tsv filtered to ../Genes.for.analysis.final.tsv",
-    "../Mishra_et_al_Drosophila_ASE/Data_for_R_scripts/GLM.outputs/FDR.Sex.Effects.in.AI/{Heads,Gonads}.FDR.test.for.AI.tsv filtered to ../Genes.for.analysis.final.tsv",
+    "Data/inputs/Sex.Reversed.AI.test.tsv filtered to Genes.for.analysis.final.tsv (local copy preferred)",
+    "Data/inputs/Sex.Reversed.AI.test.tsv filtered to Genes.for.analysis.final.tsv (local copy preferred)",
+    "Data/inputs/{Heads,Gonads}.FDR.test.for.AI.tsv filtered to Genes.for.analysis.final.tsv (local copy preferred)",
     "Data/inputs/Genes.with.Sex.Reversed.AI.tsv",
-    "../MaleLimitedEvo/Analyses/DS_analysis/dimorphic.subset.list.txt",
-    "Grieshop Lab shared/Data/Harper and Morrow 2025/Output/all_paralogs_correct.csv"
+    "Data/inputs/dimorphic.subset.list.txt (local copy preferred)",
+    "Data/inputs/all_paralogs_correct.csv (local copy preferred)"
   ),
   Status = c(rep("ready", 10)),
   GeneCount = c(
@@ -312,10 +342,6 @@ feature_notes <- data.frame(
 )
 
 
-feature_sizes <- feature_notes |>
-  select(Feature, Status, GeneCount, Description)
-
-
 write.csv(
   feature_membership,
   output_path("sa_resolution_feature_membership.csv"),
@@ -325,12 +351,6 @@ write.csv(
 write.csv(
   feature_sets_long,
   output_path("sa_resolution_feature_sets.csv"),
-  row.names = FALSE
-)
-
-write.csv(
-  feature_sizes,
-  summary_path("sa_resolution_feature_sizes.csv"),
   row.names = FALSE
 )
 

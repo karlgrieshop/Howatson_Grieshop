@@ -13,7 +13,7 @@ find_project_root <- function(start = getwd()) {
     parent <- dirname(current)
     if (identical(parent, current)) {
       stop(
-        "Could not locate the project root. Run this script from inside the Final_Year_Project repository.",
+        "Could not locate the project root. Run this script from inside the repository root or one of its subdirectories.",
         call. = FALSE
       )
     }

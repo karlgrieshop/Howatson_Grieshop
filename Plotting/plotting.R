@@ -23,7 +23,7 @@ find_project_root <- function(start = getwd()) {
     parent <- dirname(current)
     if (identical(parent, current)) {
       stop(
-        "Could not locate the project root. Run this script from inside the Final_Year_Project_github repository.",
+        "Could not locate the project root. Run this script from inside the repository root or one of its subdirectories.",
         call. = FALSE
       )
     }
@@ -265,11 +265,11 @@ build_metric_data <- function(metric_data, value_col) {
 
 
 metric_specs <- list(
-  list(name = "tajD", data = singh, value_col = "tajD.S", y_label = expression("Tajima's " * italic(D)), figure_file = "tajD_plot.png"),
-  list(name = "rMF", data = singh, value_col = "rmf", y_label = expression(italic(r)[MF]), figure_file = "rmf_plot.png"),
-  list(name = "rlnd", data = singh, value_col = "piNfract", y_label = expression(tilde(pi)[italic(r) * N]), figure_file = "rlnd_plot.png"),
-  list(name = "DoS", data = fra, value_col = "DoS", y_label = expression(italic(DoS)), figure_file = "DoS_plot.png"),
-  list(name = "Tissue Specificity", data = singh, value_col = "tao.FML.FA2", y_label = expression("Tissue Specificity (" * tau * ")"), figure_file = "tissuespec.png")
+  list(name = "tajD", data = singh, value_col = "tajD.S", y_label = expression("Tajima's " * italic(D))),
+  list(name = "rMF", data = singh, value_col = "rmf", y_label = expression(italic(r)[MF])),
+  list(name = "rlnd", data = singh, value_col = "piNfract", y_label = expression(tilde(pi)[italic(r) * N])),
+  list(name = "DoS", data = fra, value_col = "DoS", y_label = expression(italic(DoS))),
+  list(name = "Tissue Specificity", data = singh, value_col = "tao.FML.FA2", y_label = expression("Tissue Specificity (" * tau * ")"))
 )
 
 for (metric_spec in metric_specs) {
@@ -284,22 +284,9 @@ for (metric_spec in metric_specs) {
     row.names = FALSE
   )
   write.csv(
-    raw_metric_data,
-    summary_path(paste0(metric_spec$name, " Raw Data.csv")),
-    row.names = FALSE
-  )
-  write.csv(
     tests_metric_data,
     summary_path(paste0(metric_spec$name, " Permutation Tests.csv")),
     row.names = FALSE
-  )
-
-  ggsave(
-    filename = figure_path(metric_spec$figure_file),
-    plot = metric_plot,
-    width = 7,
-    height = 5,
-    dpi = 300
   )
 
 }

@@ -1,14 +1,18 @@
-# Supplemental plotting
+# Supplementary plotting
 
-- `sbge_metric_plots.R` regenerates the supplemental four-category metric figures using a single SBGE x-axis with Mishra whole-body sex-bias classes plus `All` at the far left.
-- `figureS3_figureS4_metric_panels.R` packages those SBGE summary tables into the stacked supplemental composites `FigS3_rmf_tau.png` and `FigS4_rlns_tajD_DoS.png`.
-- It uses the current canonical SSDO / disease-orthologue / orthologue ID sets and the current bootstrap + permutation workflow, then subsets to genes present in `Data/outputs/mishra_whole_body_sbge_bins.csv`.
-- The six x-axis bins are:
-  - All
-  - Highly female-biased
-  - Female-biased
-  - Unbiased
-  - Male-biased
-  - Highly male-biased
+This directory contains the active scripts for the retained **supplementary figure** plotting workflow.
 
-`Female-biased` and `Male-biased` in these supplemental panels correspond to Mishra's `Moderately female-biased` and `Moderately male-biased` categories from the rebuilt MaleLimitedEvo-style binning.
+## Active scripts
+
+1. `sbge_metric_plots.R`  
+   Writes the SBGE-stratified metric plot-data and permutation-test tables kept in `Data/Summary_tables/SBGE_supplement/`.
+
+2. `figureS2_sa_prob_mag.R`  
+   Builds `Sup_figures/FigS2_sa_prob_mag.png` from the active SA probability/magnitude inputs.
+
+3. `figureS3_figureS4_metric_panels.R`  
+   Builds:
+   - `Sup_figures/FigS3_rmf_tau.png`
+   - `Sup_figures/FigS4_rlns_tajD_DoS.png`
+
+The SBGE-stratified component PNGs are no longer kept as tracked standalone outputs.

@@ -14,7 +14,7 @@ find_project_root <- function(start = getwd()) {
     parent <- dirname(current)
     if (identical(parent, current)) {
       stop(
-        "Could not locate the project root. Run this script from inside the Final_Year_Project repository.",
+        "Could not locate the project root. Run this script from inside the repository root or one of its subdirectories.",
         call. = FALSE
       )
     }
@@ -501,7 +501,6 @@ ruzicka_candidate_plot_data <- assign_candidate_groups(
   group_var = "RuzickaCandidateGroup"
 )
 enrichment_results <- whole_genome_family$results
-overlap_ids <- whole_genome_family$overlaps
 
 
 write.csv(
@@ -509,13 +508,6 @@ write.csv(
   summary_path("SA_resolution_enrichment_tests.csv"),
   row.names = FALSE
 )
-
-write.csv(
-  overlap_ids,
-  summary_path("SA_resolution_enrichment_overlap_ids.csv"),
-  row.names = FALSE
-)
-
 
 radar_features <- c("HFB", "FB", "MB", "HMB", "Dup", "SSS", "ASE", "SS_ASE", "TS_ASE", "DR")
 radar_feature_labels <- c(
@@ -546,71 +538,10 @@ radar_permutation_tests <- build_resolution_radar_permutation_tests(
   group_var = "GeneType",
   group_order = ordered_gene_types
 )
-collapsed_radar_result <- build_resolution_radar(
-  data = collapsed_resolution_plot_data,
-  feature_order = radar_features,
-  feature_labels = radar_feature_labels,
-  group_var = "CollapsedGeneType",
-  group_order = c("SSDOs", "Background"),
-  group_colours = c("SSDOs" = "#D55E00", "Background" = "#999999"),
-  legend_ncol = 1
-)
-collapsed_radar_permutation_tests <- build_resolution_radar_permutation_tests(
-  data = collapsed_resolution_plot_data,
-  feature_order = radar_features,
-  group_var = "CollapsedGeneType",
-  group_order = c("SSDOs", "Background")
-)
-neal_candidate_radar_result <- build_resolution_radar(
-  data = neal_candidate_plot_data,
-  feature_order = radar_features,
-  feature_labels = radar_feature_labels,
-  group_var = "NealCandidateGroup",
-  group_order = c("Candidate SA genes", "Background genes"),
-  group_colours = c("Candidate SA genes" = "#CC79A7", "Background genes" = "#000000"),
-  legend_ncol = 1
-)
-ruzicka_candidate_radar_result <- build_resolution_radar(
-  data = ruzicka_candidate_plot_data,
-  feature_order = radar_features,
-  feature_labels = radar_feature_labels,
-  group_var = "RuzickaCandidateGroup",
-  group_order = c("Candidate SA genes", "Background genes"),
-  group_colours = c("Candidate SA genes" = "#C77CFF", "Background genes" = "#000000"),
-  legend_ncol = 1
-)
-neal_candidate_enrichment_results <- run_candidate_enrichment_family(
-  universe_ids = whole_genome_universe,
-  focal_ids = neal_candidate_ids,
-  study_name = "Neal_Truter_Grieshop"
-)
-ruzicka_candidate_enrichment_results <- run_candidate_enrichment_family(
-  universe_ids = whole_genome_universe,
-  focal_ids = ruzicka_candidate_ids,
-  study_name = "Ruzicka et al."
-)
 
 write.csv(
   radar_result$summary,
   summary_path("SA_resolution_radar_prevalence.csv"),
-  row.names = FALSE
-)
-
-write.csv(
-  collapsed_radar_result$summary,
-  summary_path("SA_resolution_collapsed_radar_prevalence.csv"),
-  row.names = FALSE
-)
-
-write.csv(
-  neal_candidate_radar_result$summary,
-  summary_path("SA_resolution_neal_candidate_radar_prevalence.csv"),
-  row.names = FALSE
-)
-
-write.csv(
-  ruzicka_candidate_radar_result$summary,
-  summary_path("SA_resolution_ruzicka_candidate_radar_prevalence.csv"),
   row.names = FALSE
 )
 
@@ -620,36 +551,7 @@ write.csv(
   row.names = FALSE
 )
 
-write.csv(
-  collapsed_radar_permutation_tests,
-  summary_path("SA_resolution_collapsed_radar_permutation_tests.csv"),
-  row.names = FALSE
-)
-
-dir.create(file.path(project_root, "Sup_figures"), recursive = TRUE, showWarnings = FALSE)
-write.csv(
-  neal_candidate_enrichment_results,
-  summary_path("SA_resolution_neal_candidate_enrichment_tests.csv"),
-  row.names = FALSE
-)
-write.csv(
-  neal_candidate_enrichment_results,
-  sup_figure_path("neal_truter_grieshop_candidate_sa_resolution_enrichment_table.csv"),
-  row.names = FALSE
-)
-write.csv(
-  ruzicka_candidate_enrichment_results,
-  summary_path("SA_resolution_ruzicka_candidate_enrichment_tests.csv"),
-  row.names = FALSE
-)
-write.csv(
-  ruzicka_candidate_enrichment_results,
-  sup_figure_path("ruzicka_candidate_sa_resolution_enrichment_table.csv"),
-  row.names = FALSE
-)
-
 radar_result$draw(figure_path("Fig4_sa_res_radar.png"))
-collapsed_radar_result$draw(figure_path("sa_resolution_collapsed_radar.png"))
 
 
 # The current `SSS` column comes from `dimorphic.subset.list.txt`, treated here

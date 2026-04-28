@@ -14,7 +14,7 @@ find_project_root <- function(start = getwd()) {
     parent <- dirname(current)
     if (identical(parent, current)) {
       stop(
-        "Could not locate the project root. Run this script from inside the Final_Year_Project repository.",
+        "Could not locate the project root. Run this script from inside the repository root or one of its subdirectories.",
         call. = FALSE
       )
     }
@@ -448,28 +448,6 @@ overlap_table <- bind_rows(lapply(all_results, `[[`, "overlap")) |>
 write.csv(
   summary_table,
   summary_path("TableS1_SA_Candidate_Enrichment_Tests.csv"),
-  row.names = FALSE
-)
-
-write.csv(
-  innocenti$mapping,
-  summary_path("Innocenti Candidate Symbol Mapping.csv"),
-  row.names = FALSE
-)
-
-write.csv(
-  overlap_table,
-  summary_path("SA Candidate Enrichment Overlap IDs.csv"),
-  row.names = FALSE
-)
-
-write.csv(
-  data.frame(
-    Study = names(matched_universes),
-    UniverseSize = vapply(matched_universes, length, integer(1)),
-    stringsAsFactors = FALSE
-  ),
-  summary_path("SA Candidate Matched Universes.csv"),
   row.names = FALSE
 )
 

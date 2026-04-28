@@ -1,16 +1,25 @@
 # Data wrangling
 
+This directory contains the **active build scripts** that create canonical intermediate tables used by the retained plotting and analysis workflow.
+
 ## Active scripts
 
-- `compile_ssdo_reference_data.R`
-- `build_mishra_whole_body_sbge_bins.R`
-- `build_affx_dros_2_array_reference.R`
-- `build_sa_resolution_inputs.R`
+1. `compile_ssdo_reference_data.R`  
+   Compiles the canonical SSDO, disease-orthologue, orthologue, and gene-reference tables.
 
-`build_mishra_whole_body_sbge_bins.R` rebuilds the active five-level whole-body Mishra SBGE categories directly from the local untracked input `Data/inputs/DifferentialGeneExpression.whole.bodies.tsv` using the MaleLimitedEvo `x1 = 1`, `x2 = 5`, `y0 = 1`, and `lfcSE` rules, and writes them to `Data/outputs/mishra_whole_body_sbge_bins.csv`.
+2. `build_mishra_whole_body_sbge_bins.R`  
+   Rebuilds the five-bin whole-body SBGE classification used in the current manuscript figures.
 
-`compile_ssdo_reference_data.R` reads the raw files from `Data/inputs/`, parses the GTF into gene and transcript reference tables, restricts the active canonical universes to protein-coding FBgn genes, and writes the compiled outputs to `Data/outputs/`.
+3. `build_affx_dros_2_array_reference.R`  
+   Builds the Affymetrix Drosophila Genome 2.0 probe reference used to define the Innocenti and Morrow (2010) assay universe for FigS1.
 
-`build_affx_dros_2_array_reference.R` builds `Data/outputs/Affx_Dros_2.0.csv`, a real Affymetrix Drosophila Genome 2.0 probe-symbol reference used only for the study-matched Innocenti enrichment background.
+4. `build_sa_resolution_inputs.R`  
+   Assembles the Fig4 feature-membership table and feature-set table. This is the most involved wrangling step in the repository.
 
-`build_sa_resolution_inputs.R` assembles the current protein-coding SA-resolution feature table and per-feature gene sets used by `Analyses/sa_resolution.R`, including the four biased Mishra SBGE sub-bins (`HFB`, `FB`, `MB`, `HMB`) from `Data/outputs/mishra_whole_body_sbge_bins.csv`, filtered Mishra ASE-derived classes (`ASE`, `SS-ASE`, `TS-ASE`), and pulling from the sibling `Mishra_et_al_Drosophila_ASE` and `MaleLimitedEvo` clones plus the shared Harper and Morrow duplication table where available.
+## Brief notes on the more involved transformations
+
+- **SSDO compilation:** the SSDO, disease-orthologue, and orthologue sets are standardized onto local FBgn-based reference tables so downstream scripts use a single canonical gene-ID space.
+- **Affymetrix universe:** the Innocenti and Morrow enrichment tests use the genes represented on the Affymetrix Drosophila Genome 2.0 array rather than the broader protein-coding background.
+- **Fig4 feature assembly:** `build_sa_resolution_inputs.R` combines Mishra-derived ASE classes, sex-limited expression classes, dimorphic splicing, and duplication into one feature-membership table. Where local copies exist in `Data/inputs/`, they are preferred over historical sibling-directory paths.
+
+Outputs from these scripts are written to `Data/outputs/` and then consumed by `Plotting/`, `Sup_plotting/`, or `Analyses/`.

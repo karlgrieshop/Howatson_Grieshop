@@ -1,96 +1,93 @@
-# Final Year Project — Sex-Specific Disease Orthologues in *Drosophila melanogaster*
+# SSDOs_Howatson_Grieshop_Phil_Trans
 
-> [!IMPORTANT]
-> **Required local data files are intentionally gitignored and must be copied into `Data/inputs/` before rerunning the full workflow. Do not commit these raw files to Git.**
->
-> Use the **Grieshop Lab shared/Data** directory here:
-> `/Users/rpr23sxu/Library/CloudStorage/OneDrive-UniversityofEastAnglia/Documents/BIO UEA/Grieshop Lab/Grieshop Lab shared/Data`
->
-> Required untracked files:
->
-> | Local repo path | Needed for | Shared source |
-> | --- | --- | --- |
-> | `Data/inputs/SBGEandSSSdataForMBE.csv` | metric plots | `.../Data/Singh_and_Agrawal_2023/SBGEandSSSdataForMBE.csv` |
-> | `Data/inputs/FileS7.txt` | metric plots | source file is `.../Data/Fraïsse_et_al_2019/FileS7.csv` |
-> | `Data/inputs/all_orthologs.csv` | `compile_ssdo_reference_data.R` | `.../Data/Grieshop_and_Howatson_2026/Orthologues/all_orthologs.csv` |
-> | `Data/inputs/all_disease_orthologs.csv` | `compile_ssdo_reference_data.R` | `.../Data/Grieshop_and_Howatson_2026/Orthologues/all_disease_orthologs.csv` |
-> | `Data/inputs/Drosophila_melanogaster.BDGP6.54.115.gtf` | gene/transcript reference and SNP-to-gene mapping | `.../Data/Grieshop_and_Howatson_2026/Dmel_GTF/Drosophila_melanogaster.BDGP6.54.115.gtf` |
-> | `Data/inputs/Assoc_Data.txt` | Ruzicka SA probability plot | `.../Data/Ruzicka_et_al_2019/Assoc_Data.txt` |
-> | `Data/inputs/true_cmh_results.txt` | Neal_Truter_Grieshop SA probability plot | `.../Data/Grieshop_and_Howatson_2026/Neal_Truter_Grieshop/true_cmh_results.txt` |
-> | `Data/inputs/gene_hits_snps_90.csv` | Neal_Truter_Grieshop enrichment test | `.../Data/Grieshop_and_Howatson_2026/Neal_Truter_Grieshop/gene_hits_snps_90.csv` |
-> | `Data/inputs/DifferentialGeneExpression.whole.bodies.tsv` | rebuild MaleLimitedEvo-style Mishra whole-body SBGE bins | `.../Mishra_et_al_Drosophila_ASE/Data_for_R_scripts/DESeq2.outputs/DifferentialGeneExpression.whole.bodies.tsv` |
->
-> **Note:** the repo expects a local `Data/inputs/FileS7.txt`; the shared file I found is `FileS7.csv`, so keep a local converted/renamed copy there and leave it untracked.
+This repo includes the code to support Howatson and Grieshop (2026) Phil Trans B, a study of *Drosophila melanogaster* genes whose human orthologues are implicated in various sex-specific genetic diseases (i.e. sex-specific disease orthologues, SSDOs).
 
-Analysis code and curated reference data for comparing sex-specific disease orthologues (SSDOs) against broader disease orthologues, all orthologues, and the *D. melanogaster* background genome.
+> **All raw inputs available from:**  
+> **[ACCESSION TO INSERT]**
+>
+> The repository intentionally keeps `Data/inputs/` **gitignored**. To rerun the workflow, download or clone the repository and copy the accession files into the matching local paths under `Data/inputs/`.
 
-## Repository structure
+## Contents
+
+- **Main figures:** `Figures/Fig1_SA_Probability_and_Magnitude.png`, `Figures/Fig2_rmf_tau.png`, `Figures/Fig3_rlns_tajD_DoS.png`, `Figures/Fig4_sa_res_radar.png`
+- **Supplementary figures:** `Sup_figures/FigS1_SA_Candidate_Enrichment.png`, `Sup_figures/FigS2_sa_prob_mag.png`, `Sup_figures/FigS3_rmf_tau.png`, `Sup_figures/FigS4_rlns_tajD_DoS.png`
+- **Tables and data frames:** `Data/outputs/` and `Data/Summary_tables/`
+- **Code:** `Data_wrangling/`, `Plotting/`, `Sup_plotting/`, and `Analyses/`
+
+## Repository layout
 
 ```text
 Data/
-  inputs/        raw local inputs copied from shared lab data
-  outputs/       canonical ID tables and compiled derived inputs
-  Summary_tables/
-  unused/
-Data_wrangling/  scripts that compile and harmonize reference datasets
-Analyses/        broader or legacy analytical scripts retained for context
-Plotting/        active plotting workflow for metric plots and study-specific SA plots
-Figures/         output figure PNGs
-Sup_plotting/    supplemental SBGE-stratified plotting workflow
-Sup_figures/     supplemental SBGE-stratified figure PNGs
+  inputs/          local accession files copied in by the user; intentionally untracked
+  outputs/         canonical compiled reference/intermediate tables used by active scripts
+  Summary_tables/  kept figure-driving summaries and retained statistical tables
+Data_wrangling/    active wrangling/build scripts
+Analyses/          active analysis scripts for FigS1 and Fig4
+Plotting/          active main-figure plotting scripts
+Sup_plotting/      active supplementary plotting scripts
+Figures/           final main-figure PNGs (Fig1–Fig4)
+Sup_figures/       final supplementary PNGs (FigS1–FigS4)
 ```
 
-## Current workflow
+## Input provenance
 
-1. Run `Data_wrangling/compile_ssdo_reference_data.R`
-2. Run `Data_wrangling/build_mishra_whole_body_sbge_bins.R`
-3. Run `Plotting/plotting.R`
-4. Run `Sup_plotting/sbge_metric_plots.R` for the supplemental Mishra-SBGE-stratified versions of the same five core metrics
-5. Run `Analyses/sa_candidate_enrichment.R` for the Fisher enrichment tests
-6. Run `Plotting/sa_probability_plots.R` for the current SA probability figures
-7. Run `Plotting/sa_magnitude_plots.R` for the analogous SA magnitude figures based on study-specific effect sizes
-8. Run `Sup_plotting/figureS2_sa_prob_mag.R` for the supplemental SBGE-split SA probability and SA magnitude panel figure
-9. Run `Plotting/figure2_figure3_metric_panels.R` for `Figures/Fig2_rmf_tau.png` and `Figures/Fig3_rlns_tajD_DoS.png`
-10. Run `Sup_plotting/figureS3_figureS4_metric_panels.R` for the supplemental SBGE-stratified stacked metric figures `Sup_figures/FigS3_rmf_tau.png` and `Sup_figures/FigS4_rlns_tajD_DoS.png`
-11. Run `Data_wrangling/build_sa_resolution_inputs.R` and then `Analyses/sa_resolution.R` for the SA-resolution feature assembly, the protein-coding whole-genome Fisher tests, and the current radar prevalence figures
-12. Run `Data_wrangling/build_affx_dros_2_array_reference.R` if `Affx_Dros_2.0.csv` needs to be rebuilt for the study-matched Innocenti enrichment background
+All files below should be supplied locally in `Data/inputs/` from the accession above. Fill in the DOI placeholders before release.
 
-The compile step now builds a standalone SSDO table directly from the sex-specific disease inputs and literature orthology files, rather than inheriting SSDOs from a Mishra SBGE merge.
-The plotting step is now a single readable script rather than a thin wrapper around helper files.
+| Local file(s) | Original source | DOI / link |
+| --- | --- | --- |
+| `SBGEandSSSdataForMBE.csv` | Singh and Agrawal (2023) | [add DOI] |
+| `FileS7.txt` | Fraïsse et al. (2019) | [add DOI] |
+| `Assoc_Data.txt`, `Ruzicka_et_al_pbio.3000244.s008.csv` | Ruzicka et al. (2019) | [add DOI] |
+| `true_cmh_results.txt`, `gene_hits_snps_90.csv` | Neal, Truter, *et al.* (unpublished) | [add accession / note] |
+| `Innocenti_and_Morrow_ANTAGONISTIC.csv` | Innocenti and Morrow (2010) | [add DOI] |
+| `DifferentialGeneExpression.whole.bodies.tsv`, `Sex.Reversed.AI.test.tsv`, `Heads.FDR.test.for.AI.tsv`, `Gonads.FDR.test.for.AI.tsv`, `Genes.with.Sex.Reversed.AI.tsv`, `Genes.for.analysis.final.tsv` | Mishra et al. ASE study | [add DOI] |
+| `dimorphic.subset.list.txt` | Grieshop et al. (2025) | [add DOI] |
+| `all_paralogs_correct.csv` | Harper and Morrow (2025) | [add DOI] |
+| `Drosophila_melanogaster.BDGP6.54.115.gtf` | Ensembl / FlyBase gene annotation release 115 | [add link] |
+| `all_disease_orthologs.csv`, `all_orthologs.csv`, `ssdo_inputs/**` | This study’s curated SSDO / orthology source files | [add accession note] |
 
-## Canonical reference sets used by the core plots
+## Fastest route: rebuild figures from kept summaries
 
-The active four-category workflow reads compiled reference files from `Data/outputs/`:
+The repository keeps the summary tables needed for the **already-summarized panel figures**. If those tables are present, readers can jump straight to:
 
-| File | Role |
-| --- | --- |
-| `Data/outputs/sexspecific_disease_gene_data.csv` | Compiled SSDO table with FlyBase IDs, gene symbols, disease labels, and source provenance |
-| `Data/outputs/sexspecific_disease_ids.csv` | Unique SSDO FlyBase IDs used as the focal class |
-| `Data/outputs/all_disease_ortholog_ids.csv` | Canonical disease-orthologue FlyBase IDs, harmonized so SSDOs are included |
-| `Data/outputs/all_ortholog_ids.csv` | Canonical orthologue FlyBase IDs, harmonized so disease orthologues are included |
-| `Data/outputs/dmel_gene_reference.csv` | Gene-level FlyBase reference parsed from the Ensembl/FlyBase GTF |
-| `Data/outputs/dmel_transcript_reference.csv` | Transcript-to-gene key parsed from the same GTF |
+1. `Rscript Plotting/figure1_sa_probability_magnitude.R`
+2. `Rscript Plotting/figure2_figure3_metric_panels.R`
+3. `Rscript Sup_plotting/figureS3_figureS4_metric_panels.R`
 
-## Core metric sources
+This shortcut works directly from the kept plot-data tables in `Data/Summary_tables/`.
 
-| Dataset | Use |
-| --- | --- |
-| `Data/inputs/SBGEandSSSdataForMBE.csv` | Tajima's *D*, `rMF`, `piNfract` (`rlnd`), and tissue specificity (`tao.FML.FA2`) |
-| `Data/inputs/FileS7.txt` | `DoS` |
-| `Data/outputs/mishra_whole_body_sbge_bins.csv` | Rebuilt Mishra whole-body SBGE panel assignments using the MaleLimitedEvo five-level `x1 = 1`, `x2 = 5`, `y0 = 1`, `lfcSE` rule |
-| `Data/inputs/Innocenti_and_Morrow_ANTAGONISTIC.csv` | Innocenti and Morrow SA candidate enrichment input |
-| `Data/inputs/Ruzicka_et_al_pbio.3000244.s008.csv` | Ruzicka candidate-gene enrichment input |
-| `Data/outputs/Affx_Dros_2.0.csv` | Affymetrix Drosophila 2.0 background for the study-matched Innocenti enrichment analysis |
+**Still upstream-dependent:** `FigS1`, `FigS2`, and `Fig4` are rebuilt from their active analysis scripts rather than from preassembled panel-summary tables alone.
+
+## Full active workflow
+
+Run these from the repository root.
+
+1. `Rscript Data_wrangling/compile_ssdo_reference_data.R`
+2. `Rscript Data_wrangling/build_mishra_whole_body_sbge_bins.R`
+3. `Rscript Plotting/plotting.R`
+4. `Rscript Plotting/sa_probability_plots.R`
+5. `Rscript Plotting/sa_magnitude_plots.R`
+6. `Rscript Plotting/figure1_sa_probability_magnitude.R`
+7. `Rscript Plotting/figure2_figure3_metric_panels.R`
+8. `Rscript Sup_plotting/sbge_metric_plots.R`
+9. `Rscript Sup_plotting/figureS2_sa_prob_mag.R`
+10. `Rscript Sup_plotting/figureS3_figureS4_metric_panels.R`
+11. `Rscript Data_wrangling/build_affx_dros_2_array_reference.R` *(only if `Data/outputs/Affx_Dros_2.0.csv` needs to be rebuilt)*
+12. `Rscript Analyses/sa_candidate_enrichment.R`
+13. `Rscript Data_wrangling/build_sa_resolution_inputs.R`
+14. `Rscript Analyses/sa_resolution.R`
+
+## What each active area does
+
+- `Data_wrangling/compile_ssdo_reference_data.R` compiles the canonical SSDO, disease-orthologue, orthologue, and gene-reference tables from the accession inputs.
+- `Data_wrangling/build_mishra_whole_body_sbge_bins.R` rebuilds the active five-bin Mishra whole-body SBGE classification using the MaleLimitedEvo thresholds.
+- `Plotting/plotting.R` writes the kept four-group metric plot-data and permutation-test tables for Tajima’s *D*, *r*<sub>*MF*</sub>, *pi*<sub>*rN*</sub>, tissue specificity, and *DoS*.
+- `Plotting/sa_probability_plots.R` and `Plotting/sa_magnitude_plots.R` write the kept study-level SA summary tables used in Fig1.
+- `Analyses/sa_candidate_enrichment.R` generates **FigS1** and **TableS1**.
+- `Data_wrangling/build_sa_resolution_inputs.R` assembles the feature-membership table for **Fig4**, including Dup, SSS, and Mishra-derived ASE classes.
+- `Analyses/sa_resolution.R` generates **Fig4** and the kept SA-resolution statistical summaries.
 
 ## Notes
 
-- The default “whole-genome” universe used by the active workflows is now the **protein-coding FBgn gene set**.
-- `Sup_plotting/sbge_metric_plots.R` uses the same exclusive four-group definitions as the core plots, then restricts each metric to genes retained after merging to the rebuilt Mishra whole-body SBGE bins in `Data/outputs/mishra_whole_body_sbge_bins.csv`.
-- Raw source files now live in `Data/inputs/`, compiled reference tables live in `Data/outputs/`, and duplicated or superseded files are kept under `Data/unused/`.
-- `Analyses/Final_Script.R`, `Analyses/data_analysis.R`, and `Analyses/SA probability.R` are retained as older analysis scripts and were **not** fully modernized in this re-layout.
-- `Analyses/sa_candidate_enrichment.R` reports the study-matched-universe Fisher enrichment analyses for SSDOs, disease orthologues, and orthologues against the Innocenti, Ruzicka, and Neal_Truter_Grieshop candidate SA gene sets, and now writes `FigS1_SA_Candidate_Enrichment.png` to `Sup_figures/`.
-- `Analyses/sa_resolution.R` reports the protein-coding whole-genome Fisher family and the current radar figures, including the main split-background prevalence plot (`Figures/Fig4_sa_res_radar.png`) and a collapsed-background prevalence plot. The reported SA-resolution terms are the four biased Mishra SBGE sub-bins (`HFB`, `FB`, `MB`, `HMB`) rebuilt with the MaleLimitedEvo `x1 = 1`, `x2 = 5`, `y0 = 1`, `lfcSE` rules, plus Mishra-derived `ASE`, `SS-ASE`, `TS-ASE`, and `DR`; `UB` is omitted, and `DS` is excluded from the reported SA-resolution outputs.
-- `Plotting/sa_probability_plots.R` produces the default protein-coding-universe SA probability plots in `Figures/` for the Ruzicka and Neal_Truter_Grieshop datasets.
-- `Plotting/sa_magnitude_plots.R` produces the analogous SA magnitude plots and permutation tables in `Figures/`, using `Wald_Stat` for Ruzicka and finite `abs(LogOdds)` for Neal_Truter_Grieshop.
-- `Sup_plotting/figureS2_sa_prob_mag.R` produces the supplemental SBGE-split four-panel SA probability / SA magnitude figure in `Sup_figures/`.
-- `Data_wrangling/build_affx_dros_2_array_reference.R` rebuilds the real Affymetrix Drosophila 2.0 probe-symbol background in `Data/outputs/` for the narrower Innocenti enrichment analysis.
+- The default gene universe for the kept active workflow is the **protein-coding FBgn gene set**.
+- `Data/outputs/` contains active intermediates used by downstream scripts; `Data/Summary_tables/` contains retained figure summaries and kept statistical tables.

@@ -23,7 +23,7 @@ find_project_root <- function(start = getwd()) {
     parent <- dirname(current)
     if (identical(parent, current)) {
       stop(
-        "Could not locate the project root. Run this script from inside the Final_Year_Project repository.",
+        "Could not locate the project root. Run this script from inside the repository root or one of its subdirectories.",
         call. = FALSE
       )
     }
@@ -322,13 +322,11 @@ study_specs <- list(
   list(
     name = "Ruzicka et al.",
     values = build_ruzicka_values(protein_coding_gene_reference),
-    figure = "ruzicka_SA_probability.png",
     y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
   ),
   list(
     name = "Neal_Truter_Grieshop",
     values = build_neal_values(protein_coding_gene_reference),
-    figure = "neal_truter_grieshop_SA_probability.png",
     y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
   )
 )
@@ -343,11 +341,6 @@ for (study_spec in study_specs) {
   safe_study_name <- gsub("^_|_$", "", safe_study_name)
 
   write.csv(
-    raw_data,
-    summary_path(paste0(safe_study_name, "_SA_probability_raw.csv")),
-    row.names = FALSE
-  )
-  write.csv(
     summary_data,
     summary_path(paste0(safe_study_name, "_SA_probability_plot_data.csv")),
     row.names = FALSE
@@ -358,11 +351,5 @@ for (study_spec in study_specs) {
     row.names = FALSE
   )
 
-  ggsave(
-    filename = figure_path(study_spec$figure),
-    plot = plot_object,
-    width = 7,
-    height = 5.5,
-    dpi = 300
-  )
+  invisible(plot_object)
 }
