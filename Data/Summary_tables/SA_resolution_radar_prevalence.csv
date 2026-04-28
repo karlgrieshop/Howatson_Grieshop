@@ -9,33 +9,33 @@
 "SSDOs","SS_ASE","SS-ASE",15.4929577464789
 "SSDOs","TS_ASE","TS-ASE",15.1408450704225
 "SSDOs","DR","DR",1.93661971830986
-"Disease orthologues","HFB","HFB",1.06846062524733
-"Disease orthologues","FB","FB",31.8559556786704
-"Disease orthologues","MB","MB",22.8729719034428
-"Disease orthologues","HMB","HMB",2.61179263949347
-"Disease orthologues","Dup","Dup",62.4455876533439
-"Disease orthologues","SSS","SSS",24.2184408389395
-"Disease orthologues","ASE","ASE",27.582113177681
-"Disease orthologues","SS_ASE","SS-ASE",17.1745152354571
-"Disease orthologues","TS_ASE","TS-ASE",16.8579343094579
-"Disease orthologues","DR","DR",1.89948555599525
-"Orthologues","HFB","HFB",1.38211382113821
-"Orthologues","FB","FB",29.0406504065041
-"Orthologues","MB","MB",21.1544715447154
-"Orthologues","HMB","HMB",13.2357723577236
-"Orthologues","Dup","Dup",67.2520325203252
-"Orthologues","SSS","SSS",14.4227642276423
-"Orthologues","ASE","ASE",20.7642276422764
-"Orthologues","SS_ASE","SS-ASE",12.6829268292683
-"Orthologues","TS_ASE","TS-ASE",11.4471544715447
-"Orthologues","DR","DR",1.44715447154472
-"Background","HFB","HFB",1.87724108837798
-"Background","FB","FB",10.1666315123392
-"Background","MB","MB",20.0379666736975
-"Background","HMB","HMB",22.6956338325248
-"Background","Dup","Dup",35.6675806791816
-"Background","SSS","SSS",7.44568656401603
-"Background","ASE","ASE",9.57603881037756
-"Background","SS_ASE","SS-ASE",5.42079730014765
-"Background","TS_ASE","TS-ASE",6.72853828306264
-"Background","DR","DR",0.590592701961611
+"Disease orthologues","HFB","HFB",1.35195035460993
+"Disease orthologues","FB","FB",22.8280141843972
+"Disease orthologues","MB","MB",26.8395390070922
+"Disease orthologues","HMB","HMB",10.3058510638298
+"Disease orthologues","Dup","Dup",74.9778368794326
+"Disease orthologues","SSS","SSS",16.7331560283688
+"Disease orthologues","ASE","ASE",22.0744680851064
+"Disease orthologues","SS_ASE","SS-ASE",13.2978723404255
+"Disease orthologues","TS_ASE","TS-ASE",13.5195035460993
+"Disease orthologues","DR","DR",1.68439716312057
+"Orthologues","HFB","HFB",1.17148554336989
+"Orthologues","FB","FB",37.9361914257228
+"Orthologues","MB","MB",15.4037886340977
+"Orthologues","HMB","HMB",10.2193419740778
+"Orthologues","Dup","Dup",56.7048853439681
+"Orthologues","SSS","SSS",17.8713858424726
+"Orthologues","ASE","ASE",23.5543369890329
+"Orthologues","SS_ASE","SS-ASE",14.8305084745763
+"Orthologues","TS_ASE","TS-ASE",12.4376869391825
+"Orthologues","DR","DR",1.52043868394816
+"Background","HFB","HFB",1.90028606456886
+"Background","FB","FB",10.6456885982836
+"Background","MB","MB",20.4331834899877
+"Background","HMB","HMB",22.0882713526767
+"Background","Dup","Dup",35.6967715570086
+"Background","SSS","SSS",7.76460972619534
+"Background","ASE","ASE",9.95096035962403
+"Background","SS_ASE","SS-ASE",5.63955864323662
+"Background","TS_ASE","TS-ASE",6.94728238659583
+"Background","DR","DR",0.572129137719657

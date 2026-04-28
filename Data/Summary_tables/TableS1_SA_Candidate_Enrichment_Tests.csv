@@ -2,9 +2,9 @@
 "SSDOs","Innocenti and Morrow","Study-matched universe","Affx_Dros_2.0 array-assayed genes",17103,560,915,41,1.41622611656631,0.0441072833795502,0.997018597079725,1.96442087520801
 "SSDOs","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,540,488,22,1.28732091094784,0.262411933617008,0.791784464711592,1.99415119070617
 "SSDOs","Neal_Truter_Grieshop","Study-matched universe","Genes represented by SNPs in true_cmh_results.txt",11574,471,291,23,2.07539782605235,0.00226303663398173,1.27973673152938,3.22096854765639
-"Disease orthologues","Innocenti and Morrow","Study-matched universe","Affx_Dros_2.0 array-assayed genes",17103,2511,915,167,1.31859318686178,0.0024519075356979,1.1018719626724,1.57083248167581
-"Disease orthologues","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,2396,488,74,0.948441337854249,0.752581490184467,0.727395638848757,1.2225318556546
-"Disease orthologues","Neal_Truter_Grieshop","Study-matched universe","Genes represented by SNPs in true_cmh_results.txt",11574,2074,291,75,1.6125307402339,0.000820451816170372,1.21751254672008,2.11643317275561
-"Orthologues","Innocenti and Morrow","Study-matched universe","Affx_Dros_2.0 array-assayed genes",17103,6043,915,402,1.46517435394543,4.06159944734379e-08,1.27742026071524,1.67954069117904
-"Orthologues","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,5607,488,184,1.02906541003106,0.775070334982374,0.849508455539576,1.24383905234219
-"Orthologues","Neal_Truter_Grieshop","Study-matched universe","Genes represented by SNPs in true_cmh_results.txt",11574,4645,291,139,1.3752980887362,0.0076736328870787,1.08127116456079,1.74819714470521
+"Disease orthologues","Innocenti and Morrow","Study-matched universe","Affx_Dros_2.0 array-assayed genes",17103,4466,915,278,1.25050014250732,0.00288213598187268,1.07742391246094,1.44849162548418
+"Disease orthologues","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,4163,488,151,1.18725416174082,0.0890348225233479,0.969951977099712,1.44797694732635
+"Disease orthologues","Neal_Truter_Grieshop","Study-matched universe","Genes represented by SNPs in true_cmh_results.txt",11574,3595,291,123,1.64703723500418,4.89559957712058e-05,1.2898843295488,2.09825930612667
+"Orthologues","Innocenti and Morrow","Study-matched universe","Affx_Dros_2.0 array-assayed genes",17103,3936,915,275,1.47024321704349,4.24626522052643e-07,1.26569504767408,1.70443211632706
+"Orthologues","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,3697,488,101,0.801760483503651,0.0537652962631169,0.635472774578422,1.00397041489274
+"Orthologues","Neal_Truter_Grieshop","Study-matched universe","Genes represented by SNPs in true_cmh_results.txt",11574,3007,291,84,1.16056888519041,0.250565610143413,0.886514128388916,1.50822542762175
