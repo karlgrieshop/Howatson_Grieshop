@@ -47,14 +47,14 @@ gene_type_palette <- c(
 )
 
 
-publication_theme <- function(base_size = 13) {
+publication_theme <- function(base_size = 14) {
   theme_classic(base_size = base_size) +
     theme(
       axis.text = element_text(size = base_size, colour = "black"),
-      axis.title = element_text(size = base_size + 2, face = "bold"),
+      axis.title = element_text(size = base_size + 2),
       axis.line = element_blank(),
-      plot.title = element_text(size = base_size + 2, hjust = 0.5),
-      plot.tag = element_text(size = base_size + 3, face = "bold"),
+      plot.title = element_text(size = base_size + 3, hjust = 0.5),
+      plot.tag = element_text(size = base_size + 4, face = "bold"),
       legend.position = "none",
       panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
       axis.title.x = element_text(margin = margin(t = 10)),
@@ -298,7 +298,7 @@ plot_metric_panel <- function(
 
   p <- ggplot(summary_data, aes(x = GeneType, y = q50, colour = GeneType)) +
     geom_pointrange(aes(ymin = q05, ymax = q95), linewidth = 1.2) +
-    geom_text(aes(y = q95, label = SampleSize), size = 3.6, colour = "black", vjust = -0.75) +
+    geom_text(aes(y = q95, label = SampleSize), size = 3.9, colour = "black", vjust = -0.75) +
     scale_colour_manual(values = gene_type_palette, drop = FALSE) +
     scale_y_continuous(expand = expansion(mult = c(0.03, 0.14))) +
     labs(

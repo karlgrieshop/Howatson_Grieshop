@@ -24,8 +24,8 @@ find_project_root <- function(start = getwd()) {
 
 
 project_root <- find_project_root()
+input_path <- function(...) file.path(project_root, "Data", "inputs", ...)
 output_path <- function(...) file.path(project_root, "Data", "outputs", ...)
-mishra_ase_path <- function(...) file.path(project_root, "..", "Mishra_et_al_Drosophila_ASE", ...)
 
 
 suppressPackageStartupMessages({
@@ -33,17 +33,14 @@ suppressPackageStartupMessages({
 })
 
 
-input_file <- mishra_ase_path(
-  "Data_for_R_scripts",
-  "DESeq2.outputs",
-  "DifferentialGeneExpression.whole.bodies.tsv"
-)
+input_file <- input_path("DifferentialGeneExpression.whole.bodies.tsv")
 
 if (!file.exists(input_file)) {
   stop(
     paste0(
       "Missing Mishra whole-body DE file:\n",
-      input_file
+      input_file,
+      "\n\nPlace a local untracked copy in Data/inputs/."
     ),
     call. = FALSE
   )

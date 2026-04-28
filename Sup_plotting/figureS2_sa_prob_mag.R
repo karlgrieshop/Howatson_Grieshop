@@ -67,14 +67,14 @@ sbge_label_map <- c(
 )
 
 
-publication_theme <- function(base_size = 12) {
+publication_theme <- function(base_size = 13) {
   theme_classic(base_size = base_size) +
     theme(
       axis.text = element_text(size = base_size, colour = "black"),
-      axis.title = element_text(size = base_size + 1, face = "bold"),
+      axis.title = element_text(size = base_size + 1),
       axis.line = element_blank(),
-      plot.title = element_text(size = base_size + 2, hjust = 0.5),
-      plot.tag = element_text(size = base_size + 3, face = "bold"),
+      plot.title = element_text(size = base_size + 3, hjust = 0.5),
+      plot.tag = element_text(size = base_size + 4, face = "bold"),
       legend.position = "none",
       panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
       panel.grid.major = element_blank(),
@@ -353,7 +353,7 @@ plot_sbge_panel <- function(summary_data, y_label, title, tag, show_x_title = FA
     geom_text(
       aes(y = q95, label = SampleSize),
       position = position_dodge(width = dodge_width),
-      size = 2.8,
+      size = 3.1,
       colour = "black",
       vjust = -0.55
     ) +

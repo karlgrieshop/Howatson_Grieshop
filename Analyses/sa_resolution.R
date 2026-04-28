@@ -648,7 +648,7 @@ write.csv(
   row.names = FALSE
 )
 
-radar_result$draw(figure_path("sa_resolution_radar.png"))
+radar_result$draw(figure_path("Fig4_sa_res_radar.png"))
 collapsed_radar_result$draw(figure_path("sa_resolution_collapsed_radar.png"))
 
 

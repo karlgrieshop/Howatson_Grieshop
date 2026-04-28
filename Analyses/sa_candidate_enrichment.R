@@ -36,20 +36,23 @@ suppressPackageStartupMessages({
   library(data.table)
   library(dplyr)
   library(ggplot2)
+  library(ggtext)
 })
 
 dir.create(file.path(project_root, "Sup_figures"), recursive = TRUE, showWarnings = FALSE)
 
 
-simple_theme <- function(base_size = 13) {
+simple_theme <- function(base_size = 14) {
   theme_classic(base_size = base_size) +
     theme(
+      axis.title = element_text(size = base_size + 1, face = "plain"),
       axis.line = element_blank(),
       panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
       legend.position = "none",
-      axis.text = element_text(colour = "black"),
+      axis.text = element_text(size = base_size, colour = "black"),
       strip.background = element_blank(),
-      strip.text = element_text(face = "bold"),
+      strip.text = element_text(size = base_size + 1, face = "bold"),
+      strip.text.x = ggtext::element_markdown(size = base_size + 1),
       plot.margin = margin(10, 10, 10, 10)
     )
 }
@@ -291,11 +294,15 @@ ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors =
 disease_only_ids <- setdiff(disease_ids, ssdo_ids)
 ortholog_only_ids <- setdiff(ortholog_ids, disease_ids)
 study_order <- c("Innocenti and Morrow", "Ruzicka et al.", "Neal_Truter_Grieshop")
-study_display_order <- c("Innocenti and Morrow", "Ruzicka et al.", "Neal, Truter, et al. (unpublished)")
+study_display_order <- c(
+  "Innocenti and Morrow (2010)",
+  "Ruzicka <i>et al.</i> (2019)",
+  "Neal, Truter, <i>et al.</i> (<i>unpublished</i>)"
+)
 study_display_map <- c(
-  "Innocenti and Morrow" = "Innocenti and Morrow",
-  "Ruzicka et al." = "Ruzicka et al.",
-  "Neal_Truter_Grieshop" = "Neal, Truter, et al. (unpublished)"
+  "Innocenti and Morrow" = "Innocenti and Morrow (2010)",
+  "Ruzicka et al." = "Ruzicka <i>et al.</i> (2019)",
+  "Neal_Truter_Grieshop" = "Neal, Truter, <i>et al.</i> (<i>unpublished</i>)"
 )
 focal_order <- c("SSDOs", "Disease orthologues", "Orthologues")
 panel_order <- c(
@@ -468,7 +475,7 @@ write.csv(
 
 sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCandidate, fill = FillGroup)) +
   geom_col(width = 0.6, colour = "black") +
-  geom_text(aes(label = Label), vjust = -0.5, size = 3.6) +
+  geom_text(aes(label = Label), vjust = -0.5, size = 4) +
   geom_text(
     data = summary_table |>
       mutate(
@@ -486,10 +493,14 @@ sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCand
       mutate(x = 1.5, y = max(plot_data$ProportionCandidate) * 1.12, label = "*"),
     aes(x = x, y = y, label = label),
     inherit.aes = FALSE,
-    size = 9,
+    size = 10,
     fontface = "bold"
   ) +
-  facet_grid(PanelLabel ~ StudyDisplay, switch = "y") +
+  facet_grid(
+    PanelLabel ~ StudyDisplay,
+    switch = "y",
+    labeller = labeller(PanelLabel = function(x) rep("% SA genes", length(x)))
+  ) +
   scale_fill_manual(values = c("SSDOs" = "#D55E00", "Disease orthologues" = "#0072B2", "Orthologues" = "#009E73", "Other genes" = "#999999")) +
   scale_y_continuous(
     limits = c(0, max(plot_data$ProportionCandidate) * 1.18),
@@ -503,7 +514,7 @@ sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCand
   simple_theme() +
   theme(
     strip.placement = "outside",
-    strip.text.y.left = element_text(angle = 90, face = "bold")
+    strip.text.y.left = element_text(angle = 90, face = "plain", size = 15)
   )
 
 ggsave(

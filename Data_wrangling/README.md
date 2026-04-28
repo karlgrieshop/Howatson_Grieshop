@@ -7,7 +7,7 @@
 - `build_affx_dros_2_array_reference.R`
 - `build_sa_resolution_inputs.R`
 
-`build_mishra_whole_body_sbge_bins.R` rebuilds the active five-level whole-body Mishra SBGE categories directly from `DifferentialGeneExpression.whole.bodies.tsv` using the MaleLimitedEvo `x1 = 1`, `x2 = 5`, `y0 = 1`, and `lfcSE` rules, and writes them to `Data/outputs/mishra_whole_body_sbge_bins.csv`.
+`build_mishra_whole_body_sbge_bins.R` rebuilds the active five-level whole-body Mishra SBGE categories directly from the local untracked input `Data/inputs/DifferentialGeneExpression.whole.bodies.tsv` using the MaleLimitedEvo `x1 = 1`, `x2 = 5`, `y0 = 1`, and `lfcSE` rules, and writes them to `Data/outputs/mishra_whole_body_sbge_bins.csv`.
 
 `compile_ssdo_reference_data.R` reads the raw files from `Data/inputs/`, parses the GTF into gene and transcript reference tables, restricts the active canonical universes to protein-coding FBgn genes, and writes the compiled outputs to `Data/outputs/`.
 
