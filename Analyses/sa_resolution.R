@@ -555,6 +555,7 @@ radar_result$draw(figure_path("Fig4_sa_res_radar.png"))
 
 
 # The current `SSS` column comes from `dimorphic.subset.list.txt`, treated here
-# as the final consistently sex-specific splicing set from MaleLimitedEvo.
-# Current documentation indicates that these 2036 genes passed cross-dataset
-# consistency filtering for sex-specific splicing profiles.
+# as the final 2036-gene consistently sex-specific splicing set from
+# Grieshop et al. (2025), derived from Mishra et al. (2024a) reference
+# profiles and filtered using three additional Mishra et al. (2024b)
+# populations.
