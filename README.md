@@ -75,7 +75,7 @@ Run these from the repository root.
 11. `Rscript Data_wrangling/build_affx_dros_2_array_reference.R` *(only if `Data/outputs/Affx_Dros_2.0.csv` needs to be rebuilt)*
 12. `Rscript Analyses/sa_candidate_enrichment.R`
 13. `Rscript Data_wrangling/build_sa_resolution_inputs.R`
-14. `Rscript Analyses/sa_resolution.R`
+14. `Rscript Analyses/core_analyses.R`
 
 ## What each active area does
 
@@ -84,8 +84,8 @@ Run these from the repository root.
 - `Plotting/plotting.R` writes the kept four-group metric plot-data and permutation-test tables for Tajima’s *D*, *r*<sub>*MF*</sub>, *pi*<sub>*rN*</sub>, tissue specificity, and *DoS*.
 - `Plotting/sa_probability_plots.R` and `Plotting/sa_magnitude_plots.R` write the kept study-level SA summary tables used in Fig1.
 - `Analyses/sa_candidate_enrichment.R` generates **FigS1** and **TableS1**.
-- `Data_wrangling/build_sa_resolution_inputs.R` assembles the feature-membership table for **Fig4**, including Dup, SSS, and Mishra-derived ASE classes.
-- `Analyses/sa_resolution.R` generates **Fig4** and the kept SA-resolution statistical summaries.
+- `Data_wrangling/build_sa_resolution_inputs.R` assembles the feature-membership table for **Fig4**, including whole-body SBGE classes, tau/PC-derived TSE classes, Dup, SSS, and Mishra-derived ASE classes.
+- `Analyses/core_analyses.R` generates **Fig4** and the kept SA-resolution statistical summaries.
 
 ## Notes
 

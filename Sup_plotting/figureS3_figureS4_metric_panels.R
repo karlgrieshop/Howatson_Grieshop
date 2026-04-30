@@ -1,3 +1,6 @@
+# Assemble the SBGE-stratified supplementary metric figures from the exported
+# summary tables produced by `Sup_plotting/sbge_metric_plots.R`.
+
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
 
@@ -71,6 +74,8 @@ publication_theme <- function(base_size = 13) {
 }
 
 
+# Read one summary table and immediately impose the plotting order used across
+# all SBGE-stratified supplementary panels.
 read_summary_data <- function(filename) {
   read.csv(summary_path(filename), stringsAsFactors = FALSE) |>
     transform(
@@ -115,6 +120,8 @@ plot_metric_panel_by_sbge <- function(summary_data, y_label, tag, show_x_labels 
 }
 
 
+# Figure sizes are tuned to keep panel text legible after the multi-panel
+# layouts are inserted into the supplement.
 two_panel_width <- 12
 two_panel_height <- 10
 three_panel_width <- 12

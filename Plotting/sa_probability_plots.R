@@ -71,6 +71,8 @@ publication_theme <- function(base_size = 14) {
 }
 
 
+# Bootstrap the group mean so the point-range summaries reflect uncertainty in
+# the mean SA-probability estimate for each gene class.
 bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "GeneType", n_boot = 5000, seed = 1L) {
   set.seed(seed)
 
@@ -105,6 +107,8 @@ bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "Ge
 }
 
 
+# Permute gene labels rather than raw values to test whether SSDOs differ from
+# each control category in mean SA-probability.
 two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
   x <- x[!is.na(x)]
   y <- y[!is.na(y)]
@@ -176,6 +180,8 @@ plot_metric_distribution <- function(summary_data, y_label) {
 }
 
 
+# Rebuild the four mutually exclusive manuscript groups from the canonical ID
+# lists before any study-specific probability summaries are calculated.
 assign_gene_types <- function(raw_values, ssdo_ids, disease_ids, ortholog_ids) {
   disease_only_ids <- setdiff(disease_ids, ssdo_ids)
   ortholog_only_ids <- setdiff(ortholog_ids, union(ssdo_ids, disease_ids))
@@ -204,6 +210,8 @@ normalise_chromosome <- function(x) {
 }
 
 
+# Collapse SNP-level evidence to one gene-level value by interval overlap and
+# then taking the strongest signal per gene.
 map_snp_metric_to_genes <- function(snp_values, gene_reference, source_label) {
   genes <- gene_reference |>
     transmute(
@@ -314,6 +322,8 @@ build_neal_values <- function(gene_reference) {
 gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
 protein_coding_gene_reference <- gene_reference |>
   filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), gene_biotype == "protein_coding")
+# ---- Main plotting workflow -----------------------------------------------
+
 ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()

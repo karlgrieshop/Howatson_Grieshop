@@ -1,3 +1,16 @@
+# Core manuscript analyses for SA-resolution mechanisms.
+# This script is broader than the Fig4 radar itself: it assembles the
+# whole-genome SA-resolution enrichment tests, the per-group radar prevalence
+# values, the pairwise follow-up permutation tests, and the omnibus multivariate
+# permutation test that summarises whether the four gene classes differ in their
+# overall mechanism profiles.
+
+# Core manuscript analyses for SA-resolution mechanisms.
+# This script is broader than the Fig4 radar alone: it also runs the
+# whole-genome enrichment tests, exports the plotted prevalence values, carries
+# out the pairwise follow-up permutation tests, and computes the omnibus
+# multivariate permutation test on the full binary mechanism matrix.
+
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
 
@@ -87,6 +100,11 @@ pending_resolution_features <- resolution_notes |>
   pull(Feature)
 
 
+# Convenience wrapper: every downstream test works from the same binary
+# gene-by-feature matrix, so this helper standardises how we recover the
+# FlyBase IDs assigned TRUE for each mechanism.
+# Recover the FlyBase IDs scored TRUE for one mechanism in the shared
+# gene-by-feature matrix built upstream.
 get_resolution_candidate_ids <- function(feature_name) {
   if (!(feature_name %in% available_resolution_features)) {
     stop(
@@ -106,6 +124,10 @@ get_resolution_candidate_ids <- function(feature_name) {
 }
 
 
+# Fisher enrichment here asks whether SSDOs are unusually common among genes
+# carrying a given mechanism, relative to the whole protein-coding universe.
+# Fisher enrichment asks whether SSDOs are disproportionately represented among
+# genes carrying a given putative resolution mechanism.
 run_resolution_enrichment <- function(universe_ids, candidate_ids, study_name, universe_type, source_note) {
   analysis_df <- data.frame(FlyBaseID = unique(universe_ids), stringsAsFactors = FALSE) |>
     mutate(
@@ -133,6 +155,10 @@ run_resolution_enrichment <- function(universe_ids, candidate_ids, study_name, u
 }
 
 
+# Apply the same whole-genome enrichment logic to every mechanism, then
+# correct the resulting family of enrichment tests with BH.
+# Apply the same enrichment logic to every retained mechanism, then BH-correct
+# the resulting family of enrichment tests.
 run_enrichment_family <- function(universe_ids, universe_type_label, source_note_suffix = NULL) {
   results <- bind_rows(lapply(reported_resolution_features, function(feature_name) {
     source_note <- resolution_notes$Source[match(feature_name, resolution_notes$Feature)]
@@ -167,6 +193,11 @@ run_enrichment_family <- function(universe_ids, universe_type_label, source_note
 }
 
 
+# Generic two-sample permutation test used throughout the repo.
+# We permute gene labels, not values, so the observed statistic is the
+# difference in group means under the null of exchangeable group membership.
+# Generic permutation test used throughout the repo. Here the group mean is a
+# prevalence because the inputs are binary 0/1 indicators.
 two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
   x <- x[!is.na(x)]
   y <- y[!is.na(y)]
@@ -204,6 +235,9 @@ two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
 }
 
 
+# Convert the binary mechanism table into the mutually exclusive manuscript
+# comparison groups used everywhere else in the project.
+# Recreate the mutually exclusive manuscript groups used throughout the paper.
 assign_resolution_groups <- function(data) {
   disease_only_ids <- setdiff(disease_ids, ssdo_ids)
   ortholog_only_ids <- setdiff(ortholog_ids, union(ssdo_ids, disease_ids))
@@ -221,6 +255,9 @@ assign_resolution_groups <- function(data) {
 }
 
 
+# The collapsed version is retained because some follow-up summaries compare
+# SSDOs against the rest of the genome pooled together.
+# A collapsed SSDO-versus-rest grouping is retained for simpler binary contrasts.
 assign_collapsed_resolution_groups <- function(data) {
   data |>
     mutate(
@@ -230,6 +267,8 @@ assign_collapsed_resolution_groups <- function(data) {
 }
 
 
+# These helpers recover the external candidate SA gene sets used for
+# mechanism-level enrichment against independent SA studies.
 load_neal_candidate_ids <- function() {
   read.csv(
     input_path("gene_hits_snps_90.csv"),
@@ -338,10 +377,18 @@ run_candidate_enrichment_family <- function(universe_ids, focal_ids, study_name)
 }
 
 
+# Build the values that are actually plotted in Fig4:
+# for each gene group and each mechanism, calculate the percentage of genes
+# scored TRUE in the binary mechanism table.
+# Convert the binary mechanism table into the actual percentages plotted in
+# Fig4, then wrap the `fmsb` plotting call so those same values can also be
+# exported as a tidy summary table.
 build_resolution_radar <- function(data, feature_order, feature_labels, group_var, group_order, group_colours, legend_ncol = 2) {
   if (!requireNamespace("fmsb", quietly = TRUE)) {
     stop("Install the 'fmsb' package to draw the SA-resolution radar chart.", call. = FALSE)
   }
+
+  plot_group_order <- rev(group_order)
 
   missing_features <- setdiff(feature_order, colnames(data))
   if (length(missing_features) > 0) {
@@ -375,7 +422,7 @@ build_resolution_radar <- function(data, feature_order, feature_labels, group_va
     rep(0, length(feature_order)),
     do.call(
       rbind,
-      lapply(group_order, function(group_name) {
+      lapply(plot_group_order, function(group_name) {
         radar_summary |>
           filter(Group == group_name) |>
           arrange(match(Feature, feature_order)) |>
@@ -386,7 +433,7 @@ build_resolution_radar <- function(data, feature_order, feature_labels, group_va
 
   radar_df <- as.data.frame(radar_matrix, stringsAsFactors = FALSE)
   colnames(radar_df) <- unname(feature_labels[feature_order])
-  rownames(radar_df) <- c("max", "min", group_order)
+  rownames(radar_df) <- c("max", "min", plot_group_order)
 
   plot_radar <- function(output_path) {
     png(filename = output_path, width = 2700, height = 2400, res = 300, bg = "white")
@@ -399,8 +446,8 @@ build_resolution_radar <- function(data, feature_order, feature_labels, group_va
     fmsb::radarchart(
       radar_df,
       axistype = 1,
-      pcol = group_colours[group_order],
-      pfcol = grDevices::adjustcolor(group_colours[group_order], alpha.f = 0.20),
+      pcol = group_colours[plot_group_order],
+      pfcol = grDevices::adjustcolor(group_colours[plot_group_order], alpha.f = 0.20),
       plwd = 4,
       plty = 1,
       cglcol = "grey78",
@@ -438,6 +485,11 @@ build_resolution_radar <- function(data, feature_order, feature_labels, group_va
 }
 
 
+# These pairwise tests are follow-ups to the omnibus comparison.
+# They stay on the binary 0/1 scale, so the "mean" for a group is simply the
+# prevalence (proportion of genes scored TRUE) for that mechanism.
+# Follow-up pairwise tests stay on the same binary matrix used for the radar,
+# so differences among groups can be interpreted directly as prevalence shifts.
 build_resolution_radar_permutation_tests <- function(data, feature_order, group_var, group_order, seed = 1L) {
   group_pairs <- combn(group_order, 2, simplify = FALSE)
 
@@ -471,11 +523,74 @@ build_resolution_radar_permutation_tests <- function(data, feature_order, group_
   }))
 
   tests |>
-    group_by(Feature) |>
-    mutate(p_adjust_bh = p.adjust(p_value, method = "BH")) |>
-    ungroup()
+    mutate(p_adjust_bh = p.adjust(p_value, method = "BH"))
 }
 
+
+# The custom omnibus statistic is a MANOVA-like between-group sum of squares on
+# the full binary mechanism matrix. It is used here because it is lightweight
+# on the full 13,986 x 14 matrix and aligns closely with the prevalence-focused
+# interpretation of the radar plot.
+# This custom omnibus statistic is a MANOVA-like between-group sum of squares on
+# the binary mechanism matrix. It is computationally much lighter than
+# distance-matrix approaches on the full 13,986-gene dataset.
+compute_ssb <- function(x, groups) {
+  grand_mean <- colMeans(x)
+  group_levels <- unique(as.character(groups))
+
+  sum(vapply(group_levels, function(group_name) {
+    subset_x <- x[groups == group_name, , drop = FALSE]
+    n_g <- nrow(subset_x)
+    mean_g <- colMeans(subset_x)
+    n_g * sum((mean_g - grand_mean)^2)
+  }, numeric(1)))
+}
+
+
+run_multivariate_permutation_test <- function(x, groups, n_perm = 1999, seed = 1L) {
+  groups <- factor(groups, levels = ordered_gene_types)
+  x <- as.matrix(x)
+
+  sst <- sum(scale(x, scale = FALSE)^2)
+  ssb <- compute_ssb(x, groups)
+  ssw <- sst - ssb
+  df_between <- nlevels(groups) - 1
+  df_within <- nrow(x) - nlevels(groups)
+  obs_f <- (ssb / df_between) / (ssw / df_within)
+  obs_r2 <- ssb / sst
+
+  set.seed(seed)
+  perm_f <- replicate(n_perm, {
+    perm_groups <- sample(groups, length(groups), replace = FALSE)
+    perm_ssb <- compute_ssb(x, perm_groups)
+    perm_ssw <- sst - perm_ssb
+    (perm_ssb / df_between) / (perm_ssw / df_within)
+  })
+
+  data.frame(
+    N = nrow(x),
+    P = ncol(x),
+    DfBetween = df_between,
+    DfWithin = df_within,
+    SSB = ssb,
+    SSW = ssw,
+    R2 = obs_r2,
+    PseudoF = obs_f,
+    PValue = (sum(perm_f >= obs_f) + 1) / (n_perm + 1),
+    Permutations = n_perm,
+    stringsAsFactors = FALSE
+  )
+}
+
+
+# ---- Main execution block -------------------------------------------------
+# From this point down, the script switches from helper definitions to the
+# publication workflow: assemble the universes, run the enrichment tests,
+# compute the radar statistics, then write the tracked summary tables/figure.
+
+# ---- Main analysis workflow -----------------------------------------------
+# Assemble the universes, run the enrichment tests, calculate the radar values,
+# and then export the tables/figure used in the manuscript.
 
 whole_genome_universe <- resolution_membership |>
   pull(FlyBaseID) |>
@@ -509,12 +624,16 @@ write.csv(
   row.names = FALSE
 )
 
-radar_features <- c("HFB", "FB", "MB", "HMB", "Dup", "SSS", "ASE", "SS_ASE", "TS_ASE", "DR")
+radar_features <- c("HFB", "FB", "MB", "HMB", "TSE", "M_TSE", "F_TSE", "SS_TSE", "Dup", "SSS", "ASE", "SS_ASE", "TS_ASE", "DR")
 radar_feature_labels <- c(
   "HFB" = "HFB",
   "FB" = "FB",
   "MB" = "MB",
   "HMB" = "HMB",
+  "TSE" = "TSE",
+  "M_TSE" = "M-TSE",
+  "F_TSE" = "F-TSE",
+  "SS_TSE" = "SS-TSE",
   "Dup" = "Dup",
   "SSS" = "SSS",
   "ASE" = "ASE",
@@ -538,6 +657,11 @@ radar_permutation_tests <- build_resolution_radar_permutation_tests(
   group_var = "GeneType",
   group_order = ordered_gene_types
 )
+omnibus_multivariate_test <- run_multivariate_permutation_test(
+  x = resolution_plot_data[, radar_features, drop = FALSE],
+  groups = resolution_plot_data$GeneType,
+  seed = 41L
+)
 
 write.csv(
   radar_result$summary,
@@ -551,6 +675,12 @@ write.csv(
   row.names = FALSE
 )
 
+write.csv(
+  omnibus_multivariate_test,
+  summary_path("SA_resolution_multivariate_tests.csv"),
+  row.names = FALSE
+)
+
 radar_result$draw(figure_path("Fig4_sa_res_radar.png"))
 
 
@@ -558,4 +688,5 @@ radar_result$draw(figure_path("Fig4_sa_res_radar.png"))
 # as the final 2036-gene consistently sex-specific splicing set from
 # Grieshop et al. (2025), derived from Mishra et al. (2024a) reference
 # profiles and filtered using three additional Mishra et al. (2024b)
-# populations.
+# populations. TSE, M_TSE, F_TSE, and SS_TSE are built upstream in
+# `build_sa_resolution_inputs.R` from Singh and Agrawal tau and tissue-PC data.

@@ -1,0 +1,8 @@
+"Step","Variable","Lower","Upper","Rule","TailSetting"
+"TSE gate","tau",0.891768775383329,NA,"top quartile of protein-coding genes",NA
+"M_TSE gate","m.Comp.1",-11.2001512137339,7.89505054276355,"outside lower/upper tail thresholds","2.5% tails (95% bulk retained)"
+"M_TSE gate","m.Comp.2",-14.4403348653674,6.01336388711136,"outside lower/upper tail thresholds","2.5% tails (95% bulk retained)"
+"M_TSE gate","m.Comp.3",-9.28522873453875,7.14571509506122,"outside lower/upper tail thresholds","2.5% tails (95% bulk retained)"
+"F_TSE gate","f.Comp.1",-16.1678772470099,6.76980352931927,"outside lower/upper tail thresholds","2.5% tails (95% bulk retained)"
+"F_TSE gate","f.Comp.2",-13.6343465541341,8.33818842377613,"outside lower/upper tail thresholds","2.5% tails (95% bulk retained)"
+"F_TSE gate","f.Comp.3",-11.9814125902413,8.73297274203431,"outside lower/upper tail thresholds","2.5% tails (95% bulk retained)"

@@ -20,6 +20,6 @@ This directory contains the **active build scripts** that create canonical inter
 
 - **SSDO compilation:** the SSDO, disease-orthologue, and orthologue sets are standardized onto local FBgn-based reference tables so downstream scripts use a single canonical gene-ID space.
 - **Affymetrix universe:** the Innocenti and Morrow enrichment tests use the genes represented on the Affymetrix Drosophila Genome 2.0 array rather than the broader protein-coding background.
-- **Fig4 feature assembly:** `build_sa_resolution_inputs.R` combines Mishra-derived ASE classes, sex-limited expression classes, dimorphic splicing, and duplication into one feature-membership table. Where local copies exist in `Data/inputs/`, they are preferred over historical sibling-directory paths.
+- **Fig4 feature assembly:** `build_sa_resolution_inputs.R` combines Mishra-derived whole-body SBGE classes, tau/PC-derived tissue-specific expression classes, ASE classes, dimorphic splicing, and duplication into one feature-membership table. Where local copies exist in `Data/inputs/`, they are preferred over historical sibling-directory paths.
 
 Outputs from these scripts are written to `Data/outputs/` and then consumed by `Plotting/`, `Sup_plotting/`, or `Analyses/`.

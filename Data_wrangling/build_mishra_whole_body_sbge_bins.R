@@ -1,3 +1,7 @@
+# Recreate the active five-bin Mishra whole-body SBGE classification.
+# The thresholds below mirror the MaleLimitedEvo decision rules so these bins
+# stay directly comparable with the Grieshop et al. workflow.
+
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
 
@@ -50,6 +54,7 @@ if (!file.exists(input_file)) {
 dir.create(output_path(), recursive = TRUE, showWarnings = FALSE)
 
 
+# Threshold constants copied from the MaleLimitedEvo implementation.
 x1 <- 1
 x2 <- 5
 y0 <- 1
@@ -71,6 +76,7 @@ mishra <- read.delim(input_file, stringsAsFactors = FALSE) |>
   distinct(FlyBaseID, .keep_all = TRUE)
 
 
+# Define each SBGE bin separately so the threshold logic remains transparent.
 high_female <- mishra |>
   filter(log2FoldChange < -x2, (log2FoldChange + lfcSE) < -(x2 - y0)) |>
   mutate(Sex.Bias.Category = "Highly female-biased")
@@ -107,6 +113,7 @@ high_male <- mishra |>
   mutate(Sex.Bias.Category = "Highly male-biased")
 
 
+# Collapse the five bin-specific tables into one clean FlyBaseID-keyed export.
 sbge_bins <- bind_rows(
   high_female,
   female,

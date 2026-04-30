@@ -1,3 +1,7 @@
+# Build the Affymetrix Drosophila 2.0 probe-to-symbol table used to reproduce
+# the Innocenti and Morrow assay universe. The script prefers the dedicated
+# Bioconductor annotation package but falls back to biomaRt when necessary.
+
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
 
@@ -34,6 +38,8 @@ suppressPackageStartupMessages({
 })
 
 
+# Two retrieval routes are supported because legacy microarray annotation can be
+# fragile across systems and package installations.
 get_affx_dros_2 <- function() {
   if (
     requireNamespace("drosophila2.db", quietly = TRUE) &&
@@ -78,6 +84,8 @@ get_affx_dros_2 <- function() {
 }
 
 
+# Export a simple probe-symbol table so the rest of the workflow never needs to
+# repeat the annotation lookup.
 build_affx_dros_2_array_reference <- function(project_root = find_project_root()) {
   affx <- get_affx_dros_2()
   dir.create(project_output(root = project_root), recursive = TRUE, showWarnings = FALSE)

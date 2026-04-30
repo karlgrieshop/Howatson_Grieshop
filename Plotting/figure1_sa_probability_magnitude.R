@@ -1,3 +1,7 @@
+# Assemble the four study-specific SA probability / magnitude panels into the
+# tracked Figure 1 manuscript layout. The underlying single-study summary tables
+# are generated upstream by `sa_probability_plots.R` and `sa_magnitude_plots.R`.
+
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
 
@@ -65,6 +69,8 @@ publication_theme <- function(base_size = 14) {
 }
 
 
+# Retain the same bootstrap summary logic used in the standalone study plots so
+# the composite figure and its components remain numerically consistent.
 bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "GeneType", n_boot = 5000, seed = 1L) {
   set.seed(seed)
 
@@ -127,6 +133,8 @@ normalise_chromosome <- function(x) {
 }
 
 
+# Collapse SNP-level evidence to one gene-level value by interval overlap and
+# then taking the strongest signal per gene.
 map_snp_metric_to_genes <- function(snp_values, gene_reference, source_label) {
   genes <- gene_reference |>
     transmute(
@@ -334,6 +342,8 @@ read_saved_summary <- function(filename) {
     arrange(GeneType)
 }
 
+
+# ---- Figure assembly workflow ---------------------------------------------
 
 gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
 protein_coding_gene_reference <- gene_reference |>

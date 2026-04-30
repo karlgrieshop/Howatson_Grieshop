@@ -1,3 +1,7 @@
+# SBGE-stratified supplementary metric plots. These repeat the main metric
+# comparisons within each whole-body SBGE class so that the supplement can show
+# whether the four-way contrasts are consistent across sex-bias backgrounds.
+
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
 
@@ -90,6 +94,8 @@ sbge_label_map <- c(
 )
 
 
+# Bootstrap the group mean within each SBGE panel to obtain empirical 95% CIs
+# for the supplementary point-range summaries.
 bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "GeneType", n_boot = 5000, seed = 1L) {
   set.seed(seed)
 
@@ -126,6 +132,8 @@ bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "Ge
 }
 
 
+# Permutation tests remain SSDO-versus-control contrasts, but are repeated
+# within each SBGE stratum.
 two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
   x <- x[!is.na(x)]
   y <- y[!is.na(y)]
@@ -234,6 +242,8 @@ plot_metric_distribution_by_sbge <- function(summary_data, y_label) {
     )
 }
 
+
+# ---- Main supplementary workflow ------------------------------------------
 
 # Load the metric source tables.
 fra <- read.delim(input_path("FileS7.txt"), header = TRUE, stringsAsFactors = FALSE)

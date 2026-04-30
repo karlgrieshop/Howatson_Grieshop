@@ -1,3 +1,6 @@
+# Assemble the tracked main-text metric panels for Figures 2 and 3 from the
+# already-exported summary tables produced by `Plotting/plotting.R`.
+
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
 
@@ -60,9 +63,9 @@ publication_theme <- function(base_size = 14) {
 }
 
 
-# Figure 1 is exported at 12 x 10 inches as a two-column figure.
-# These single-column stacked exports are sized so that, after manuscript
-# scaling, their text remains close to the apparent size used in Figure 1.
+# Figures 2 and 3 are exported as stacked single-column figures. These sizes
+# were tuned so the apparent font size stays close to the other publication
+# figures after manuscript scaling.
 single_column_width <- 6.8
 two_panel_height <- 10
 three_panel_height <- 14.5
@@ -93,6 +96,8 @@ plot_metric_panel <- function(summary_data, y_label, tag, show_x_labels = FALSE)
   }
 }
 
+
+# ---- Figure assembly workflow ---------------------------------------------
 
 rmf_data <- read_summary_data("rMF Plot Data.csv")
 tissue_data <- read_summary_data("Tissue Specificity Plot Data.csv")

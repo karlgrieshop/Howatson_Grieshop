@@ -1,3 +1,8 @@
+# Compile the core reference tables that define the manuscript's gene classes:
+# SSDOs, disease orthologues, all orthologues, and the FlyBase gene reference
+# parsed from the current GTF. Most downstream figure scripts depend on these
+# outputs.
+
 find_project_root_local <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
 
@@ -39,6 +44,8 @@ project_summary <- function(..., root = find_project_root_local()) {
 }
 
 
+# FlyBase-style GTF attributes are stored as semicolon-delimited key/value
+# strings; this helper pulls out the specific field we need.
 extract_gtf_attribute <- function(attribute_text, key) {
   pattern <- paste0(key, ' "([^"]+)"')
   matches <- regexec(pattern, attribute_text)
@@ -53,6 +60,8 @@ extract_gtf_attribute <- function(attribute_text, key) {
 }
 
 
+# Build clean gene-level and transcript-level reference tables from the
+# Ensembl/FlyBase GTF. The gene table underlies almost every downstream join.
 read_gtf_reference <- function(gtf_path) {
   gtf <- read.delim(
     gtf_path,
@@ -105,6 +114,8 @@ read_gtf_reference <- function(gtf_path) {
 }
 
 
+# SSDOs combine direct FlyBase disease searches saved as TXT files with
+# literature-derived human disease genes mapped to Drosophila via DIOPT.
 read_ssdo_text_sources <- function(root) {
   text_files <- list.files(
     project_input("ssdo_inputs", "sex_specific_diseases", root = root),
@@ -130,6 +141,8 @@ read_ssdo_text_sources <- function(root) {
 }
 
 
+# Apply the manuscript's high-confidence DIOPT filter before folding
+# literature-derived orthologues into the SSDO set.
 read_diopt_source <- function(path, disease_name) {
   data <- read.csv(path, stringsAsFactors = FALSE)
   col_names <- names(data)
@@ -161,6 +174,8 @@ read_diopt_source <- function(path, disease_name) {
 }
 
 
+# FlyBase-derived CSVs are not perfectly standardised, so detect the most
+# plausible FBgn column rather than assuming a fixed header.
 read_fbgn_column <- function(path) {
   data <- read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
 
@@ -181,6 +196,9 @@ read_fbgn_column <- function(path) {
 }
 
 
+# Main wrangling workflow: build the SSDO table, then layer in the broader
+# disease-orthologue and orthologue comparators on the same protein-coding gene
+# universe.
 compile_ssdo_reference_data <- function(project_root = find_project_root_local()) {
   if (!requireNamespace("dplyr", quietly = TRUE)) {
     stop("Missing required R package: dplyr", call. = FALSE)

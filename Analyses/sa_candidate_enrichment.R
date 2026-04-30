@@ -1,3 +1,14 @@
+# Candidate SA-gene enrichment analyses for FigS1 / TableS1.
+# The logic here is intentionally parallel across the three candidate-SA
+# studies: define each study's assay universe, ask whether the focal gene set is
+# enriched for candidate SA genes, then export both the test summaries and the
+# exact overlap IDs.
+
+# Candidate SA-gene enrichment analyses for FigS1 / TableS1.
+# Each study contributes its own assay universe; the key question is whether the
+# focal gene class contains more candidate SA genes than expected within that
+# study-specific universe.
+
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
 
@@ -58,6 +69,10 @@ simple_theme <- function(base_size = 14) {
 }
 
 
+# Map published symbols to modern FlyBase IDs only when the mapping is unique.
+# This avoids inflating overlaps with ambiguous symbol-to-gene matches.
+# Only keep one-to-one symbol mappings to avoid inflating overlaps through
+# ambiguous historical gene symbols.
 map_symbols_to_flybase <- function(symbols, gene_reference) {
   symbol_map <- gene_reference |>
     filter(!is.na(Fly.Symbol), nzchar(Fly.Symbol)) |>
@@ -80,6 +95,10 @@ normalise_chromosome <- function(x) {
 }
 
 
+# SNP-level SA scans are converted to gene-level summaries by interval overlap
+# with the current FlyBase/Ensembl gene coordinates.
+# Convert SNP-level studies into gene-level universes by interval overlap with
+# the current FlyBase/Ensembl reference coordinates.
 map_snp_positions_to_genes <- function(snp_positions, gene_reference) {
   genes <- gene_reference |>
     transmute(
@@ -123,6 +142,8 @@ map_snp_positions_to_genes <- function(snp_positions, gene_reference) {
 }
 
 
+# Innocenti and Morrow requires an extra symbol-mapping step because the source
+# study is array/probe oriented rather than already keyed to FlyBase IDs.
 load_innocenti_candidates <- function(gene_reference) {
   innocenti_raw <- read.csv(
     input_path("Innocenti_and_Morrow_ANTAGONISTIC.csv"),
@@ -224,6 +245,10 @@ load_neal_matched_universe <- function(gene_reference) {
 }
 
 
+# Core enrichment helper: compare the focal gene set against the non-focal
+# genes present in the same study-specific assay universe.
+# Core enrichment helper: compare one focal class against all other genes
+# represented in the same study-specific assay universe.
 run_enrichment_test <- function(
   universe_ids,
   focal_ids,
@@ -287,6 +312,8 @@ run_enrichment_test <- function(
 }
 
 
+# ---- Main execution block -------------------------------------------------
+
 gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
 ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
@@ -314,6 +341,8 @@ panel_order <- c(
 innocenti <- load_innocenti_candidates(gene_reference)
 ruzicka_ids <- load_ruzicka_candidates()
 neal_ids <- load_neal_candidates()
+
+# ---- Main analysis workflow -----------------------------------------------
 
 matched_universes <- list(
   "Innocenti and Morrow" = load_innocenti_matched_universe(gene_reference)$FlyBaseID,

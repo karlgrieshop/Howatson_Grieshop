@@ -9,7 +9,7 @@ This directory now contains only the two **active manuscript analysis scripts**.
    - `Sup_figures/FigS1_SA_Candidate_Enrichment.png`
    - `Data/Summary_tables/TableS1_SA_Candidate_Enrichment_Tests.csv`
 
-2. `sa_resolution.R`  
+2. `core_analyses.R`  
    Runs the retained SA-resolution enrichment/permutation workflow and writes:
    - `Figures/Fig4_sa_res_radar.png`
    - `Data/Summary_tables/SA_resolution_enrichment_tests.csv`

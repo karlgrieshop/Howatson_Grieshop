@@ -78,6 +78,8 @@ gene_type_palette <- c(
 )
 
 
+# Bootstrap the group mean so the dot/whisker plots show an empirical 95% CI
+# even when the underlying metric is non-normal.
 bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "GeneType", n_boot = 5000, seed = 1L) {
   set.seed(seed)
 
@@ -114,6 +116,8 @@ bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "Ge
 }
 
 
+# Compare SSDOs to each control class by permuting group labels while holding
+# the observed metric values fixed.
 two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
   x <- x[!is.na(x)]
   y <- y[!is.na(y)]
@@ -202,6 +206,11 @@ plot_metric_distribution <- function(summary_data, y_label) {
     theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
 }
 
+
+# ---- Main plotting workflow -----------------------------------------------
+# Load the metric source tables and canonical gene-set definitions, then export
+# the plot-data / permutation-test tables that feed both the standalone panels
+# and the assembled manuscript figures.
 
 # Load the metric source tables.
 fra <- read.delim(input_path("FileS7.txt"), header = TRUE, stringsAsFactors = FALSE)
