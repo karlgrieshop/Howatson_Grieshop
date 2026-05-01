@@ -13,10 +13,10 @@ This directory contains the active scripts for the retained **main-figure** plot
    Writes the four-category metric summaries and permutation tests for *r*<sub>*MF*</sub>, tissue specificity, *pi*<sub>*rN*</sub>, Tajima’s *D*, and *DoS*.
 
 2. `sa_probability_plots.R`  
-   Writes the kept Ruzicka and Neal/Truter/Grieshop SA-probability summary tables.
+   Writes the kept Ruzicka and Neal/Truter/Grieshop SA-probability summary tables, with BH correction applied within each study across the full six pairwise group comparisons.
 
 3. `sa_magnitude_plots.R`  
-   Writes the kept Ruzicka and Neal/Truter/Grieshop SA-magnitude summary tables.
+   Writes the kept Ruzicka and Neal/Truter/Grieshop SA-magnitude summary tables, with BH correction applied within each study across the full six pairwise group comparisons.
 
 4. `figure1_sa_probability_magnitude.R`  
    Builds `Figures/Fig1_SA_Probability_and_Magnitude.png`. If the kept summary tables already exist, this script can reuse them directly instead of recomputing the study summaries.

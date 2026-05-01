@@ -107,8 +107,8 @@ bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "Ge
 }
 
 
-# Permute gene labels rather than raw values to test whether SSDOs differ from
-# each control category in mean SA-probability.
+# Permute gene labels rather than raw values to test whether each manuscript
+# gene class differs from the others in mean SA-probability.
 two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
   x <- x[!is.na(x)]
   y <- y[!is.na(y)]
@@ -146,16 +146,19 @@ two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
 }
 
 
-pairwise_tests_against_reference <- function(data, value_col = "Value", group_col = "GeneType", reference_group = "SSDOs") {
-  comparison_groups <- setdiff(unique(as.character(data[[group_col]])), reference_group)
+pairwise_tests_within_study <- function(data, value_col = "Value", group_col = "GeneType") {
+  available_groups <- ordered_gene_types[ordered_gene_types %in% unique(as.character(data[[group_col]]))]
+  group_pairs <- combn(available_groups, 2, simplify = FALSE)
 
-  tests <- lapply(comparison_groups, function(group_name) {
-    reference_values <- data[data[[group_col]] == reference_group, value_col, drop = TRUE]
-    comparison_values <- data[data[[group_col]] == group_name, value_col, drop = TRUE]
+  tests <- lapply(group_pairs, function(group_pair) {
+    group_1 <- group_pair[1]
+    group_2 <- group_pair[2]
+    group_1_values <- data[data[[group_col]] == group_1, value_col, drop = TRUE]
+    group_2_values <- data[data[[group_col]] == group_2, value_col, drop = TRUE]
 
-    test_result <- two_sample_permutation_test(reference_values, comparison_values)
-    test_result$group_1 <- reference_group
-    test_result$group_2 <- group_name
+    test_result <- two_sample_permutation_test(group_1_values, group_2_values)
+    test_result$group_1 <- group_1
+    test_result$group_2 <- group_2
     test_result
   })
 
@@ -344,7 +347,10 @@ study_specs <- list(
 for (study_spec in study_specs) {
   raw_data <- assign_gene_types(study_spec$values, ssdo_ids, disease_ids, ortholog_ids)
   summary_data <- bootstrap_group_summaries(raw_data)
-  tests_data <- pairwise_tests_against_reference(raw_data)
+  # For the exploratory factorial-style follow-up, each study now contributes
+  # the full six within-study group contrasts rather than only SSDOs versus the
+  # three control categories.
+  tests_data <- pairwise_tests_within_study(raw_data)
   plot_object <- plot_metric_distribution(summary_data, study_spec$y_label)
 
   safe_study_name <- gsub("[^A-Za-z0-9]+", "_", study_spec$name)
