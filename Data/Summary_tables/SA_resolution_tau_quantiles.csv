@@ -1,0 +1,6 @@
+"Step","Variable","Lower","Upper","Rule","TailSetting"
+"HTG gate","tau",0.073143017637283,0.329436512558688,"lowest tau quintile (bottom 20 percent)",NA
+"TG gate","tau",0.329536202324489,0.513958942734796,"second-lowest tau quintile",NA
+"NA middle quintile","tau",0.514097103956647,0.780439372920808,"middle tau quintile (not plotted)",NA
+"TS gate","tau",0.780466790580872,0.922810445821072,"second-highest tau quintile",NA
+"HTS gate","tau",0.922836431411874,1,"highest tau quintile (top 20 percent)",NA
