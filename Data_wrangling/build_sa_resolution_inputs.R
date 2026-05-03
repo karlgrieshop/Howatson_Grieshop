@@ -172,117 +172,58 @@ load_sbge_sets <- function() {
 }
 
 
-# Tissue-specific expression is handled in three stages:
-# 1. gate on high tau (top quartile genome-wide),
-# 2. within that TSE subset, identify genes in the extreme male or female
-#    tissue-PC tails,
-# 3. define SS_TSE as asymmetric membership between the male and female gates.
-# Tissue-specific expression is defined in three stages:
-# 1. gate on high tau across the protein-coding genome,
-# 2. within that TSE subset, detect genes in the male or female PC tails,
-# 3. classify SS_TSE as asymmetric membership between the male and female gates.
-load_tse_sets <- function(gene_universe_ids) {
+# The current Fig4 workflow no longer uses tissue-PC tail subsets. Instead it
+# partitions the protein-coding gene universe into tau quintiles and retains
+# four reader-facing categories: highest tissue specificity (HTS), the next-most
+# tissue-specific quintile (TS), the next-most tissue-general quintile (TG), and
+# highest tissue generality (HTG). The middle quintile is recorded in the
+# threshold table for transparency but not carried into the radar.
+load_tau_quintile_sets <- function(gene_universe_ids) {
   singh <- read.csv(input_path("SBGEandSSSdataForMBE.csv"), stringsAsFactors = FALSE)
   colnames(singh)[2] <- "FlyBaseID"
 
   tissue_metrics <- singh |>
     transmute(
       FlyBaseID = as.character(FlyBaseID),
-      tau = as.numeric(tao.FML.FA2),
-      m.Comp.1 = as.numeric(`m.Comp.1`),
-      m.Comp.2 = as.numeric(`m.Comp.2`),
-      m.Comp.3 = as.numeric(`m.Comp.3`),
-      f.Comp.1 = as.numeric(`f.Comp.1`),
-      f.Comp.2 = as.numeric(`f.Comp.2`),
-      f.Comp.3 = as.numeric(`f.Comp.3`)
+      tau = as.numeric(tao.FML.FA2)
     ) |>
-    filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), FlyBaseID %in% gene_universe_ids) |>
-    distinct(FlyBaseID, .keep_all = TRUE)
+    filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), FlyBaseID %in% gene_universe_ids, !is.na(tau), is.finite(tau)) |>
+    distinct(FlyBaseID, .keep_all = TRUE) |>
+    mutate(TauQuintile = dplyr::ntile(tau, 5))
 
-  tau_cutoff <- unname(stats::quantile(tissue_metrics$tau, probs = 0.75, na.rm = TRUE))
-  tse_ids <- tissue_metrics$FlyBaseID[!is.na(tissue_metrics$tau) & is.finite(tissue_metrics$tau) & tissue_metrics$tau >= tau_cutoff]
-  tse_data <- tissue_metrics |>
-    filter(FlyBaseID %in% tse_ids)
-
-  # A gene is flagged if any male/female tissue PC places it in the extreme
-  # tail. This makes the category sensitive to strongly unusual tissue-bias
-  # structure on any of the leading tissue-specific axes.
-  # A gene is flagged if any of the first three sex-specific tissue PCs places
-  # it in the extreme tail. This keeps the definition sensitive to strongly
-  # unusual tissue-expression structure on any leading axis.
-  build_tail_flags <- function(data, prefix, lower_prob, upper_prob) {
-    pcs <- paste0(prefix, c(".Comp.1", ".Comp.2", ".Comp.3"))
-    thresholds <- bind_rows(lapply(pcs, function(pc_name) {
-      values <- data[[pc_name]]
-      values <- values[!is.na(values) & is.finite(values)]
-
-      data.frame(
-        Variable = pc_name,
-        Lower = unname(stats::quantile(values, probs = lower_prob, na.rm = TRUE)),
-        Upper = unname(stats::quantile(values, probs = upper_prob, na.rm = TRUE)),
-        stringsAsFactors = FALSE
-      )
-    }))
-
-    flags <- Reduce(`|`, lapply(pcs, function(pc_name) {
-      lower <- thresholds$Lower[thresholds$Variable == pc_name]
-      upper <- thresholds$Upper[thresholds$Variable == pc_name]
-      values <- data[[pc_name]]
-      (!is.na(values)) & is.finite(values) & (values <= lower | values >= upper)
-    }))
-
-    list(flags = flags, thresholds = thresholds)
-  }
-
-  male_tail <- build_tail_flags(tse_data, prefix = "m", lower_prob = 0.025, upper_prob = 0.975)
-  female_tail <- build_tail_flags(tse_data, prefix = "f", lower_prob = 0.025, upper_prob = 0.975)
-
-  tse_data <- tse_data |>
-    mutate(
-      M_TSE = male_tail$flags,
-      F_TSE = female_tail$flags,
-      SS_TSE = xor(M_TSE, F_TSE)
+  quintile_ranges <- tissue_metrics |>
+    group_by(TauQuintile) |>
+    summarise(
+      Lower = min(tau, na.rm = TRUE),
+      Upper = max(tau, na.rm = TRUE),
+      GeneCount = dplyr::n(),
+      .groups = "drop"
     )
 
-  tail_setting <- "2.5% tails (95% bulk retained)"
-  if (sum(tse_data$M_TSE) == 0 || sum(tse_data$F_TSE) == 0 || sum(tse_data$SS_TSE) == 0) {
-    male_tail <- build_tail_flags(tse_data, prefix = "m", lower_prob = 0.05, upper_prob = 0.95)
-    female_tail <- build_tail_flags(tse_data, prefix = "f", lower_prob = 0.05, upper_prob = 0.95)
-
-    tse_data <- tse_data |>
-      mutate(
-        M_TSE = male_tail$flags,
-        F_TSE = female_tail$flags,
-        SS_TSE = xor(M_TSE, F_TSE)
-      )
-
-    tail_setting <- "5% tails (90% bulk retained)"
-  }
-
-  threshold_summary <- bind_rows(
-    data.frame(
-      Step = "TSE gate",
-      Variable = "tau",
-      Lower = tau_cutoff,
-      Upper = NA_real_,
-      Rule = "top quartile of protein-coding genes",
-      TailSetting = NA_character_,
-      stringsAsFactors = FALSE
+  threshold_summary <- data.frame(
+    Step = c("HTG gate", "TG gate", "NA middle quintile", "TS gate", "HTS gate"),
+    Variable = "tau",
+    Lower = quintile_ranges$Lower[match(c(1, 2, 3, 4, 5), quintile_ranges$TauQuintile)],
+    Upper = quintile_ranges$Upper[match(c(1, 2, 3, 4, 5), quintile_ranges$TauQuintile)],
+    Rule = c(
+      "lowest tau quintile (bottom 20 percent)",
+      "second-lowest tau quintile",
+      "middle tau quintile (not plotted)",
+      "second-highest tau quintile",
+      "highest tau quintile (top 20 percent)"
     ),
-    male_tail$thresholds |>
-      mutate(Step = "M_TSE gate", Rule = "outside lower/upper tail thresholds", TailSetting = tail_setting),
-    female_tail$thresholds |>
-      mutate(Step = "F_TSE gate", Rule = "outside lower/upper tail thresholds", TailSetting = tail_setting)
+    TailSetting = NA_character_,
+    GeneCount = quintile_ranges$GeneCount[match(c(1, 2, 3, 4, 5), quintile_ranges$TauQuintile)],
+    stringsAsFactors = FALSE
   ) |>
     select(Step, Variable, Lower, Upper, Rule, TailSetting)
 
   list(
-    TSE = sort(unique(tse_ids)),
-    M_TSE = sort(unique(tse_data$FlyBaseID[tse_data$M_TSE])),
-    F_TSE = sort(unique(tse_data$FlyBaseID[tse_data$F_TSE])),
-    SS_TSE = sort(unique(tse_data$FlyBaseID[tse_data$SS_TSE])),
-    thresholds = threshold_summary,
-    tail_setting = tail_setting
+    HTG = sort(unique(tissue_metrics$FlyBaseID[tissue_metrics$TauQuintile == 1])),
+    TG = sort(unique(tissue_metrics$FlyBaseID[tissue_metrics$TauQuintile == 2])),
+    TS = sort(unique(tissue_metrics$FlyBaseID[tissue_metrics$TauQuintile == 4])),
+    HTS = sort(unique(tissue_metrics$FlyBaseID[tissue_metrics$TauQuintile == 5])),
+    thresholds = threshold_summary
   )
 }
 
@@ -363,7 +304,7 @@ load_ai_sets <- function(retained_ids) {
 }
 
 
-load_dr_set <- function() {
+load_ssdr_set <- function() {
   read.delim(input_path("Genes.with.Sex.Reversed.AI.tsv"), stringsAsFactors = FALSE) |>
     transmute(FlyBaseID = as.character(geneID)) |>
     filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
@@ -397,10 +338,10 @@ load_dup_set <- function() {
 gene_universe <- load_gene_universe()
 ssdo_ids <- load_ssdo_ids()
 sbge_sets <- load_sbge_sets()
-tse_sets <- load_tse_sets(gene_universe$FlyBaseID)
+tau_sets <- load_tau_quintile_sets(gene_universe$FlyBaseID)
 retained_ai_ids <- load_mishra_retained_ids()
 ai_sets <- load_ai_sets(retained_ai_ids)
-dr_set <- load_dr_set()
+ssdr_set <- load_ssdr_set()
 sSS_set <- load_sss_set()
 dup_set <- load_dup_set()
 
@@ -416,16 +357,16 @@ available_feature_sets <- list(
   FB = unique(sbge_sets$FB),
   MB = unique(sbge_sets$MB),
   HMB = unique(sbge_sets$HMB),
-  TSE = unique(tse_sets$TSE),
-  M_TSE = unique(tse_sets$M_TSE),
-  F_TSE = unique(tse_sets$F_TSE),
-  SS_TSE = unique(tse_sets$SS_TSE),
+  HTS = unique(tau_sets$HTS),
+  TS = unique(tau_sets$TS),
+  TG = unique(tau_sets$TG),
+  HTG = unique(tau_sets$HTG),
   Dup = unique(dup_set),
   SSS = unique(sSS_set),
   ASE = unique(ai_sets$ASE),
   SS_ASE = unique(ai_sets$SS_ASE),
   TS_ASE = unique(ai_sets$TS_ASE),
-  DR = unique(dr_set)
+  SSDR = unique(ssdr_set)
 )
 
 
@@ -457,32 +398,32 @@ feature_counts <- vapply(names(available_feature_sets), function(feature_name) {
 
 
 feature_notes <- data.frame(
-  Feature = c("HFB", "FB", "MB", "HMB", "TSE", "M_TSE", "F_TSE", "SS_TSE", "Dup", "SSS", "ASE", "SS_ASE", "TS_ASE", "DR"),
+  Feature = c("HFB", "FB", "MB", "HMB", "HTS", "TS", "TG", "HTG", "Dup", "SSS", "ASE", "SS_ASE", "TS_ASE", "SSDR"),
   Description = c(
     "Highly female-biased whole-body SBGE genes from Mishra rebuilt with the MaleLimitedEvo x1 = 1, x2 = 5, y0 = 1, lfcSE rules",
     "Female-biased whole-body SBGE genes from Mishra rebuilt with the MaleLimitedEvo x1 = 1, x2 = 5, y0 = 1, lfcSE rules (Moderately female-biased bin)",
     "Male-biased whole-body SBGE genes from Mishra rebuilt with the MaleLimitedEvo x1 = 1, x2 = 5, y0 = 1, lfcSE rules (Moderately male-biased bin)",
     "Highly male-biased whole-body SBGE genes from Mishra rebuilt with the MaleLimitedEvo x1 = 1, x2 = 5, y0 = 1, lfcSE rules",
-    "Top-quartile tissue-specific genes based on Singh and Agrawal whole-body tau estimates",
-    "TSE genes in the extreme male-PC tails of tissue specificity (m.Comp.1-3)",
-    "TSE genes in the extreme female-PC tails of tissue specificity (f.Comp.1-3)",
-    "Genes in M-TSE or F-TSE, but not both",
+    "Highest-tau quintile from Singh and Agrawal whole-body tau estimates (highest tissue specificity)",
+    "Second-highest tau quintile from Singh and Agrawal whole-body tau estimates",
+    "Second-lowest tau quintile from Singh and Agrawal whole-body tau estimates",
+    "Lowest-tau quintile from Singh and Agrawal whole-body tau estimates (highest tissue generality)",
     "Genes with one or more paralogues in the Harper and Morrow duplication analysis",
     "Consistently sex-specific splicing gene set from Grieshop et al. (2025), derived using Mishra et al. (2024a) reference splicing profiles and filtered with three additional Mishra et al. (2024b) populations",
     "Genes with allelic imbalance in the filtered Mishra whole-body sex-reversed AI table (males or females significant)",
     "Genes with significant whole-body ASE in exactly one sex only in the filtered Mishra sex-reversed AI table",
     "Genes with significant ASE in exactly one of heads or gonads in the retained Mishra ASE tables",
-    "Genes with dominance-reversed allelic imbalance from Genes.with.Sex.Reversed.AI.tsv"
+    "Genes with sex-specific dominance-reversed allelic imbalance from Genes.with.Sex.Reversed.AI.tsv"
   ),
   Source = c(
     "Data/outputs/mishra_whole_body_sbge_bins.csv",
     "Data/outputs/mishra_whole_body_sbge_bins.csv",
     "Data/outputs/mishra_whole_body_sbge_bins.csv",
     "Data/outputs/mishra_whole_body_sbge_bins.csv",
-    "Data/inputs/SBGEandSSSdataForMBE.csv (tau top quartile)",
-    "Data/inputs/SBGEandSSSdataForMBE.csv (male tissue PCs within TSE genes)",
-    "Data/inputs/SBGEandSSSdataForMBE.csv (female tissue PCs within TSE genes)",
-    "Derived from M_TSE and F_TSE",
+    "Data/inputs/SBGEandSSSdataForMBE.csv (tau highest quintile)",
+    "Data/inputs/SBGEandSSSdataForMBE.csv (tau second-highest quintile)",
+    "Data/inputs/SBGEandSSSdataForMBE.csv (tau second-lowest quintile)",
+    "Data/inputs/SBGEandSSSdataForMBE.csv (tau lowest quintile)",
     "Data/inputs/all_paralogs_correct.csv (local copy preferred)",
     "Data/inputs/dimorphic.subset.list.txt (local copy preferred)",
     "Data/inputs/Sex.Reversed.AI.test.tsv filtered to Genes.for.analysis.final.tsv (local copy preferred)",
@@ -491,13 +432,13 @@ feature_notes <- data.frame(
     "Data/inputs/Genes.with.Sex.Reversed.AI.tsv"
   ),
   Status = c(rep("ready", 14)),
-  GeneCount = unname(feature_counts[c("HFB", "FB", "MB", "HMB", "TSE", "M_TSE", "F_TSE", "SS_TSE", "Dup", "SSS", "ASE", "SS_ASE", "TS_ASE", "DR")]),
+  GeneCount = unname(feature_counts[c("HFB", "FB", "MB", "HMB", "HTS", "TS", "TG", "HTG", "Dup", "SSS", "ASE", "SS_ASE", "TS_ASE", "SSDR")]),
   Notes = c(
     rep(NA_character_, 4),
-    sprintf("TSE is defined here as the top quartile of tau across the protein-coding gene universe (tau >= %.6f).", tse_sets$thresholds$Lower[tse_sets$thresholds$Step == "TSE gate"][1]),
-    sprintf("Male tissue-PC tails were defined within TSE genes using %s.", tse_sets$tail_setting),
-    sprintf("Female tissue-PC tails were defined within TSE genes using %s.", tse_sets$tail_setting),
-    "SS_TSE is defined as genes in M_TSE or F_TSE, but not both.",
+    sprintf("HTS is the highest tau quintile, with tau in [%.6f, %.6f].", tau_sets$thresholds$Lower[tau_sets$thresholds$Step == "HTS gate"][1], tau_sets$thresholds$Upper[tau_sets$thresholds$Step == "HTS gate"][1]),
+    sprintf("TS is the second-highest tau quintile, with tau in [%.6f, %.6f].", tau_sets$thresholds$Lower[tau_sets$thresholds$Step == "TS gate"][1], tau_sets$thresholds$Upper[tau_sets$thresholds$Step == "TS gate"][1]),
+    sprintf("TG is the second-lowest tau quintile, with tau in [%.6f, %.6f].", tau_sets$thresholds$Lower[tau_sets$thresholds$Step == "TG gate"][1], tau_sets$thresholds$Upper[tau_sets$thresholds$Step == "TG gate"][1]),
+    sprintf("HTG is the lowest tau quintile, with tau in [%.6f, %.6f].", tau_sets$thresholds$Lower[tau_sets$thresholds$Step == "HTG gate"][1], tau_sets$thresholds$Upper[tau_sets$thresholds$Step == "HTG gate"][1]),
     "Dup is defined here as binary paralogue presence: genes that appear as FBgn_ID in the shared Harper and Morrow all_paralogs_correct.csv table. The current shared table already satisfies the Harper and Morrow paralogue criterion and contains only rows with DIOPT_score >= 2.",
     sprintf("Using dimorphic.subset.list.txt as the final consistently sex-specific splicing (SSS) set from Grieshop et al. (2025). Those 2036 source genes were defined from significant SSS genes in Mishra et al. (2024a), then retained only if male and female splicing profiles remained concordant with the Mishra reference profiles across three additional Mishra et al. (2024b) populations. Of those, %d were present in the current protein-coding analysis universe.", as.integer(feature_counts["SSS"])),
     rep(NA_character_, 4)
@@ -525,7 +466,7 @@ write.csv(
 )
 
 write.csv(
-  tse_sets$thresholds,
-  summary_path("SA_resolution_tse_thresholds.csv"),
+  tau_sets$thresholds,
+  summary_path("SA_resolution_tau_quantiles.csv"),
   row.names = FALSE
 )

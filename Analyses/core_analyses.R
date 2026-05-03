@@ -624,22 +624,22 @@ write.csv(
   row.names = FALSE
 )
 
-radar_features <- c("HFB", "FB", "MB", "HMB", "TSE", "M_TSE", "F_TSE", "SS_TSE", "Dup", "SSS", "ASE", "SS_ASE", "TS_ASE", "DR")
+radar_features <- c("HFB", "FB", "MB", "HMB", "HTS", "TS", "TG", "HTG", "Dup", "SSS", "ASE", "SS_ASE", "TS_ASE", "SSDR")
 radar_feature_labels <- c(
   "HFB" = "HFB",
   "FB" = "FB",
   "MB" = "MB",
   "HMB" = "HMB",
-  "TSE" = "TSE",
-  "M_TSE" = "M-TSE",
-  "F_TSE" = "F-TSE",
-  "SS_TSE" = "SS-TSE",
+  "HTS" = "HTS",
+  "TS" = "TS",
+  "TG" = "TG",
+  "HTG" = "HTG",
   "Dup" = "Dup",
   "SSS" = "SSS",
   "ASE" = "ASE",
   "SS_ASE" = "SS-ASE",
   "TS_ASE" = "TS-ASE",
-  "DR" = "DR"
+  "SSDR" = "SSDR"
 )
 
 radar_result <- build_resolution_radar(
@@ -688,5 +688,6 @@ radar_result$draw(figure_path("Fig4_sa_res_radar.png"))
 # as the final 2036-gene consistently sex-specific splicing set from
 # Grieshop et al. (2025), derived from Mishra et al. (2024a) reference
 # profiles and filtered using three additional Mishra et al. (2024b)
-# populations. TSE, M_TSE, F_TSE, and SS_TSE are built upstream in
-# `build_sa_resolution_inputs.R` from Singh and Agrawal tau and tissue-PC data.
+# populations. HTS, TS, TG, and HTG are built upstream in
+# `build_sa_resolution_inputs.R` as the non-middle tau quintiles from the Singh
+# and Agrawal whole-body tissue-specificity estimates.

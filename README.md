@@ -84,7 +84,7 @@ Run these from the repository root.
 - `Plotting/plotting.R` writes the kept four-group metric plot-data and permutation-test tables for Tajima’s *D*, *r*<sub>*MF*</sub>, *pi*<sub>*rN*</sub>, tissue specificity, and *DoS*.
 - `Plotting/sa_probability_plots.R` and `Plotting/sa_magnitude_plots.R` write the kept study-level SA summary tables used in Fig1.
 - `Analyses/sa_candidate_enrichment.R` generates **FigS1** and **TableS1**.
-- `Data_wrangling/build_sa_resolution_inputs.R` assembles the feature-membership table for **Fig4**, including whole-body SBGE classes, tau/PC-derived TSE classes, Dup, SSS, and Mishra-derived ASE classes.
+- `Data_wrangling/build_sa_resolution_inputs.R` assembles the feature-membership table for **Fig4**, including whole-body SBGE classes, four non-middle tau quintiles (`HTS`, `TS`, `TG`, `HTG`), Dup, SSS, and Mishra-derived ASE classes.
 - `Analyses/core_analyses.R` generates **Fig4** and the kept SA-resolution statistical summaries.
 
 ## Notes
