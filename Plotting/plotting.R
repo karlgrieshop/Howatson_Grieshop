@@ -116,8 +116,8 @@ bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "Ge
 }
 
 
-# Compare SSDOs to each control class by permuting group labels while holding
-# the observed metric values fixed.
+# Compare two groups by permuting group labels while holding the observed metric
+# values fixed.
 two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
   x <- x[!is.na(x)]
   y <- y[!is.na(y)]
@@ -155,16 +155,19 @@ two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
 }
 
 
-pairwise_tests_against_reference <- function(data, value_col = "Value", group_col = "GeneType", reference_group = "SSDOs") {
-  comparison_groups <- setdiff(unique(as.character(data[[group_col]])), reference_group)
+pairwise_tests_within_metric <- function(data, value_col = "Value", group_col = "GeneType") {
+  available_groups <- ordered_gene_types[ordered_gene_types %in% unique(as.character(data[[group_col]]))]
+  group_pairs <- combn(available_groups, 2, simplify = FALSE)
 
-  tests <- lapply(comparison_groups, function(group_name) {
-    reference_values <- data[data[[group_col]] == reference_group, value_col, drop = TRUE]
-    comparison_values <- data[data[[group_col]] == group_name, value_col, drop = TRUE]
+  tests <- lapply(group_pairs, function(group_pair) {
+    group_1 <- group_pair[1]
+    group_2 <- group_pair[2]
+    group_1_values <- data[data[[group_col]] == group_1, value_col, drop = TRUE]
+    group_2_values <- data[data[[group_col]] == group_2, value_col, drop = TRUE]
 
-    test_result <- two_sample_permutation_test(reference_values, comparison_values)
-    test_result$group_1 <- reference_group
-    test_result$group_2 <- group_name
+    test_result <- two_sample_permutation_test(group_1_values, group_2_values)
+    test_result$group_1 <- group_1
+    test_result$group_2 <- group_2
     test_result
   })
 
@@ -284,7 +287,7 @@ metric_specs <- list(
 for (metric_spec in metric_specs) {
   raw_metric_data <- build_metric_data(metric_spec$data, metric_spec$value_col)
   summary_metric_data <- bootstrap_group_summaries(raw_metric_data)
-  tests_metric_data <- pairwise_tests_against_reference(raw_metric_data)
+  tests_metric_data <- pairwise_tests_within_metric(raw_metric_data)
   metric_plot <- plot_metric_distribution(summary_metric_data, metric_spec$y_label)
 
   write.csv(

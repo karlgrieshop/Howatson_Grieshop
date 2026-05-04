@@ -84,10 +84,7 @@ gonads_fdr_path <- prefer_local_input(
   "Gonads.FDR.test.for.AI.tsv",
   mishra_ase_path("Data_for_R_scripts", "GLM.outputs", "FDR.Sex.Effects.in.AI", "Gonads.FDR.test.for.AI.tsv")
 )
-dimorphic_subset_path <- prefer_local_input(
-  "dimorphic.subset.list.txt",
-  male_limited_path("Analyses", "DS_analysis", "dimorphic.subset.list.txt")
-)
+dimorphic_subset_path <- input_path("dimorphic.subset.list.txt")
 duplication_table_path <- prefer_local_input(
   "all_paralogs_correct.csv",
   harper_dup_path("Output", "all_paralogs_correct.csv")
@@ -344,6 +341,7 @@ ai_sets <- load_ai_sets(retained_ai_ids)
 ssdr_set <- load_ssdr_set()
 sSS_set <- load_sss_set()
 dup_set <- load_dup_set()
+sss_source_count <- length(unique(sSS_set))
 
 
 # The final feature lists can be broader than the protein-coding universe in
@@ -425,7 +423,7 @@ feature_notes <- data.frame(
     "Data/inputs/SBGEandSSSdataForMBE.csv (tau second-lowest quintile)",
     "Data/inputs/SBGEandSSSdataForMBE.csv (tau lowest quintile)",
     "Data/inputs/all_paralogs_correct.csv (local copy preferred)",
-    "Data/inputs/dimorphic.subset.list.txt (local copy preferred)",
+    "Data/inputs/dimorphic.subset.list.txt",
     "Data/inputs/Sex.Reversed.AI.test.tsv filtered to Genes.for.analysis.final.tsv (local copy preferred)",
     "Data/inputs/Sex.Reversed.AI.test.tsv filtered to Genes.for.analysis.final.tsv (local copy preferred)",
     "Data/inputs/{Heads,Gonads}.FDR.test.for.AI.tsv filtered to Genes.for.analysis.final.tsv (local copy preferred)",
@@ -440,7 +438,7 @@ feature_notes <- data.frame(
     sprintf("TG is the second-lowest tau quintile, with tau in [%.6f, %.6f].", tau_sets$thresholds$Lower[tau_sets$thresholds$Step == "TG gate"][1], tau_sets$thresholds$Upper[tau_sets$thresholds$Step == "TG gate"][1]),
     sprintf("HTG is the lowest tau quintile, with tau in [%.6f, %.6f].", tau_sets$thresholds$Lower[tau_sets$thresholds$Step == "HTG gate"][1], tau_sets$thresholds$Upper[tau_sets$thresholds$Step == "HTG gate"][1]),
     "Dup is defined here as binary paralogue presence: genes that appear as FBgn_ID in the shared Harper and Morrow all_paralogs_correct.csv table. The current shared table already satisfies the Harper and Morrow paralogue criterion and contains only rows with DIOPT_score >= 2.",
-    sprintf("Using dimorphic.subset.list.txt as the final consistently sex-specific splicing (SSS) set from Grieshop et al. (2025). Those 2036 source genes were defined from significant SSS genes in Mishra et al. (2024a), then retained only if male and female splicing profiles remained concordant with the Mishra reference profiles across three additional Mishra et al. (2024b) populations. Of those, %d were present in the current protein-coding analysis universe.", as.integer(feature_counts["SSS"])),
+    sprintf("Using Data/inputs/dimorphic.subset.list.txt as the final consistently sex-specific splicing (SSS) set from Grieshop et al. (2025). This local file contains the %d-gene final SSS list, including genes restored after the earlier DsRed-proximity exclusion was removed. Of those, %d were present in the current protein-coding analysis universe.", sss_source_count, as.integer(feature_counts["SSS"])),
     rep(NA_character_, 4)
   ),
   stringsAsFactors = FALSE

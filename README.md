@@ -41,7 +41,7 @@ All files below should be supplied locally in `Data/inputs/` from the accession 
 | `true_cmh_results.txt`, `gene_hits_snps_90.csv` | Neal, Truter, *et al.* (unpublished) | [add accession / note] |
 | `Innocenti_and_Morrow_ANTAGONISTIC.csv` | Innocenti and Morrow (2010) | [add DOI] |
 | `DifferentialGeneExpression.whole.bodies.tsv`, `Sex.Reversed.AI.test.tsv`, `Heads.FDR.test.for.AI.tsv`, `Gonads.FDR.test.for.AI.tsv`, `Genes.with.Sex.Reversed.AI.tsv`, `Genes.for.analysis.final.tsv` | Mishra et al. ASE study | [add DOI] |
-| `dimorphic.subset.list.txt` | Grieshop et al. (2025) | [add DOI] |
+| `dimorphic.subset.list.txt` | Grieshop et al. (2025) final SSS list, with the DsRed-restored genes included | [add DOI] |
 | `all_paralogs_correct.csv` | Harper and Morrow (2025) | [add DOI] |
 | `Drosophila_melanogaster.BDGP6.54.115.gtf` | Ensembl / FlyBase gene annotation release 115 | [add link] |
 | `all_disease_orthologs.csv`, `all_orthologs.csv`, `ssdo_inputs/**` | This study’s curated SSDO / orthology source files | [add accession note] |
@@ -81,7 +81,7 @@ Run these from the repository root.
 
 - `Data_wrangling/compile_ssdo_reference_data.R` compiles the canonical SSDO, disease-orthologue, orthologue, and gene-reference tables from the accession inputs.
 - `Data_wrangling/build_mishra_whole_body_sbge_bins.R` rebuilds the active five-bin Mishra whole-body SBGE classification using the MaleLimitedEvo thresholds.
-- `Plotting/plotting.R` writes the kept four-group metric plot-data and permutation-test tables for Tajima’s *D*, *r*<sub>*MF*</sub>, *pi*<sub>*rN*</sub>, tissue specificity, and *DoS*.
+- `Plotting/plotting.R` writes the kept four-group metric plot-data and permutation-test tables for Tajima’s *D*, *r*<sub>*MF*</sub>, *pi*<sub>*rN*</sub>, tissue specificity, and *DoS*, with BH correction applied within each metric across the full six pairwise group comparisons.
 - `Plotting/sa_probability_plots.R` and `Plotting/sa_magnitude_plots.R` write the kept study-level SA summary tables used in Fig1.
 - `Analyses/sa_candidate_enrichment.R` generates **FigS1** and **TableS1**.
 - `Data_wrangling/build_sa_resolution_inputs.R` assembles the feature-membership table for **Fig4**, including whole-body SBGE classes, four non-middle tau quintiles (`HTS`, `TS`, `TG`, `HTG`), Dup, SSS, and Mishra-derived ASE classes.
