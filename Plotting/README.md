@@ -10,7 +10,7 @@ This directory contains the active scripts for the retained **main-figure** plot
 ## Active scripts
 
 1. `plotting.R`  
-   Writes the four-category metric summaries and permutation tests for *r*<sub>*MF*</sub>, tissue specificity, *pi*<sub>*rN*</sub>, Tajima’s *D*, and *DoS*.
+   Writes the four-category metric summaries and permutation tests for *r*<sub>*MF*</sub>, tissue specificity, *pi*<sub>*rN*</sub>, Tajima’s *D*, and *DoS*, with BH correction applied within each metric across the full six pairwise group comparisons.
 
 2. `sa_probability_plots.R`  
    Writes the kept Ruzicka and Neal/Truter/Grieshop SA-probability summary tables, with BH correction applied within each study across the full six pairwise group comparisons.
