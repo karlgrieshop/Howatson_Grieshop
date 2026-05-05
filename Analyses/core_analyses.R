@@ -1,15 +1,10 @@
 # Core manuscript analyses for SA-resolution mechanisms.
-# This script is broader than the Fig4 radar itself: it assembles the
+# This script is broader than the Fig4 radar itself, it assembles the
 # whole-genome SA-resolution enrichment tests, the per-group radar prevalence
-# values, the pairwise follow-up permutation tests, and the omnibus multivariate
+# values, the pairwise follow-up permutation tests and the omnibus multivariate
 # permutation test that summarises whether the four gene classes differ in their
 # overall mechanism profiles.
 
-# Core manuscript analyses for SA-resolution mechanisms.
-# This script is broader than the Fig4 radar alone: it also runs the
-# whole-genome enrichment tests, exports the plotted prevalence values, carries
-# out the pairwise follow-up permutation tests, and computes the omnibus
-# multivariate permutation test on the full binary mechanism matrix.
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -103,8 +98,7 @@ pending_resolution_features <- resolution_notes |>
 # Convenience wrapper: every downstream test works from the same binary
 # gene-by-feature matrix, so this helper standardises how we recover the
 # FlyBase IDs assigned TRUE for each mechanism.
-# Recover the FlyBase IDs scored TRUE for one mechanism in the shared
-# gene-by-feature matrix built upstream.
+
 get_resolution_candidate_ids <- function(feature_name) {
   if (!(feature_name %in% available_resolution_features)) {
     stop(
@@ -126,8 +120,7 @@ get_resolution_candidate_ids <- function(feature_name) {
 
 # Fisher enrichment here asks whether SSDOs are unusually common among genes
 # carrying a given mechanism, relative to the whole protein-coding universe.
-# Fisher enrichment asks whether SSDOs are disproportionately represented among
-# genes carrying a given putative resolution mechanism.
+
 run_resolution_enrichment <- function(universe_ids, candidate_ids, study_name, universe_type, source_note) {
   analysis_df <- data.frame(FlyBaseID = unique(universe_ids), stringsAsFactors = FALSE) |>
     mutate(
@@ -157,8 +150,7 @@ run_resolution_enrichment <- function(universe_ids, candidate_ids, study_name, u
 
 # Apply the same whole-genome enrichment logic to every mechanism, then
 # correct the resulting family of enrichment tests with BH.
-# Apply the same enrichment logic to every retained mechanism, then BH-correct
-# the resulting family of enrichment tests.
+
 run_enrichment_family <- function(universe_ids, universe_type_label, source_note_suffix = NULL) {
   results <- bind_rows(lapply(reported_resolution_features, function(feature_name) {
     source_note <- resolution_notes$Source[match(feature_name, resolution_notes$Feature)]
@@ -196,8 +188,7 @@ run_enrichment_family <- function(universe_ids, universe_type_label, source_note
 # Generic two-sample permutation test used throughout the repo.
 # We permute gene labels, not values, so the observed statistic is the
 # difference in group means under the null of exchangeable group membership.
-# Generic permutation test used throughout the repo. Here the group mean is a
-# prevalence because the inputs are binary 0/1 indicators.
+
 two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
   x <- x[!is.na(x)]
   y <- y[!is.na(y)]
@@ -237,7 +228,7 @@ two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
 
 # Convert the binary mechanism table into the mutually exclusive manuscript
 # comparison groups used everywhere else in the project.
-# Recreate the mutually exclusive manuscript groups used throughout the paper.
+
 assign_resolution_groups <- function(data) {
   disease_only_ids <- setdiff(disease_ids, ssdo_ids)
   ortholog_only_ids <- setdiff(ortholog_ids, union(ssdo_ids, disease_ids))
@@ -255,8 +246,7 @@ assign_resolution_groups <- function(data) {
 }
 
 
-# The collapsed version is retained because some follow-up summaries compare
-# SSDOs against the rest of the genome pooled together.
+
 # A collapsed SSDO-versus-rest grouping is retained for simpler binary contrasts.
 assign_collapsed_resolution_groups <- function(data) {
   data |>
@@ -484,12 +474,11 @@ build_resolution_radar <- function(data, feature_order, feature_labels, group_va
   )
 }
 
+# These pairwise tests follow the omnibus comparison and 
+# are conducted on the same binary (0/1) matrix used for the radar plot. 
+# Consequently, group means represent prevalence (proportion of TRUE values).
+# Differences between groups can be interpreted directly as shifts in prevalence.
 
-# These pairwise tests are follow-ups to the omnibus comparison.
-# They stay on the binary 0/1 scale, so the "mean" for a group is simply the
-# prevalence (proportion of genes scored TRUE) for that mechanism.
-# Follow-up pairwise tests stay on the same binary matrix used for the radar,
-# so differences among groups can be interpreted directly as prevalence shifts.
 build_resolution_radar_permutation_tests <- function(data, feature_order, group_var, group_order, seed = 1L) {
   group_pairs <- combn(group_order, 2, simplify = FALSE)
 
@@ -527,10 +516,7 @@ build_resolution_radar_permutation_tests <- function(data, feature_order, group_
 }
 
 
-# The custom omnibus statistic is a MANOVA-like between-group sum of squares on
-# the full binary mechanism matrix. It is used here because it is lightweight
-# on the full 13,986 x 14 matrix and aligns closely with the prevalence-focused
-# interpretation of the radar plot.
+
 # This custom omnibus statistic is a MANOVA-like between-group sum of squares on
 # the binary mechanism matrix. It is computationally much lighter than
 # distance-matrix approaches on the full 13,986-gene dataset.
@@ -582,11 +568,6 @@ run_multivariate_permutation_test <- function(x, groups, n_perm = 1999, seed = 1
   )
 }
 
-
-# ---- Main execution block -------------------------------------------------
-# From this point down, the script switches from helper definitions to the
-# publication workflow: assemble the universes, run the enrichment tests,
-# compute the radar statistics, then write the tracked summary tables/figure.
 
 # ---- Main analysis workflow -----------------------------------------------
 # Assemble the universes, run the enrichment tests, calculate the radar values,

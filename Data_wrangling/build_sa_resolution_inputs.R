@@ -3,10 +3,6 @@
 # is a logical TRUE/FALSE indicator showing whether that gene qualifies for the
 # corresponding putative resolution mechanism.
 
-# Assemble the binary gene-by-mechanism matrix used by the core SA-resolution
-# analyses. Each row is one protein-coding FlyBase gene and each mechanism
-# column is a logical TRUE/FALSE indicator for a putative route of conflict
-# resolution.
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -58,8 +54,7 @@ suppressPackageStartupMessages({
 })
 
 
-# Prefer local copies in `Data/inputs/` when present so the manuscript workflow
-# can be rerun from the repo surface without depending on sibling directories.
+
 # Prefer local untracked copies in `Data/inputs/` so the publication workflow
 # can be rerun from the repo surface without depending on sibling directories.
 prefer_local_input <- function(local_name, fallback_path) {
@@ -122,9 +117,7 @@ dir.create(output_path(), recursive = TRUE, showWarnings = FALSE)
 dir.create(summary_path(), recursive = TRUE, showWarnings = FALSE)
 
 
-# The analysis universe is explicitly the current protein-coding FlyBase gene
-# set parsed from the GTF-derived reference table, not every valid-looking FBgn
-# that appears in upstream source files.
+
 # The analysis universe is explicitly the current protein-coding FlyBase gene
 # set parsed from the GTF-derived reference table.
 load_gene_universe <- function() {
@@ -149,8 +142,7 @@ load_ssdo_ids <- function() {
 }
 
 
-# Rebuild the Mishra whole-body SBGE bins as four binary mechanism sets.
-# Re-express the Mishra SBGE bins as four binary mechanism sets used downstream.
+# Rebuild the Mishra whole-body SBGE bins as four binary mechanism sets used downstream.
 load_sbge_sets <- function() {
   sbge <- read.csv(output_path("mishra_whole_body_sbge_bins.csv"), stringsAsFactors = FALSE) |>
     transmute(
@@ -344,9 +336,7 @@ dup_set <- load_dup_set()
 sss_source_count <- length(unique(sSS_set))
 
 
-# The final feature lists can be broader than the protein-coding universe in
-# their raw source files, so the actual membership table below is treated as the
-# source of truth for exported counts and feature-set IDs.
+
 # Raw source lists can extend beyond the final protein-coding universe, so the
 # exported counts below are derived from `feature_membership`, not the source
 # vectors themselves.

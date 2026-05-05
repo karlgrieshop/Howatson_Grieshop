@@ -1,13 +1,7 @@
 # Candidate SA-gene enrichment analyses for FigS1 / TableS1.
-# The logic here is intentionally parallel across the three candidate-SA
-# studies: define each study's assay universe, ask whether the focal gene set is
-# enriched for candidate SA genes, then export both the test summaries and the
-# exact overlap IDs.
-
-# Candidate SA-gene enrichment analyses for FigS1 / TableS1.
-# Each study contributes its own assay universe; the key question is whether the
-# focal gene class contains more candidate SA genes than expected within that
-# study-specific universe.
+# For each study, we define a study-specific assay universe and test whether
+# the focal gene class is enriched for candidate SA genes relative to that
+# background, exporting both summary statistics and exact overlapping gene IDs.
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -71,8 +65,7 @@ simple_theme <- function(base_size = 14) {
 
 # Map published symbols to modern FlyBase IDs only when the mapping is unique.
 # This avoids inflating overlaps with ambiguous symbol-to-gene matches.
-# Only keep one-to-one symbol mappings to avoid inflating overlaps through
-# ambiguous historical gene symbols.
+
 map_symbols_to_flybase <- function(symbols, gene_reference) {
   symbol_map <- gene_reference |>
     filter(!is.na(Fly.Symbol), nzchar(Fly.Symbol)) |>
@@ -95,8 +88,7 @@ normalise_chromosome <- function(x) {
 }
 
 
-# SNP-level SA scans are converted to gene-level summaries by interval overlap
-# with the current FlyBase/Ensembl gene coordinates.
+
 # Convert SNP-level studies into gene-level universes by interval overlap with
 # the current FlyBase/Ensembl reference coordinates.
 map_snp_positions_to_genes <- function(snp_positions, gene_reference) {
@@ -247,8 +239,7 @@ load_neal_matched_universe <- function(gene_reference) {
 
 # Core enrichment helper: compare the focal gene set against the non-focal
 # genes present in the same study-specific assay universe.
-# Core enrichment helper: compare one focal class against all other genes
-# represented in the same study-specific assay universe.
+
 run_enrichment_test <- function(
   universe_ids,
   focal_ids,
