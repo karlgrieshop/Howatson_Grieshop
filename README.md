@@ -10,7 +10,7 @@ This repo includes the code to support Howatson and Grieshop (2026) Phil Trans B
 ## Contents
 
 - **Main figures:** `Figures/Fig1_SA_Probability_and_Magnitude.png`, `Figures/Fig2_rmf_tau.png`, `Figures/Fig3_rlns_tajD_DoS.png`, `Figures/Fig4_sa_res_radar.png`
-- **Supplementary figures:** `Sup_figures/FigS1_SA_Candidate_Enrichment.png`, `Sup_figures/FigS2_sa_prob_mag.png`, `Sup_figures/FigS3_rmf_tau.png`, `Sup_figures/FigS4_rlns_tajD_DoS.png`
+- **Supplementary figures:** `Sup_figures/FigS1_SA_Candidate_Enrichment.png`, `Sup_figures/FigS2_sa_prob_mag.png`, `Sup_figures/FigS3_rmf_tau.png`, `Sup_figures/FigS4_rlns_tajD_DoS.png`, `Sup_figures/FigS5_radar_context.png`, `Sup_figures/FigS6_SSDO_candidate_overlay.png`
 - **Tables and data frames:** `Data/outputs/` and `Data/Summary_tables/`
 - **Code:** `Data_wrangling/`, `Plotting/`, `Sup_plotting/`, and `Analyses/`
 
@@ -26,7 +26,7 @@ Analyses/          active analysis scripts for FigS1 and Fig4
 Plotting/          active main-figure plotting scripts
 Sup_plotting/      active supplementary plotting scripts
 Figures/           final main-figure PNGs (Fig1–Fig4)
-Sup_figures/       final supplementary PNGs (FigS1–FigS4)
+Sup_figures/       final supplementary PNGs (FigS1–FigS6)
 ```
 
 ## Input provenance
@@ -56,7 +56,7 @@ The repository keeps the summary tables needed for the **already-summarized pane
 
 This shortcut works directly from the kept plot-data tables in `Data/Summary_tables/`.
 
-**Still upstream-dependent:** `FigS1`, `FigS2`, and `Fig4` are rebuilt from their active analysis scripts rather than from preassembled panel-summary tables alone.
+**Still upstream-dependent:** `FigS1`, `FigS2`, `Fig4`, `FigS5`, and `FigS6` are rebuilt from their active analysis scripts rather than from preassembled panel-summary tables alone.
 
 ## Full active workflow
 
@@ -76,6 +76,7 @@ Run these from the repository root.
 12. `Rscript Analyses/sa_candidate_enrichment.R`
 13. `Rscript Data_wrangling/build_sa_resolution_inputs.R`
 14. `Rscript Analyses/core_analyses.R`
+15. `Rscript Sup_plotting/figureS5_radar_context.R`
 
 ## What each active area does
 
@@ -86,6 +87,7 @@ Run these from the repository root.
 - `Analyses/sa_candidate_enrichment.R` generates **FigS1** and **TableS1**.
 - `Data_wrangling/build_sa_resolution_inputs.R` assembles the feature-membership table for **Fig4**, including whole-body SBGE classes, four non-middle tau quintiles (`HTS`, `TS`, `TG`, `HTG`), Dup, SSS, and Mishra-derived ASE classes.
 - `Analyses/core_analyses.R` generates **Fig4** and the kept SA-resolution statistical summaries.
+- `Sup_plotting/figureS5_radar_context.R` generates **FigS5**, a four-panel SA-resolution radar-context figure with panel A reprinting the Fig4 SSDO comparison and panels B-D replacing the orange focal group with the Innocenti, Ruzicka, and Neal candidate SA-gene sets while retaining the same split background categories; it also generates **FigS6**, a single-panel overlay comparing SSDOs directly with the three study-specific SA-candidate sets.
 
 ## Notes
 

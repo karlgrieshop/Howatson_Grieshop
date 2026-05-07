@@ -427,7 +427,7 @@ build_resolution_radar <- function(data, feature_order, feature_labels, group_va
 
   plot_radar <- function(output_path) {
     png(filename = output_path, width = 2700, height = 2400, res = 300, bg = "white")
-    op <- par(family = "sans", mar = c(3.8, 2.8, 3.2, 2.8), xpd = NA)
+    op <- par(family = "sans", mar = c(4.6, 2.8, 3.2, 2.8), xpd = NA)
     on.exit({
       par(op)
       dev.off()
@@ -463,7 +463,7 @@ build_resolution_radar <- function(data, feature_order, feature_labels, group_va
       seg.len = 3,
       x.intersp = 0.8,
       y.intersp = 1.1,
-      inset = c(0, -0.08)
+      inset = c(0, -0.13)
     )
   }
 
