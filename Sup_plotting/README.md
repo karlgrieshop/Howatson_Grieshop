@@ -25,14 +25,14 @@ This directory contains the active scripts for the retained **supplementary figu
    - `Sup_figures/FigS5_rlns_tajD_DoS.png`
 
 5. `figureS6_radar_context.R`  
-   Builds:
-   - `Sup_figures/FigS6_radar_context.png`, a four-panel SA-resolution radar-context figure:
+    Builds:
+   - `Sup_figures/FigS6_radar_context.png`, a four-panel study-matched SA-resolution radar-context figure:
    - panel A: `SSDOs (Figure 4)`
    - panel B: `Innocenti and Morrow (2010)`
    - panel C: `Ruzicka et al. (2019)`
    - panel D: `Neal, Truter, et al. (unpublished)`
-   - `Sup_figures/FigS7_SSDO_candidate_overlay.png`, a single-panel overlay comparing SSDOs directly with the Innocenti, Ruzicka, and Neal/Truter SA-candidate sets
+   - `Sup_figures/FigS7_SSDO_candidate_overlay.png`, a study-matched single-panel overlay comparing SSDOs directly with the Innocenti, Ruzicka, and Neal/Truter SA-candidate sets
 
-   Panels B-D keep any candidate genes that are also SSDOs in the focal candidate set, and exclude only non-candidate SSDOs from those study-specific comparison universes.
+    Panels B-D keep any candidate genes that are also SSDOs in the focal candidate set, exclude only non-candidate SSDOs from those study-specific comparison universes, and use the same study-matched per-feature denominators as Fig4. In the current tracked workflow, `SSS` uses the coauthor-supplied `Mishra.sig.SSS_filt25.forKarl.txt` tested-gene frame together with the DsRed-restored final list in `dimorphic.subset.list_wDsRedgenes.txt`, and `Dup` remains the only protein-coding-genome fallback.
 
 The SBGE-stratified component PNGs are no longer kept as tracked standalone outputs.

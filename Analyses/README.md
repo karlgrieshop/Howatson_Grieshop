@@ -10,10 +10,11 @@ This directory now contains only the two **active manuscript analysis scripts**.
    - `Data/Summary_tables/TableS1_SA_Candidate_Enrichment_Tests.csv`
 
 2. `core_analyses.R`  
-   Runs the retained SA-resolution enrichment/permutation workflow and writes:
+   Runs the retained study-matched SA-resolution enrichment/permutation workflow and writes:
    - `Figures/Fig4_sa_res_radar.png`
    - `Data/Summary_tables/SA_resolution_enrichment_tests.csv`
    - `Data/Summary_tables/SA_resolution_radar_prevalence.csv`
    - `Data/Summary_tables/SA_resolution_radar_permutation_tests.csv`
+   - `Data/Summary_tables/SA_resolution_multivariate_tests.csv`
 
 Legacy exploratory analysis scripts were moved out of the tracked publication surface and are no longer part of the active rerun workflow.

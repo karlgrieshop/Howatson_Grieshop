@@ -41,7 +41,7 @@ All files below should be supplied locally in `Data/inputs/` from the accession 
 | `true_cmh_results.txt`, `gene_hits_snps_90.csv` | Neal, Truter, *et al.* (unpublished) | [add accession / note] |
 | `Innocenti_and_Morrow_ANTAGONISTIC.csv` | Innocenti and Morrow (2010) | [add DOI] |
 | `DifferentialGeneExpression.whole.bodies.tsv`, `Sex.Reversed.AI.test.tsv`, `Heads.FDR.test.for.AI.tsv`, `Gonads.FDR.test.for.AI.tsv`, `Genes.with.Sex.Reversed.AI.tsv`, `Genes.for.analysis.final.tsv` | Mishra et al. ASE study | [add DOI] |
-| `dimorphic.subset.list.txt` | Grieshop et al. (2025) final SSS list, with the DsRed-restored genes included | [add DOI] |
+| `Mishra.sig.SSS_filt25.forKarl.txt`, `dimorphic.subset.list_wDsRedgenes.txt`, `all.exclude.txt` | Grieshop et al. (2025) / MaleLimitedEvo coauthor-supplied SSS tested, final, and excluded-gene lists | [add DOI / note] |
 | `all_paralogs_correct.csv` | Harper and Morrow (2025) | [add DOI] |
 | `Drosophila_melanogaster.BDGP6.54.115.gtf` | Ensembl / FlyBase gene annotation release 115 | [add link] |
 | `all_disease_orthologs.csv`, `all_orthologs.csv`, `ssdo_inputs/**` | This study’s curated SSDO / orthology source files | [add accession note] |
@@ -87,9 +87,9 @@ Run these from the repository root.
 - `Plotting/sa_probability_plots.R` and `Plotting/sa_magnitude_plots.R` write the kept study-level SA summary tables used in Fig1.
 - `Analyses/sa_candidate_enrichment.R` generates **FigS1** and **TableS1**.
 - `Sup_plotting/figureS2_context.R` generates **FigS2**, a Fig1-style four-panel context figure comparing SSDOs to the Innocenti, Ruzicka, and Neal/Truter candidate SA-gene sets, with original Fig1 non-SSDO bootstrap means shown as blue/green/grey horizontal reference lines.
-- `Data_wrangling/build_sa_resolution_inputs.R` assembles the feature-membership table for **Fig4**, including whole-body SBGE classes, four non-middle tau quintiles (`HTS`, `TS`, `TG`, `HTG`), Dup, SSS, and Mishra-derived ASE classes.
-- `Analyses/core_analyses.R` generates **Fig4** and the kept SA-resolution statistical summaries.
-- `Sup_plotting/figureS6_radar_context.R` generates **FigS6**, a four-panel SA-resolution radar-context figure with panel A reprinting the Fig4 SSDO comparison and panels B-D replacing the orange focal group with the Innocenti, Ruzicka, and Neal candidate SA-gene sets while retaining the same split background categories; it also generates **FigS7**, a single-panel overlay comparing SSDOs directly with the three study-specific SA-candidate sets.
+- `Data_wrangling/build_sa_resolution_inputs.R` assembles the study-matched SA-resolution feature tables for **Fig4** and the radar supplements, storing `TRUE`/`FALSE` only within each mechanism's source-study universe and `NA` outside it; it also exports the corresponding feature-universe summary. `SSS` now uses the coauthor-supplied `Mishra.sig.SSS_filt25.forKarl.txt` tested-gene frame together with the DsRed-restored final list in `dimorphic.subset.list_wDsRedgenes.txt`; `Dup` remains the only protein-coding-genome fallback denominator.
+- `Analyses/core_analyses.R` generates **Fig4** and the kept SA-resolution statistical summaries using those study-matched per-feature denominators.
+- `Sup_plotting/figureS6_radar_context.R` generates **FigS6**, a four-panel study-matched SA-resolution radar-context figure with panel A reprinting the Fig4 SSDO comparison and panels B-D replacing the orange focal group with the Innocenti, Ruzicka, and Neal candidate SA-gene sets while retaining the same split background categories; it also generates **FigS7**, a study-matched single-panel overlay comparing SSDOs directly with the three study-specific SA-candidate sets.
 
 ## Notes
 

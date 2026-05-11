@@ -6,7 +6,7 @@ This directory keeps only the summary/statistical tables that remain part of the
 
 - **Plot Data** tables: precomputed group summaries used to assemble manuscript figures.
 - **Permutation Tests** tables: retained statistical test outputs corresponding to the plotted contrasts.
-- **Reader-facing analysis tables:** currently `TableS1_SA_Candidate_Enrichment_Tests.csv`, `SA_resolution_enrichment_tests.csv`, `SA_resolution_multivariate_tests.csv`, `SA_resolution_radar_prevalence.csv`, `SA_resolution_radar_permutation_tests.csv`, `SA_resolution_tse_thresholds.csv`, and `sa_resolution_feature_notes.csv`.
+- **Reader-facing analysis tables:** currently `TableS1_SA_Candidate_Enrichment_Tests.csv`, `SA_resolution_enrichment_tests.csv`, `SA_resolution_multivariate_tests.csv`, `SA_resolution_radar_prevalence.csv`, `SA_resolution_radar_permutation_tests.csv`, `SA_resolution_tse_thresholds.csv`, and `sa_resolution_feature_notes.csv`. The SA-resolution tables now use study-matched denominators and record `NConsidered` where applicable.
 
 ## Shortcut figure assembly
 

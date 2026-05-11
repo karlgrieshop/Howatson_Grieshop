@@ -113,16 +113,34 @@ build_radar_components <- function(data, group_var, group_order, feature_order, 
     subset_df <- data |>
       filter(.data[[group_var]] == group_name)
 
-    data.frame(
-      Group = group_name,
-      Feature = feature_order,
-      FeatureLabel = unname(feature_labels[feature_order]),
-      Percent = vapply(feature_order, function(feature_name) {
-        100 * mean(subset_df[[feature_name]], na.rm = TRUE)
-      }, numeric(1)),
-      stringsAsFactors = FALSE
+      data.frame(
+        Group = group_name,
+        Feature = feature_order,
+        FeatureLabel = unname(feature_labels[feature_order]),
+        Percent = vapply(feature_order, function(feature_name) {
+          100 * mean(subset_df[[feature_name]], na.rm = TRUE)
+        }, numeric(1)),
+        NConsidered = vapply(feature_order, function(feature_name) {
+          sum(!is.na(subset_df[[feature_name]]))
+        }, integer(1)),
+        stringsAsFactors = FALSE
+      )
+    }))
+
+  if (any(radar_summary$NConsidered == 0L)) {
+    empty_rows <- radar_summary |>
+      filter(NConsidered == 0L) |>
+      transmute(Label = paste(Group, Feature, sep = " / ")) |>
+      pull(Label)
+
+    stop(
+      paste(
+        "At least one supplementary group-feature combination has zero study-matched genes:",
+        paste(empty_rows, collapse = ", ")
+      ),
+      call. = FALSE
     )
-  }))
+  }
 
   max_percent <- ceiling(max(radar_summary$Percent, na.rm = TRUE) / 10) * 10
   max_percent <- max(max_percent, 10)
@@ -167,16 +185,34 @@ build_overlay_radar_components <- function(data, group_ids, group_order, feature
       stop(sprintf("No genes available for overlay group '%s'.", group_name), call. = FALSE)
     }
 
-    data.frame(
-      Group = group_name,
-      Feature = feature_order,
-      FeatureLabel = unname(feature_labels[feature_order]),
-      Percent = vapply(feature_order, function(feature_name) {
-        100 * mean(subset_df[[feature_name]], na.rm = TRUE)
-      }, numeric(1)),
-      stringsAsFactors = FALSE
+      data.frame(
+        Group = group_name,
+        Feature = feature_order,
+        FeatureLabel = unname(feature_labels[feature_order]),
+        Percent = vapply(feature_order, function(feature_name) {
+          100 * mean(subset_df[[feature_name]], na.rm = TRUE)
+        }, numeric(1)),
+        NConsidered = vapply(feature_order, function(feature_name) {
+          sum(!is.na(subset_df[[feature_name]]))
+        }, integer(1)),
+        stringsAsFactors = FALSE
+      )
+    }))
+
+  if (any(radar_summary$NConsidered == 0L)) {
+    empty_rows <- radar_summary |>
+      filter(NConsidered == 0L) |>
+      transmute(Label = paste(Group, Feature, sep = " / ")) |>
+      pull(Label)
+
+    stop(
+      paste(
+        "At least one supplementary overlay group-feature combination has zero study-matched genes:",
+        paste(empty_rows, collapse = ", ")
+      ),
+      call. = FALSE
     )
-  }))
+  }
 
   max_percent <- ceiling(max(radar_summary$Percent, na.rm = TRUE) / 10) * 10
   max_percent <- max(max_percent, 10)

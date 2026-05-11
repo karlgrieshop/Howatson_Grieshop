@@ -14,12 +14,12 @@ This directory contains the **active build scripts** that create canonical inter
    Builds the Affymetrix Drosophila Genome 2.0 probe reference used to define the Innocenti and Morrow (2010) assay universe for FigS1.
 
 4. `build_sa_resolution_inputs.R`  
-   Assembles the Fig4 feature-membership table and feature-set table. This is the most involved wrangling step in the repository.
+   Assembles the study-matched Fig4 / FigS6 / FigS7 feature-membership table, feature-set table, and feature-universe table. This is the most involved wrangling step in the repository.
 
 ## Brief notes on the more involved transformations
 
 - **SSDO compilation:** the SSDO, disease-orthologue, and orthologue sets are standardized onto local FBgn-based reference tables so downstream scripts use a single canonical gene-ID space.
 - **Affymetrix universe:** the Innocenti and Morrow enrichment tests use the genes represented on the Affymetrix Drosophila Genome 2.0 array rather than the broader protein-coding background.
-- **Fig4 feature assembly:** `build_sa_resolution_inputs.R` combines Mishra-derived whole-body SBGE classes, tau-quintile classes (`HTS`, `TS`, `TG`, `HTG`), ASE classes, dimorphic splicing, and duplication into one feature-membership table. The final SSS input is now the local `Data/inputs/dimorphic.subset.list.txt` file, which includes the DsRed-restored genes.
+- **Fig4 feature assembly:** `build_sa_resolution_inputs.R` combines Mishra-derived whole-body SBGE classes, tau-quintile classes (`HTS`, `TS`, `TG`, `HTG`), ASE classes, dimorphic splicing, and duplication into one study-matched feature-membership table. Mechanism columns are `TRUE`/`FALSE` within the corresponding source-study universe and `NA` outside it. The SSS workflow now uses the coauthor-supplied files directly: `Data/inputs/dimorphic.subset.list_wDsRedgenes.txt` for the final DsRed-restored positive set, `Data/inputs/Mishra.sig.SSS_filt25.forKarl.txt` for the tested-gene denominator, and `Data/inputs/all.exclude.txt` as an optional consistency check that the tested set minus the excluded genes reproduces the final SSS list. `Dup` remains the only protein-coding-genome fallback.
 
 Outputs from these scripts are written to `Data/outputs/` and then consumed by `Plotting/`, `Sup_plotting/`, or `Analyses/`.
