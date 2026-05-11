@@ -463,7 +463,7 @@ panel_d <- plot_sbge_panel(
 figure_s2 <- panel_a / panel_b / panel_c / panel_d
 
 ggsave(
-  filename = sup_figure_path("FigS2_sa_prob_mag.png"),
+  filename = sup_figure_path("FigS3_sa_prob_mag.png"),
   plot = figure_s2,
   width = 12,
   height = 18,

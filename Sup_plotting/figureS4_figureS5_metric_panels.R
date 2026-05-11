@@ -178,7 +178,7 @@ figure_s4 <- (
 
 
 ggsave(
-  filename = sup_figure_path("FigS3_rmf_tau.png"),
+  filename = sup_figure_path("FigS4_rmf_tau.png"),
   plot = figure_s3,
   width = two_panel_width,
   height = two_panel_height,
@@ -187,7 +187,7 @@ ggsave(
 )
 
 ggsave(
-  filename = sup_figure_path("FigS4_rlns_tajD_DoS.png"),
+  filename = sup_figure_path("FigS5_rlns_tajD_DoS.png"),
   plot = figure_s4,
   width = three_panel_width,
   height = three_panel_height,

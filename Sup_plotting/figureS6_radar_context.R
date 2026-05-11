@@ -362,7 +362,7 @@ overlay_components <- build_overlay_radar_components(
 )
 
 png(
-  filename = sup_figure_path("FigS5_radar_context.png"),
+  filename = sup_figure_path("FigS6_radar_context.png"),
   width = 3600,
   height = 3900,
   res = 300,
@@ -419,7 +419,7 @@ legend(
 dev.off()
 
 png(
-  filename = sup_figure_path("FigS6_SSDO_candidate_overlay.png"),
+  filename = sup_figure_path("FigS7_SSDO_candidate_overlay.png"),
   width = 2700,
   height = 2400,
   res = 300,
