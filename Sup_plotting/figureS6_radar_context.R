@@ -269,7 +269,7 @@ draw_radar_panel <- function(components, panel_title, panel_tag, panel_palette) 
   }
 
   if (!is.null(panel_tag) && nzchar(panel_tag)) {
-    mtext(panel_tag, side = 3, line = 1.8, adj = 0.02, font = 2, cex = 1.25)
+    mtext(panel_tag, side = 3, line = 1.4, adj = 0.02, font = 2, cex = 1.25)
   }
 }
 
@@ -408,10 +408,10 @@ png(
 layout(matrix(c(1, 2, 3, 4, 5, 5), nrow = 3, byrow = TRUE), heights = c(15, 15, 2.3))
 par(family = "sans", xpd = NA)
 
-par(mar = c(2.8, 2.8, 3.0, 2.8))
+par(mar = c(2.8, 2.8, 3.3, 2.8))
 draw_radar_panel(main_components, "SSDOs (Figure 4)", "A", main_palette)
 
-par(mar = c(2.8, 2.8, 3.0, 2.8))
+par(mar = c(2.8, 2.8, 3.3, 2.8))
 draw_radar_panel(
   innocenti_components,
   expression("Innocenti and Morrow (2010)"),
@@ -419,7 +419,7 @@ draw_radar_panel(
   candidate_palette
 )
 
-par(mar = c(2.8, 2.8, 3.0, 2.8))
+par(mar = c(2.8, 2.8, 3.3, 2.8))
 draw_radar_panel(
   ruzicka_components,
   expression("Ruzicka " * italic("et al.") * " (2019)"),
@@ -427,7 +427,7 @@ draw_radar_panel(
   candidate_palette
 )
 
-par(mar = c(2.8, 2.8, 3.0, 2.8))
+par(mar = c(2.8, 2.8, 3.3, 2.8))
 draw_radar_panel(
   neal_components,
   expression("Neal, Truter, " * italic("et al.") * " (unpublished)"),

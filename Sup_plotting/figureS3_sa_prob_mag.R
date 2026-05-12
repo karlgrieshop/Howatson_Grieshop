@@ -369,7 +369,7 @@ plot_sbge_panel <- function(summary_data, y_label, title, tag, show_x_title = FA
     ) +
     scale_colour_manual(values = gene_type_palette, drop = FALSE) +
     scale_x_discrete(
-      labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB"),
+      labels = c("All", "Highly FB", "Female-biased", "Unbiased", "Male-biased", "Highly MB"),
       drop = FALSE
     ) +
     scale_y_continuous(expand = expansion(mult = c(0.04, 0.16))) +

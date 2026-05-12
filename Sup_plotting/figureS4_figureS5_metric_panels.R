@@ -47,7 +47,7 @@ ordered_sbge_panels <- c(
   "Male-biased",
   "Highly male-biased"
 )
-sbge_axis_labels <- c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")
+sbge_axis_labels <- c("All", "Highly FB", "Female-biased", "Unbiased", "Male-biased", "Highly MB")
 
 gene_type_palette <- c(
   "SSDOs" = "#D55E00",
