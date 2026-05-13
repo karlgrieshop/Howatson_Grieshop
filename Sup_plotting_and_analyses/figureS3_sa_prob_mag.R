@@ -8,7 +8,7 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Sup_plotting")) &&
+      dir.exists(file.path(current, "Sup_plotting_and_analyses")) &&
       dir.exists(file.path(current, "Sup_figures")) &&
       file.exists(file.path(current, "README.md"))
     ) {
@@ -260,7 +260,7 @@ build_neal_probability_values <- function(gene_reference) {
   map_snp_metric_to_genes(
     snp_values = snps,
     gene_reference = gene_reference,
-    source_label = "Neal_Truter_Grieshop from true_cmh_results.txt (max Log10_pvalue)"
+    source_label = "Neal (2024) from true_cmh_results.txt (max Log10_pvalue)"
   )
 }
 
@@ -313,7 +313,7 @@ build_neal_magnitude_values <- function(gene_reference) {
   map_snp_metric_to_genes(
     snp_values = snps,
     gene_reference = gene_reference,
-    source_label = "Neal_Truter_Grieshop from true_cmh_results.txt (max abs LogOdds)"
+    source_label = "Neal (2024) from true_cmh_results.txt (max abs LogOdds)"
   )
 }
 

@@ -6,8 +6,8 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Analyses")) &&
-      dir.exists(file.path(current, "Sup_plotting")) &&
+      dir.exists(file.path(current, "Plotting_and_analyses")) &&
+      dir.exists(file.path(current, "Sup_plotting_and_analyses")) &&
       file.exists(file.path(current, "README.md"))
     ) {
       return(current)
@@ -362,13 +362,13 @@ overlay_group_order <- c(
   "SSDOs",
   "Innocenti and Morrow SA candidates",
   "Ruzicka et al. SA candidates",
-  "Neal, Truter et al. SA candidates"
+  "Neal candidates"
 )
 overlay_palette <- c(
   "SSDOs" = "#D55E00",
   "Innocenti and Morrow SA candidates" = "#7B3294",
   "Ruzicka et al. SA candidates" = "#E6AB02",
-  "Neal, Truter et al. SA candidates" = "#B2182B"
+  "Neal candidates" = "#B2182B"
 )
 
 innocenti_candidate_ids <- intersect(load_innocenti_candidate_ids(gene_reference), resolution_membership$FlyBaseID)
@@ -390,7 +390,7 @@ overlay_components <- build_overlay_radar_components(
     "SSDOs" = ssdo_ids,
     "Innocenti and Morrow SA candidates" = innocenti_candidate_ids,
     "Ruzicka et al. SA candidates" = ruzicka_candidate_ids,
-    "Neal, Truter et al. SA candidates" = neal_candidate_ids
+    "Neal candidates" = neal_candidate_ids
   ),
   group_order = overlay_group_order,
   feature_order = feature_order,
@@ -430,7 +430,7 @@ draw_radar_panel(
 par(mar = c(2.8, 2.8, 3.3, 2.8))
 draw_radar_panel(
   neal_components,
-  expression("Neal, Truter, " * italic("et al.") * " (unpublished)"),
+  "Neal (2024)",
   "D",
   candidate_palette
 )

@@ -1,5 +1,5 @@
 # Assemble the tracked main-text metric panels for Figures 2 and 3 from the
-# already-exported summary tables produced by `Plotting/plotting.R`.
+# already-exported summary tables produced by `boot_permute_metrics.R`.
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -7,7 +7,7 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Plotting")) &&
+      dir.exists(file.path(current, "Plotting_and_analyses")) &&
       dir.exists(file.path(current, "Figures")) &&
       file.exists(file.path(current, "README.md"))
     ) {

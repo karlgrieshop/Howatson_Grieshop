@@ -1,9 +1,7 @@
-# Core manuscript analyses for SA-resolution mechanisms.
-# This script is broader than the Fig4 radar itself, it assembles the
-# whole-genome SA-resolution enrichment tests, the per-group radar prevalence
-# values, the pairwise follow-up permutation tests and the omnibus multivariate
-# permutation test that summarises whether the four gene classes differ in their
-# overall mechanism profiles.
+# Study-matched SA-resolution analyses for Figure 4 and its kept summary tables.
+# This script assembles the genome-wide enrichment tests, radar prevalences,
+# pairwise follow-up permutation tests, and the omnibus multivariate
+# permutation test for the four gene classes.
 
 
 find_project_root <- function(start = getwd()) {
@@ -12,7 +10,7 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Analyses")) &&
+      dir.exists(file.path(current, "Plotting_and_analyses")) &&
       dir.exists(file.path(current, "Figures")) &&
       file.exists(file.path(current, "README.md"))
     ) {

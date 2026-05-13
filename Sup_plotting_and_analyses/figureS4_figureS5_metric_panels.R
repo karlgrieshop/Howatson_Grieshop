@@ -1,5 +1,5 @@
 # Assemble the SBGE-stratified supplementary metric figures from the exported
-# summary tables produced by `Sup_plotting/sbge_metric_plots.R`.
+# summary tables produced by `Sup_plotting_and_analyses/sbge_metric_plots.R`.
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -7,7 +7,7 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Sup_plotting")) &&
+      dir.exists(file.path(current, "Sup_plotting_and_analyses")) &&
       dir.exists(file.path(current, "Sup_figures")) &&
       file.exists(file.path(current, "README.md"))
     ) {

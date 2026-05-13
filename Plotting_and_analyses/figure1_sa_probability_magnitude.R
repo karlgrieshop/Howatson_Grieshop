@@ -1,11 +1,6 @@
-# SA probability plots
-#
-# This script restores the four-group SA probability plots from the original
-# study-specific inputs now present in `Data/`.
-#
-# - Ruzicka et al.: SNP-level p-values from `Assoc_Data.txt`, mapped to genes
-# - Neal_Truter_Grieshop: SNP-level `-log10(p)` values from
-#   `true_cmh_results.txt`, mapped to genes
+# Assemble the four study-specific SA probability / magnitude panels into the
+# tracked Figure 1 manuscript layout. The underlying single-study summary tables
+# are generated upstream by `sa_probability_plots.R` and `sa_magnitude_plots.R`.
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -13,7 +8,7 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Plotting")) &&
+      dir.exists(file.path(current, "Plotting_and_analyses")) &&
       dir.exists(file.path(current, "Figures")) &&
       file.exists(file.path(current, "README.md"))
     ) {
@@ -44,11 +39,11 @@ suppressPackageStartupMessages({
   library(data.table)
   library(dplyr)
   library(ggplot2)
+  library(patchwork)
 })
 
 
 ordered_gene_types <- c("SSDOs", "Disease orthologues", "Orthologues", "Background")
-
 gene_type_palette <- c(
   "SSDOs" = "#D55E00",
   "Disease orthologues" = "#0072B2",
@@ -61,18 +56,21 @@ publication_theme <- function(base_size = 14) {
   theme_classic(base_size = base_size) +
     theme(
       axis.text = element_text(size = base_size, colour = "black"),
-      axis.title = element_text(size = base_size + 2, face = "bold"),
+      axis.title = element_text(size = base_size + 2),
       axis.line = element_blank(),
+      plot.title = element_text(size = base_size + 3, hjust = 0.5),
+      plot.tag = element_text(size = base_size + 4, face = "bold"),
       legend.position = "none",
       panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
-      axis.title.x = element_text(margin = margin(t = 12)),
-      plot.margin = margin(32, 12, 12, 24)
+      axis.title.x = element_text(margin = margin(t = 10)),
+      axis.title.y = element_text(margin = margin(r = 10)),
+      plot.margin = margin(10, 10, 10, 10)
     )
 }
 
 
-# Bootstrap the group mean so the point-range summaries reflect uncertainty in
-# the mean SA-probability estimate for each gene class.
+# Retain the same bootstrap summary logic used in the standalone study plots so
+# the composite figure and its components remain numerically consistent.
 bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "GeneType", n_boot = 5000, seed = 1L) {
   set.seed(seed)
 
@@ -107,84 +105,6 @@ bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "Ge
 }
 
 
-# Permute gene labels rather than raw values to test whether each manuscript
-# gene class differs from the others in mean SA-probability.
-two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
-  x <- x[!is.na(x)]
-  y <- y[!is.na(y)]
-
-  if (length(x) < 2 || length(y) < 2) {
-    return(
-      data.frame(
-        obs_diff = NA_real_,
-        n_group1 = length(x),
-        n_group2 = length(y),
-        p_value = NA_real_,
-        stringsAsFactors = FALSE
-      )
-    )
-  }
-
-  set.seed(seed)
-
-  n_x <- length(x)
-  pooled <- c(x, y)
-  obs_diff <- mean(x) - mean(y)
-
-  perm_diffs <- replicate(n_perm, {
-    shuffled <- sample(pooled, size = length(pooled), replace = FALSE)
-    mean(shuffled[seq_len(n_x)]) - mean(shuffled[-seq_len(n_x)])
-  })
-
-  data.frame(
-    obs_diff = obs_diff,
-    n_group1 = length(x),
-    n_group2 = length(y),
-    p_value = (sum(abs(perm_diffs) >= abs(obs_diff)) + 1) / (n_perm + 1),
-    stringsAsFactors = FALSE
-  )
-}
-
-
-pairwise_tests_within_study <- function(data, value_col = "Value", group_col = "GeneType") {
-  available_groups <- ordered_gene_types[ordered_gene_types %in% unique(as.character(data[[group_col]]))]
-  group_pairs <- combn(available_groups, 2, simplify = FALSE)
-
-  tests <- lapply(group_pairs, function(group_pair) {
-    group_1 <- group_pair[1]
-    group_2 <- group_pair[2]
-    group_1_values <- data[data[[group_col]] == group_1, value_col, drop = TRUE]
-    group_2_values <- data[data[[group_col]] == group_2, value_col, drop = TRUE]
-
-    test_result <- two_sample_permutation_test(group_1_values, group_2_values)
-    test_result$group_1 <- group_1
-    test_result$group_2 <- group_2
-    test_result
-  })
-
-  bind_rows(tests) |>
-    mutate(p_adjust_bh = p.adjust(p_value, method = "BH")) |>
-    select(group_1, group_2, everything())
-}
-
-
-plot_metric_distribution <- function(summary_data, y_label) {
-  ggplot(summary_data, aes(x = GeneType, y = q50, colour = GeneType)) +
-    geom_pointrange(aes(ymin = q05, ymax = q95), linewidth = 1.2) +
-    geom_text(aes(y = q95, label = SampleSize), size = 3.8, colour = "black", vjust = -0.75) +
-    scale_colour_manual(values = gene_type_palette, drop = FALSE) +
-    scale_y_continuous(expand = expansion(mult = c(0.03, 0.14))) +
-    labs(x = "Gene Type", y = y_label, title = NULL) +
-    publication_theme() +
-    theme(
-      axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
-      axis.title.y = element_text(hjust = 0.42, margin = margin(r = 12))
-    )
-}
-
-
-# Rebuild the four mutually exclusive manuscript groups from the canonical ID
-# lists before any study-specific probability summaries are calculated.
 assign_gene_types <- function(raw_values, ssdo_ids, disease_ids, ortholog_ids) {
   disease_only_ids <- setdiff(disease_ids, ssdo_ids)
   ortholog_only_ids <- setdiff(ortholog_ids, union(ssdo_ids, disease_ids))
@@ -268,7 +188,7 @@ map_snp_metric_to_genes <- function(snp_values, gene_reference, source_label) {
 }
 
 
-build_ruzicka_values <- function(gene_reference) {
+build_ruzicka_probability_values <- function(gene_reference) {
   assoc <- read.delim(
     input_path("Assoc_Data.txt"),
     stringsAsFactors = FALSE,
@@ -290,7 +210,7 @@ build_ruzicka_values <- function(gene_reference) {
 }
 
 
-build_neal_values <- function(gene_reference) {
+build_neal_probability_values <- function(gene_reference) {
   snps <- read.delim(
     input_path("true_cmh_results.txt"),
     header = FALSE,
@@ -317,55 +237,196 @@ build_neal_values <- function(gene_reference) {
   map_snp_metric_to_genes(
     snp_values = snps,
     gene_reference = gene_reference,
-    source_label = "Neal_Truter_Grieshop from true_cmh_results.txt (max Log10_pvalue)"
+    source_label = "Neal (2024) from true_cmh_results.txt (max Log10_pvalue)"
   )
 }
 
+
+build_ruzicka_magnitude_values <- function(gene_reference) {
+  assoc <- read.delim(
+    input_path("Assoc_Data.txt"),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  ) |>
+    transmute(
+      chromosome = as.character(Chromosome),
+      position = as.integer(Basepair),
+      Value = as.numeric(Wald_Stat)
+    ) |>
+    filter(!is.na(Value), is.finite(Value))
+
+  map_snp_metric_to_genes(
+    snp_values = assoc[, c("chromosome", "position", "Value")],
+    gene_reference = gene_reference,
+    source_label = "Ruzicka et al. from Assoc_Data.txt (max Wald_Stat)"
+  )
+}
+
+
+build_neal_magnitude_values <- function(gene_reference) {
+  snps <- read.delim(
+    input_path("true_cmh_results.txt"),
+    header = FALSE,
+    stringsAsFactors = FALSE
+  )
+
+  colnames(snps) <- c(
+    "Chromosome",
+    "Basepair",
+    "Reference",
+    paste0("Sample_", 1:28),
+    "Log10_pvalue",
+    "LogOdds"
+  )
+
+  snps <- snps |>
+    transmute(
+      chromosome = as.character(Chromosome),
+      position = as.integer(Basepair),
+      Value = abs(as.numeric(LogOdds))
+    ) |>
+    filter(!is.na(Value), is.finite(Value))
+
+  map_snp_metric_to_genes(
+    snp_values = snps,
+    gene_reference = gene_reference,
+    source_label = "Neal (2024) from true_cmh_results.txt (max abs LogOdds)"
+  )
+}
+
+
+plot_metric_panel <- function(
+  summary_data,
+  y_label = NULL,
+  show_x_axis = TRUE,
+  show_y_title = TRUE,
+  title = NULL,
+  tag = NULL
+) {
+  y_max <- max(summary_data$q95, na.rm = TRUE)
+
+  p <- ggplot(summary_data, aes(x = GeneType, y = q50, colour = GeneType)) +
+    geom_pointrange(aes(ymin = q05, ymax = q95), linewidth = 1.2) +
+    geom_text(aes(y = q95, label = SampleSize), size = 3.9, colour = "black", vjust = -0.75) +
+    scale_colour_manual(values = gene_type_palette, drop = FALSE) +
+    scale_y_continuous(expand = expansion(mult = c(0.03, 0.14))) +
+    labs(
+      x = NULL,
+      y = if (show_y_title) y_label else NULL,
+      title = title,
+      tag = tag
+    ) +
+    publication_theme()
+
+  if (show_x_axis) {
+    p <- p + theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
+  } else {
+    p <- p + theme(
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      axis.title.x = element_blank()
+    )
+  }
+
+  if (!show_y_title) {
+    p <- p + theme(axis.title.y = element_blank())
+  }
+
+  p
+}
+
+
+read_saved_summary <- function(filename) {
+  read.csv(summary_path(filename), stringsAsFactors = FALSE) |>
+    mutate(GeneType = factor(GeneType, levels = ordered_gene_types)) |>
+    arrange(GeneType)
+}
+
+
+# ---- Figure assembly workflow ---------------------------------------------
 
 gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
 protein_coding_gene_reference <- gene_reference |>
   filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), gene_biotype == "protein_coding")
-# ---- Main plotting workflow -----------------------------------------------
-
 ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 
-study_specs <- list(
-  list(
-    name = "Ruzicka et al.",
-    values = build_ruzicka_values(protein_coding_gene_reference),
-    y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
-  ),
-  list(
-    name = "Neal_Truter_Grieshop",
-    values = build_neal_values(protein_coding_gene_reference),
-    y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
-  )
+ruz_prob_summary <- if (file.exists(summary_path("Ruzicka_et_al_SA_probability_plot_data.csv"))) {
+  read_saved_summary("Ruzicka_et_al_SA_probability_plot_data.csv")
+} else {
+  build_ruzicka_probability_values(protein_coding_gene_reference) |>
+    assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
+    bootstrap_group_summaries()
+}
+
+neal_prob_summary <- if (file.exists(summary_path("Neal_2024_SA_probability_plot_data.csv"))) {
+  read_saved_summary("Neal_2024_SA_probability_plot_data.csv")
+} else {
+  build_neal_probability_values(protein_coding_gene_reference) |>
+    assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
+    bootstrap_group_summaries()
+}
+
+ruz_mag_summary <- if (file.exists(summary_path("Ruzicka_et_al_SA_magnitude_plot_data.csv"))) {
+  read_saved_summary("Ruzicka_et_al_SA_magnitude_plot_data.csv")
+} else {
+  build_ruzicka_magnitude_values(protein_coding_gene_reference) |>
+    assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
+    bootstrap_group_summaries()
+}
+
+neal_mag_summary <- if (file.exists(summary_path("Neal_2024_SA_magnitude_plot_data.csv"))) {
+  read_saved_summary("Neal_2024_SA_magnitude_plot_data.csv")
+} else {
+  build_neal_magnitude_values(protein_coding_gene_reference) |>
+    assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
+    bootstrap_group_summaries()
+}
+
+panel_a <- plot_metric_panel(
+  summary_data = ruz_prob_summary,
+  y_label = "Prob. of SA polymorphism",
+  show_x_axis = FALSE,
+  show_y_title = TRUE,
+  title = expression("Ruzicka " * italic("et al.") * " (2019)"),
+  tag = "A"
 )
 
-for (study_spec in study_specs) {
-  raw_data <- assign_gene_types(study_spec$values, ssdo_ids, disease_ids, ortholog_ids)
-  summary_data <- bootstrap_group_summaries(raw_data)
-  # For the exploratory factorial-style follow-up, each study now contributes
-  # the full six within-study group contrasts rather than only SSDOs versus the
-  # three control categories.
-  tests_data <- pairwise_tests_within_study(raw_data)
-  plot_object <- plot_metric_distribution(summary_data, study_spec$y_label)
+panel_b <- plot_metric_panel(
+  summary_data = neal_prob_summary,
+  y_label = "Prob. of SA polymorphism",
+  show_x_axis = FALSE,
+  show_y_title = FALSE,
+  title = "Neal (2024)",
+  tag = "B"
+)
 
-  safe_study_name <- gsub("[^A-Za-z0-9]+", "_", study_spec$name)
-  safe_study_name <- gsub("^_|_$", "", safe_study_name)
+panel_c <- plot_metric_panel(
+  summary_data = ruz_mag_summary,
+  y_label = "SA effect",
+  show_x_axis = TRUE,
+  show_y_title = TRUE,
+  title = NULL,
+  tag = "C"
+)
 
-  write.csv(
-    summary_data,
-    summary_path(paste0(safe_study_name, "_SA_probability_plot_data.csv")),
-    row.names = FALSE
-  )
-  write.csv(
-    tests_data,
-    summary_path(paste0(safe_study_name, "_SA_probability_permutation_tests.csv")),
-    row.names = FALSE
-  )
+panel_d <- plot_metric_panel(
+  summary_data = neal_mag_summary,
+  y_label = "SA effect",
+  show_x_axis = TRUE,
+  show_y_title = FALSE,
+  title = NULL,
+  tag = "D"
+)
 
-  invisible(plot_object)
-}
+figure_1 <- (panel_a | panel_b) / (panel_c | panel_d)
+
+ggsave(
+  filename = figure_path("Fig1_SA_Probability_and_Magnitude.png"),
+  plot = figure_1,
+  width = 12,
+  height = 10,
+  dpi = 300,
+  bg = "white"
+)

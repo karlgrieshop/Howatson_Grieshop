@@ -9,7 +9,7 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Analyses")) &&
+      dir.exists(file.path(current, "Plotting_and_analyses")) &&
       dir.exists(file.path(current, "Figures")) &&
       file.exists(file.path(current, "README.md"))
     ) {
@@ -311,16 +311,16 @@ disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFa
 ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 disease_only_ids <- setdiff(disease_ids, ssdo_ids)
 ortholog_only_ids <- setdiff(ortholog_ids, disease_ids)
-study_order <- c("Innocenti and Morrow", "Ruzicka et al.", "Neal_Truter_Grieshop")
+study_order <- c("Innocenti and Morrow", "Ruzicka et al.", "Neal_2024")
 study_display_order <- c(
   "Innocenti and Morrow (2010)",
   "Ruzicka <i>et al.</i> (2019)",
-  "Neal, Truter, <i>et al.</i> (<i>unpublished</i>)"
+  "Neal (2024)"
 )
 study_display_map <- c(
   "Innocenti and Morrow" = "Innocenti and Morrow (2010)",
   "Ruzicka et al." = "Ruzicka <i>et al.</i> (2019)",
-  "Neal_Truter_Grieshop" = "Neal, Truter, <i>et al.</i> (<i>unpublished</i>)"
+  "Neal_2024" = "Neal (2024)"
 )
 focal_order <- c("SSDOs", "Disease orthologues", "Orthologues")
 panel_order <- c(
@@ -338,7 +338,7 @@ neal_ids <- load_neal_candidates()
 matched_universes <- list(
   "Innocenti and Morrow" = load_innocenti_matched_universe(gene_reference)$FlyBaseID,
   "Ruzicka et al." = load_ruzicka_matched_universe(gene_reference)$FlyBaseID,
-  "Neal_Truter_Grieshop" = load_neal_matched_universe(gene_reference)$FlyBaseID
+  "Neal_2024" = load_neal_matched_universe(gene_reference)$FlyBaseID
 )
 
 ssdo_results <- list(
@@ -363,10 +363,10 @@ ssdo_results <- list(
     panel_label = "SA genes among SSDOs"
   ),
   run_enrichment_test(
-    universe_ids = matched_universes[["Neal_Truter_Grieshop"]],
+    universe_ids = matched_universes[["Neal_2024"]],
     focal_ids = ssdo_ids,
     candidate_ids = neal_ids$FlyBaseID,
-    study_name = "Neal_Truter_Grieshop",
+    study_name = "Neal_2024",
     universe_type = "Study-matched universe",
     source_note = "Genes represented by SNPs in true_cmh_results.txt",
     focal_group = "SSDOs",
@@ -396,10 +396,10 @@ disease_results <- list(
     panel_label = "SA genes among Disease Orthologues"
   ),
   run_enrichment_test(
-    universe_ids = matched_universes[["Neal_Truter_Grieshop"]],
+    universe_ids = matched_universes[["Neal_2024"]],
     focal_ids = disease_only_ids,
     candidate_ids = neal_ids$FlyBaseID,
-    study_name = "Neal_Truter_Grieshop",
+    study_name = "Neal_2024",
     universe_type = "Study-matched universe",
     source_note = "Genes represented by SNPs in true_cmh_results.txt",
     focal_group = "Disease orthologues",
@@ -429,10 +429,10 @@ orthologue_results <- list(
     panel_label = "SA genes among Orthologues"
   ),
   run_enrichment_test(
-    universe_ids = matched_universes[["Neal_Truter_Grieshop"]],
+    universe_ids = matched_universes[["Neal_2024"]],
     focal_ids = ortholog_only_ids,
     candidate_ids = neal_ids$FlyBaseID,
-    study_name = "Neal_Truter_Grieshop",
+    study_name = "Neal_2024",
     universe_type = "Study-matched universe",
     source_note = "Genes represented by SNPs in true_cmh_results.txt",
     focal_group = "Orthologues",

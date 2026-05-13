@@ -1,11 +1,10 @@
-# SA magnitude plots
+# SA probability plots
 #
-# This script restores four-group SA magnitude plots from the original
+# This script restores the four-group SA probability plots from the original
 # study-specific inputs now present in `Data/`.
 #
-# - Ruzicka et al.: SNP-level Wald chi-squared statistics from `Assoc_Data.txt`,
-#   mapped to genes
-# - Neal_Truter_Grieshop: SNP-level absolute log-odds ratios from
+# - Ruzicka et al.: SNP-level p-values from `Assoc_Data.txt`, mapped to genes
+# - Neal (2024): SNP-level `-log10(p)` values from
 #   `true_cmh_results.txt`, mapped to genes
 
 find_project_root <- function(start = getwd()) {
@@ -14,7 +13,7 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Plotting")) &&
+      dir.exists(file.path(current, "Plotting_and_analyses")) &&
       dir.exists(file.path(current, "Figures")) &&
       file.exists(file.path(current, "README.md"))
     ) {
@@ -67,13 +66,13 @@ publication_theme <- function(base_size = 14) {
       legend.position = "none",
       panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
       axis.title.x = element_text(margin = margin(t = 12)),
-      plot.margin = margin(12, 12, 12, 12)
+      plot.margin = margin(32, 12, 12, 24)
     )
 }
 
 
 # Bootstrap the group mean so the point-range summaries reflect uncertainty in
-# the mean SA-magnitude estimate for each gene class.
+# the mean SA-probability estimate for each gene class.
 bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "GeneType", n_boot = 5000, seed = 1L) {
   set.seed(seed)
 
@@ -109,7 +108,7 @@ bootstrap_group_summaries <- function(data, value_col = "Value", group_col = "Ge
 
 
 # Permute gene labels rather than raw values to test whether each manuscript
-# gene class differs from the others in mean SA-effect magnitude.
+# gene class differs from the others in mean SA-probability.
 two_sample_permutation_test <- function(x, y, n_perm = 10000, seed = 1L) {
   x <- x[!is.na(x)]
   y <- y[!is.na(y)]
@@ -177,12 +176,15 @@ plot_metric_distribution <- function(summary_data, y_label) {
     scale_y_continuous(expand = expansion(mult = c(0.03, 0.14))) +
     labs(x = "Gene Type", y = y_label, title = NULL) +
     publication_theme() +
-    theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
+    theme(
+      axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1),
+      axis.title.y = element_text(hjust = 0.42, margin = margin(r = 12))
+    )
 }
 
 
 # Rebuild the four mutually exclusive manuscript groups from the canonical ID
-# lists before any study-specific magnitude summaries are calculated.
+# lists before any study-specific probability summaries are calculated.
 assign_gene_types <- function(raw_values, ssdo_ids, disease_ids, ortholog_ids) {
   disease_only_ids <- setdiff(disease_ids, ssdo_ids)
   ortholog_only_ids <- setdiff(ortholog_ids, union(ssdo_ids, disease_ids))
@@ -275,14 +277,15 @@ build_ruzicka_values <- function(gene_reference) {
     transmute(
       chromosome = as.character(Chromosome),
       position = as.integer(Basepair),
-      Value = as.numeric(Wald_Stat)
+      p_value = as.numeric(Wald_P)
     ) |>
-    filter(!is.na(Value), is.finite(Value))
+    filter(!is.na(p_value), p_value > 0, p_value <= 1) |>
+    mutate(Value = -log10(pmax(p_value, .Machine$double.xmin)))
 
   map_snp_metric_to_genes(
     snp_values = assoc[, c("chromosome", "position", "Value")],
     gene_reference = gene_reference,
-    source_label = "Ruzicka et al. from Assoc_Data.txt (max Wald_Stat)"
+    source_label = "Ruzicka et al. from Assoc_Data.txt (max -log10 Wald_P)"
   )
 }
 
@@ -307,14 +310,14 @@ build_neal_values <- function(gene_reference) {
     transmute(
       chromosome = as.character(Chromosome),
       position = as.integer(Basepair),
-      Value = abs(as.numeric(LogOdds))
+      Value = as.numeric(Log10_pvalue)
     ) |>
     filter(!is.na(Value), is.finite(Value))
 
   map_snp_metric_to_genes(
     snp_values = snps,
     gene_reference = gene_reference,
-    source_label = "Neal_Truter_Grieshop from true_cmh_results.txt (max abs LogOdds)"
+    source_label = "Neal (2024) from true_cmh_results.txt (max Log10_pvalue)"
   )
 }
 
@@ -332,20 +335,21 @@ study_specs <- list(
   list(
     name = "Ruzicka et al.",
     values = build_ruzicka_values(protein_coding_gene_reference),
-    y_label = expression("SA effect (Wald " * chi^2 * ")")
+    y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
   ),
   list(
-    name = "Neal_Truter_Grieshop",
+    name = "Neal_2024",
     values = build_neal_values(protein_coding_gene_reference),
-    y_label = expression("SA effect (" * italic(Log) * " Odds Ratio)")
+    y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
   )
 )
 
 for (study_spec in study_specs) {
   raw_data <- assign_gene_types(study_spec$values, ssdo_ids, disease_ids, ortholog_ids)
   summary_data <- bootstrap_group_summaries(raw_data)
-  # As for SA probability, each study now contributes the full six within-study
-  # group contrasts so the BH family is study-specific rather than cross-study.
+  # For the exploratory factorial-style follow-up, each study now contributes
+  # the full six within-study group contrasts rather than only SSDOs versus the
+  # three control categories.
   tests_data <- pairwise_tests_within_study(raw_data)
   plot_object <- plot_metric_distribution(summary_data, study_spec$y_label)
 
@@ -354,12 +358,12 @@ for (study_spec in study_specs) {
 
   write.csv(
     summary_data,
-    summary_path(paste0(safe_study_name, "_SA_magnitude_plot_data.csv")),
+    summary_path(paste0(safe_study_name, "_SA_probability_plot_data.csv")),
     row.names = FALSE
   )
   write.csv(
     tests_data,
-    summary_path(paste0(safe_study_name, "_SA_magnitude_permutation_tests.csv")),
+    summary_path(paste0(safe_study_name, "_SA_probability_permutation_tests.csv")),
     row.names = FALSE
   )
 

@@ -1,8 +1,5 @@
-# Metric plotting workflow
-#
-# This script is deliberately self-contained so that the data loading,
-# four-group assignment, summary-table generation, permutation testing,
-# and ggplot figure code all live in one place.
+# Bootstrap and permutation summaries for the four-group quantitative-gene
+# metrics used in Figures 2 and 3.
 #
 # Run after:
 #   Rscript Data_wrangling/compile_ssdo_reference_data.R
@@ -13,7 +10,7 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Plotting")) &&
+      dir.exists(file.path(current, "Plotting_and_analyses")) &&
       dir.exists(file.path(current, "Figures")) &&
       file.exists(file.path(current, "README.md"))
     ) {
