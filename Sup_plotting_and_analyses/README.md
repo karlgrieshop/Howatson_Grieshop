@@ -33,6 +33,6 @@ This directory contains the active scripts for the retained **supplementary figu
    - panel D: `Neal (2024)`
    - `Sup_figures/FigS7_SSDO_candidate_overlay.png`, a study-matched single-panel overlay comparing SSDOs directly with the Innocenti, Ruzicka, and Neal candidate SA-candidate sets
 
-    Panels B-D keep any candidate genes that are also SSDOs in the focal candidate set, exclude only non-candidate SSDOs from those study-specific comparison universes, and use the same study-matched per-feature denominators as Fig4. In the current tracked workflow, `SSS` uses the coauthor-supplied `Mishra.sig.SSS_filt25.forKarl.txt` tested-gene frame together with the DsRed-restored final list in `dimorphic.subset.list_wDsRedgenes.txt`, and `Dup` remains the only protein-coding-genome fallback.
+    Panels B-D keep any candidate genes that are also SSDOs in the focal candidate set, exclude only non-candidate SSDOs from those study-specific comparison universes, and use the same study-matched per-feature denominators as Fig4. In the current tracked workflow, `SSS` uses the coauthor-supplied `Mishra.sig.SSS_filt25.txt` tested-gene frame together with the DsRed-restored final list in `dimorphic.subset.list_wDsRedgenes.txt`, and `Dup` remains the only protein-coding-genome fallback.
 
 The SBGE-stratified component PNGs are no longer kept as tracked standalone outputs.

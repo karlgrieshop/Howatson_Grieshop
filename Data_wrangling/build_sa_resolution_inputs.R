@@ -83,7 +83,7 @@ sss_final_set_path <- if (file.exists(input_path("dimorphic.subset.list_wDsRedge
 } else {
   input_path("dimorphic.subset.list.txt")
 }
-sss_tested_universe_path <- input_path("Mishra.sig.SSS_filt25.forKarl.txt")
+sss_tested_universe_path <- input_path("Mishra.sig.SSS_filt25.txt")
 sss_exclude_path <- input_path("all.exclude.txt")
 duplication_table_path <- prefer_local_input(
   "all_paralogs_correct.csv",
