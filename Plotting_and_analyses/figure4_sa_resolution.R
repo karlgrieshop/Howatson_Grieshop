@@ -703,7 +703,7 @@ write.csv(
 radar_result$draw(figure_path("Fig4_sa_res_radar.png"))
 
 
-# The current `SSS` column comes from the coauthor-supplied
+# The current `SSS` column comes from the locally supplied
 # `dimorphic.subset.list_wDsRedgenes.txt` final set, with the study-matched
 # denominator supplied separately via `Mishra.sig.SSS_filt25.txt`.
 # HTS, TS, TG, and HTG are built upstream in
