@@ -438,7 +438,7 @@ panel_a <- plot_sbge_panel(
 panel_b <- plot_sbge_panel(
   summary_data = panel_b_summary,
   y_label = "Prob. of SA polymorphism",
-  title = expression("Neal, Truter, " * italic("et al.") * " (unpublished)"),
+  title = "Neal (2024)",
   tag = "B",
   show_x_title = FALSE
 )
@@ -454,7 +454,7 @@ panel_c <- plot_sbge_panel(
 panel_d <- plot_sbge_panel(
   summary_data = panel_d_summary,
   y_label = "SA effect",
-  title = expression("Neal, Truter, " * italic("et al.") * " (unpublished)"),
+  title = "Neal (2024)",
   tag = "D",
   show_x_title = TRUE
 )

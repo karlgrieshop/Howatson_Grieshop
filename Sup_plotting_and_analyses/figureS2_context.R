@@ -521,7 +521,7 @@ panel_b <- plot_metric_panel(
   y_label = "Prob. of SA polymorphism",
   show_x_axis = FALSE,
   show_y_title = FALSE,
-  title = expression("Neal, Truter, " * italic("et al.") * " (unpublished)"),
+  title = "Neal (2024)",
   tag = "B"
 )
 
