@@ -9,7 +9,7 @@ find_project_root_local <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Plotting")) &&
+      dir.exists(file.path(current, "Plotting_and_analyses")) &&
       dir.exists(file.path(current, "Figures")) &&
       file.exists(file.path(current, "README.md"))
     ) {

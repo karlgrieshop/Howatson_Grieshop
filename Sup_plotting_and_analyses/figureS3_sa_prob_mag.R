@@ -8,7 +8,7 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Sup_plotting")) &&
+      dir.exists(file.path(current, "Sup_plotting_and_analyses")) &&
       dir.exists(file.path(current, "Sup_figures")) &&
       file.exists(file.path(current, "README.md"))
     ) {
@@ -260,7 +260,7 @@ build_neal_probability_values <- function(gene_reference) {
   map_snp_metric_to_genes(
     snp_values = snps,
     gene_reference = gene_reference,
-    source_label = "Neal_Truter_Grieshop from true_cmh_results.txt (max Log10_pvalue)"
+    source_label = "Neal (2024) from true_cmh_results.txt (max Log10_pvalue)"
   )
 }
 
@@ -313,7 +313,7 @@ build_neal_magnitude_values <- function(gene_reference) {
   map_snp_metric_to_genes(
     snp_values = snps,
     gene_reference = gene_reference,
-    source_label = "Neal_Truter_Grieshop from true_cmh_results.txt (max abs LogOdds)"
+    source_label = "Neal (2024) from true_cmh_results.txt (max abs LogOdds)"
   )
 }
 
@@ -369,7 +369,7 @@ plot_sbge_panel <- function(summary_data, y_label, title, tag, show_x_title = FA
     ) +
     scale_colour_manual(values = gene_type_palette, drop = FALSE) +
     scale_x_discrete(
-      labels = c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB"),
+      labels = c("All", "Highly FB", "Female-biased", "Unbiased", "Male-biased", "Highly MB"),
       drop = FALSE
     ) +
     scale_y_continuous(expand = expansion(mult = c(0.04, 0.16))) +
@@ -438,7 +438,7 @@ panel_a <- plot_sbge_panel(
 panel_b <- plot_sbge_panel(
   summary_data = panel_b_summary,
   y_label = "Prob. of SA polymorphism",
-  title = expression("Neal, Truter, " * italic("et al.") * " (unpublished)"),
+  title = "Neal (2024)",
   tag = "B",
   show_x_title = FALSE
 )
@@ -454,7 +454,7 @@ panel_c <- plot_sbge_panel(
 panel_d <- plot_sbge_panel(
   summary_data = panel_d_summary,
   y_label = "SA effect",
-  title = expression("Neal, Truter, " * italic("et al.") * " (unpublished)"),
+  title = "Neal (2024)",
   tag = "D",
   show_x_title = TRUE
 )
@@ -463,7 +463,7 @@ panel_d <- plot_sbge_panel(
 figure_s2 <- panel_a / panel_b / panel_c / panel_d
 
 ggsave(
-  filename = sup_figure_path("FigS2_sa_prob_mag.png"),
+  filename = sup_figure_path("FigS3_sa_prob_mag.png"),
   plot = figure_s2,
   width = 12,
   height = 18,

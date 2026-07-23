@@ -8,7 +8,7 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Sup_plotting")) &&
+      dir.exists(file.path(current, "Sup_plotting_and_analyses")) &&
       file.exists(file.path(current, "README.md"))
     ) {
       return(current)

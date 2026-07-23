@@ -1,5 +1,5 @@
 # Assemble the SBGE-stratified supplementary metric figures from the exported
-# summary tables produced by `Sup_plotting/sbge_metric_plots.R`.
+# summary tables produced by `Sup_plotting_and_analyses/sbge_metric_plots.R`.
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -7,7 +7,7 @@ find_project_root <- function(start = getwd()) {
   repeat {
     if (
       dir.exists(file.path(current, "Data")) &&
-      dir.exists(file.path(current, "Sup_plotting")) &&
+      dir.exists(file.path(current, "Sup_plotting_and_analyses")) &&
       dir.exists(file.path(current, "Sup_figures")) &&
       file.exists(file.path(current, "README.md"))
     ) {
@@ -47,7 +47,7 @@ ordered_sbge_panels <- c(
   "Male-biased",
   "Highly male-biased"
 )
-sbge_axis_labels <- c("All", "Highly FB", "Female", "Unbiased", "Male", "Highly MB")
+sbge_axis_labels <- c("All", "Highly FB", "Female-biased", "Unbiased", "Male-biased", "Highly MB")
 
 gene_type_palette <- c(
   "SSDOs" = "#D55E00",
@@ -178,7 +178,7 @@ figure_s4 <- (
 
 
 ggsave(
-  filename = sup_figure_path("FigS3_rmf_tau.png"),
+  filename = sup_figure_path("FigS4_rmf_tau.png"),
   plot = figure_s3,
   width = two_panel_width,
   height = two_panel_height,
@@ -187,7 +187,7 @@ ggsave(
 )
 
 ggsave(
-  filename = sup_figure_path("FigS4_rlns_tajD_DoS.png"),
+  filename = sup_figure_path("FigS5_rlns_tajD_DoS.png"),
   plot = figure_s4,
   width = three_panel_width,
   height = three_panel_height,

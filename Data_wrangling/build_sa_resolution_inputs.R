@@ -1,7 +1,6 @@
-# Assemble the binary gene-by-mechanism table used by the core SA-resolution
-# analyses. Each row is one protein-coding FlyBase gene; each mechanism column
-# is a logical TRUE/FALSE indicator showing whether that gene qualifies for the
-# corresponding putative resolution mechanism.
+# Assemble the gene-by-mechanism table used by the core SA-resolution analyses.
+# Each row is one protein-coding FlyBase gene; each mechanism column is logical
+# TRUE/FALSE within that mechanism's source-study universe and NA outside it.
 
 
 find_project_root <- function(start = getwd()) {
@@ -79,7 +78,13 @@ gonads_fdr_path <- prefer_local_input(
   "Gonads.FDR.test.for.AI.tsv",
   mishra_ase_path("Data_for_R_scripts", "GLM.outputs", "FDR.Sex.Effects.in.AI", "Gonads.FDR.test.for.AI.tsv")
 )
-dimorphic_subset_path <- input_path("dimorphic.subset.list.txt")
+sss_final_set_path <- if (file.exists(input_path("dimorphic.subset.list_wDsRedgenes.txt"))) {
+  input_path("dimorphic.subset.list_wDsRedgenes.txt")
+} else {
+  input_path("dimorphic.subset.list.txt")
+}
+sss_tested_universe_path <- input_path("Mishra.sig.SSS_filt25.txt")
+sss_exclude_path <- input_path("all.exclude.txt")
 duplication_table_path <- prefer_local_input(
   "all_paralogs_correct.csv",
   harper_dup_path("Output", "all_paralogs_correct.csv")
@@ -96,7 +101,8 @@ required_files <- c(
   heads_fdr_path,
   gonads_fdr_path,
   input_path("Genes.with.Sex.Reversed.AI.tsv"),
-  dimorphic_subset_path,
+  sss_final_set_path,
+  sss_tested_universe_path,
   duplication_table_path
 )
 
@@ -302,9 +308,9 @@ load_ssdr_set <- function() {
 }
 
 
-load_sss_set <- function() {
+load_id_list <- function(path) {
   read.delim(
-    dimorphic_subset_path,
+    path,
     header = FALSE,
     stringsAsFactors = FALSE
   ) |>
@@ -312,6 +318,25 @@ load_sss_set <- function() {
     filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
     distinct(FlyBaseID, .keep_all = TRUE) |>
     pull(FlyBaseID)
+}
+
+
+load_sss_set <- function() {
+  load_id_list(sss_final_set_path)
+}
+
+
+load_sss_tested_universe <- function() {
+  load_id_list(sss_tested_universe_path)
+}
+
+
+load_sss_excluded_ids <- function() {
+  if (!file.exists(sss_exclude_path)) {
+    return(NULL)
+  }
+
+  load_id_list(sss_exclude_path)
 }
 
 
@@ -324,6 +349,38 @@ load_dup_set <- function() {
 }
 
 
+build_feature_universes <- function(gene_universe_ids, sbge_ids, tau_ids, sss_ids, mishra_ids) {
+  data.frame(
+    Feature = c("HFB", "FB", "MB", "HMB", "HTS", "TS", "TG", "HTG", "Dup", "SSS", "ASE", "SS_ASE", "TS_ASE", "SSDR"),
+    StudyMatchedUniverseSize = c(
+      rep(length(unique(sbge_ids)), 4),
+      rep(length(unique(tau_ids)), 4),
+      length(unique(gene_universe_ids)),
+      length(unique(sss_ids)),
+      rep(length(unique(mishra_ids)), 4)
+    ),
+    SourceMatchedTo = c(
+      rep("Mishra whole-body SBGE bins", 4),
+      rep("Singh and Agrawal tau table", 4),
+      "Protein-coding genome",
+      "Mishra SSS filt25 tested-gene set",
+      rep("Mishra retained-gene universe", 4)
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+
+apply_feature_universes <- function(feature_membership, feature_universes) {
+  for (feature_name in names(feature_universes)) {
+    in_universe <- feature_membership$FlyBaseID %in% feature_universes[[feature_name]]
+    feature_membership[[feature_name]] <- ifelse(in_universe, feature_membership[[feature_name]], NA)
+  }
+
+  feature_membership
+}
+
+
 gene_universe <- load_gene_universe()
 ssdo_ids <- load_ssdo_ids()
 sbge_sets <- load_sbge_sets()
@@ -332,8 +389,31 @@ retained_ai_ids <- load_mishra_retained_ids()
 ai_sets <- load_ai_sets(retained_ai_ids)
 ssdr_set <- load_ssdr_set()
 sSS_set <- load_sss_set()
+sss_tested_universe <- load_sss_tested_universe()
+sss_excluded_ids <- load_sss_excluded_ids()
 dup_set <- load_dup_set()
 sss_source_count <- length(unique(sSS_set))
+sss_tested_source_count <- length(unique(sss_tested_universe))
+sss_excluded_count <- if (is.null(sss_excluded_ids)) NA_integer_ else length(unique(sss_excluded_ids))
+
+if (!is.null(sss_excluded_ids)) {
+  recovered_sss_set <- setdiff(unique(sss_tested_universe), unique(sss_excluded_ids))
+
+  if (!setequal(recovered_sss_set, unique(sSS_set))) {
+    stop(
+      paste0(
+        "The supplied SSS files are inconsistent: `",
+        basename(sss_final_set_path),
+        "` is not identical to `",
+        basename(sss_tested_universe_path),
+        "` minus `",
+        basename(sss_exclude_path),
+        "`."
+      ),
+      call. = FALSE
+    )
+  }
+}
 
 
 
@@ -356,6 +436,29 @@ available_feature_sets <- list(
   TS_ASE = unique(ai_sets$TS_ASE),
   SSDR = unique(ssdr_set)
 )
+available_feature_universes <- list(
+  HFB = unique(unlist(sbge_sets[c("HFB", "FB", "MB", "HMB")], use.names = FALSE)),
+  FB = unique(unlist(sbge_sets[c("HFB", "FB", "MB", "HMB")], use.names = FALSE)),
+  MB = unique(unlist(sbge_sets[c("HFB", "FB", "MB", "HMB")], use.names = FALSE)),
+  HMB = unique(unlist(sbge_sets[c("HFB", "FB", "MB", "HMB")], use.names = FALSE)),
+  HTS = unique(unlist(tau_sets[c("HTS", "TS", "TG", "HTG")], use.names = FALSE)),
+  TS = unique(unlist(tau_sets[c("HTS", "TS", "TG", "HTG")], use.names = FALSE)),
+  TG = unique(unlist(tau_sets[c("HTS", "TS", "TG", "HTG")], use.names = FALSE)),
+  HTG = unique(unlist(tau_sets[c("HTS", "TS", "TG", "HTG")], use.names = FALSE)),
+  Dup = unique(gene_universe$FlyBaseID),
+  SSS = intersect(unique(sss_tested_universe), unique(gene_universe$FlyBaseID)),
+  ASE = unique(retained_ai_ids),
+  SS_ASE = unique(retained_ai_ids),
+  TS_ASE = unique(retained_ai_ids),
+  SSDR = unique(retained_ai_ids)
+)
+feature_universe_summary <- build_feature_universes(
+  gene_universe_ids = gene_universe$FlyBaseID,
+  sbge_ids = available_feature_universes$HFB,
+  tau_ids = available_feature_universes$HTS,
+  sss_ids = available_feature_universes$SSS,
+  mishra_ids = retained_ai_ids
+)
 
 
 # ---- Main execution block -------------------------------------------------
@@ -370,6 +473,8 @@ feature_membership <- gene_universe |>
 for (feature_name in names(available_feature_sets)) {
   feature_membership[[feature_name]] <- feature_membership$FlyBaseID %in% available_feature_sets[[feature_name]]
 }
+
+feature_membership <- apply_feature_universes(feature_membership, available_feature_universes)
 
 
 feature_sets_long <- bind_rows(lapply(names(available_feature_sets), function(feature_name) {
@@ -413,7 +518,7 @@ feature_notes <- data.frame(
     "Data/inputs/SBGEandSSSdataForMBE.csv (tau second-lowest quintile)",
     "Data/inputs/SBGEandSSSdataForMBE.csv (tau lowest quintile)",
     "Data/inputs/all_paralogs_correct.csv (local copy preferred)",
-    "Data/inputs/dimorphic.subset.list.txt",
+    paste0("Data/inputs/", basename(sss_final_set_path)),
     "Data/inputs/Sex.Reversed.AI.test.tsv filtered to Genes.for.analysis.final.tsv (local copy preferred)",
     "Data/inputs/Sex.Reversed.AI.test.tsv filtered to Genes.for.analysis.final.tsv (local copy preferred)",
     "Data/inputs/{Heads,Gonads}.FDR.test.for.AI.tsv filtered to Genes.for.analysis.final.tsv (local copy preferred)",
@@ -428,11 +533,16 @@ feature_notes <- data.frame(
     sprintf("TG is the second-lowest tau quintile, with tau in [%.6f, %.6f].", tau_sets$thresholds$Lower[tau_sets$thresholds$Step == "TG gate"][1], tau_sets$thresholds$Upper[tau_sets$thresholds$Step == "TG gate"][1]),
     sprintf("HTG is the lowest tau quintile, with tau in [%.6f, %.6f].", tau_sets$thresholds$Lower[tau_sets$thresholds$Step == "HTG gate"][1], tau_sets$thresholds$Upper[tau_sets$thresholds$Step == "HTG gate"][1]),
     "Dup is defined here as binary paralogue presence: genes that appear as FBgn_ID in the shared Harper and Morrow all_paralogs_correct.csv table. The current shared table already satisfies the Harper and Morrow paralogue criterion and contains only rows with DIOPT_score >= 2.",
-    sprintf("Using Data/inputs/dimorphic.subset.list.txt as the final consistently sex-specific splicing (SSS) set from Grieshop et al. (2025). This local file contains the %d-gene final SSS list, including genes restored after the earlier DsRed-proximity exclusion was removed. Of those, %d were present in the current protein-coding analysis universe.", sss_source_count, as.integer(feature_counts["SSS"])),
+    if (is.null(sss_excluded_ids)) {
+      sprintf("Using Data/inputs/%s as the final consistently sex-specific splicing (SSS) set from Grieshop et al. (2025), with Data/inputs/%s as the upstream Mishra tested-gene frame. The final SSS list contains %d genes, including the DsRed-restored genes, of which %d were present in the current protein-coding analysis universe. The upstream Mishra.sig.SSS_filt25 tested set contains %d genes in total, of which %d were present in the current protein-coding analysis universe and are now used as the SSS study-matched denominator.", basename(sss_final_set_path), basename(sss_tested_universe_path), sss_source_count, as.integer(feature_counts["SSS"]), sss_tested_source_count, length(available_feature_universes$SSS))
+    } else {
+      sprintf("Using Data/inputs/%s as the final consistently sex-specific splicing (SSS) set from Grieshop et al. (2025), with Data/inputs/%s as the upstream Mishra tested-gene frame and Data/inputs/%s as the excluded-gene list. These supplied companion files are internally consistent: %s minus %s reproduces the final %d-gene SSS list exactly. Of those final SSS genes, %d were present in the current protein-coding analysis universe. The tested-gene frame contains %d genes in total, of which %d were present in the current protein-coding analysis universe and are now used as the SSS study-matched denominator; the excluded list contains %d genes.", basename(sss_final_set_path), basename(sss_tested_universe_path), basename(sss_exclude_path), basename(sss_tested_universe_path), basename(sss_exclude_path), sss_source_count, as.integer(feature_counts["SSS"]), sss_tested_source_count, length(available_feature_universes$SSS), sss_excluded_count)
+    },
     rep(NA_character_, 4)
   ),
   stringsAsFactors = FALSE
-)
+) |>
+  left_join(feature_universe_summary, by = "Feature")
 
 
 write.csv(
@@ -444,6 +554,12 @@ write.csv(
 write.csv(
   feature_sets_long,
   output_path("sa_resolution_feature_sets.csv"),
+  row.names = FALSE
+)
+
+write.csv(
+  feature_universe_summary,
+  output_path("sa_resolution_feature_universes.csv"),
   row.names = FALSE
 )
 
