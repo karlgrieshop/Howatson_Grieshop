@@ -1,0 +1,10 @@
+"FocalGroup","Study","UniverseType","Source","UniverseSize","FocalCount","CandidateCount","OverlapCount","OddsRatio","PValue","ConfLow","ConfHigh","PAdjustBH"
+"SSDOs","Innocenti and Morrow","Study-matched universe","Affx_Dros_2.0 array-assayed genes",17103,560,209,25,4.15389760849729,2.33588696407468e-08,2.5964489127511,6.39482106388474,5.25574566916803e-08
+"SSDOs","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,540,206,25,3.86427331150831,8.96536529123258e-08,2.41346059349601,5.95402586338035,1.61376575242186e-07
+"SSDOs","Neal_2024","Study-matched universe","Genes represented by SNPs in true_cmh_results.txt",11574,471,178,19,2.89285977234829,0.000115112088806127,1.68106277200029,4.72138815544276,0.000172668133209191
+"Disease orthologues","Innocenti and Morrow","Study-matched universe","Affx_Dros_2.0 array-assayed genes",17103,4466,209,115,3.52648252717497,5.39101539145672e-19,2.65568394164789,4.69237389666726,4.85191385231104e-18
+"Disease orthologues","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,4163,206,115,3.39567081077777,1.08914661282019e-17,2.55013981177332,4.5316299209779,4.90115975769087e-17
+"Disease orthologues","Neal_2024","Study-matched universe","Genes represented by SNPs in true_cmh_results.txt",11574,3595,178,101,2.9661899615709,1.08570400041649e-12,2.17702648523612,4.0548089417539,3.25711200124946e-12
+"Orthologues","Innocenti and Morrow","Study-matched universe","Affx_Dros_2.0 array-assayed genes",17103,3936,209,65,1.51854166692139,0.00633150091995277,1.11255468624722,2.05391918441749,0.00814050118279642
+"Orthologues","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,3697,206,63,1.36880689302787,0.0413238407158089,0.998662750578827,1.85818500627592,0.046489320805285
+"Orthologues","Neal_2024","Study-matched universe","Genes represented by SNPs in true_cmh_results.txt",11574,3007,178,54,1.24510323290945,0.196088945941472,0.884720770168539,1.73245691720465,0.196088945941472
