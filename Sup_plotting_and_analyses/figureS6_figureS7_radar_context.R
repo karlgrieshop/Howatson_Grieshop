@@ -95,13 +95,12 @@ load_ruzicka_candidate_ids <- function() {
 }
 
 
-load_neal_candidate_ids <- function() {
+load_brigos_candidate_ids <- function() {
   read.csv(
-    input_path("gene_hits_snps_90.csv"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
+    output_path("brigos_barril_ids_strict.csv"),
+    stringsAsFactors = FALSE
   ) |>
-    transmute(FlyBaseID = as.character(ensembl_gene_id)) |>
+    transmute(FlyBaseID = as.character(FlyBaseID)) |>
     filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
     pull(FlyBaseID) |>
     unique()
@@ -247,6 +246,90 @@ build_overlay_radar_components <- function(data, group_ids, group_order, feature
 }
 
 
+compute_overlay_pseudo_f <- function(x, groups) {
+  groups <- factor(groups)
+  grand_mean <- colMeans(x)
+  centered <- sweep(x, 2, grand_mean, FUN = "-")
+  sst <- sum(centered^2)
+
+  ssb <- sum(vapply(levels(groups), function(group_name) {
+    group_x <- x[groups == group_name, , drop = FALSE]
+    group_mean <- colMeans(group_x)
+    n_group <- nrow(group_x)
+    sum(n_group * (group_mean - grand_mean)^2)
+  }, numeric(1)))
+
+  df_between <- nlevels(groups) - 1
+  df_within <- nrow(x) - nlevels(groups)
+  ssw <- sst - ssb
+
+  list(
+    SSB = ssb,
+    SSW = ssw,
+    R2 = ssb / sst,
+    PseudoF = (ssb / df_between) / (ssw / df_within),
+    DfBetween = df_between,
+    DfWithin = df_within
+  )
+}
+
+
+run_overlay_multivariate_test <- function(data, group_ids, group_order, n_perm = 1999L, seed = 71L) {
+  feature_matrix <- data |>
+    select(all_of(feature_order)) |>
+    as.matrix()
+  storage.mode(feature_matrix) <- "numeric"
+  # The omnibus overlay test uses a complete binary feature matrix.
+  feature_matrix[is.na(feature_matrix)] <- 0
+  universe_ids <- as.character(data$FlyBaseID)
+  group_indices <- lapply(group_order, function(group_name) {
+    match(intersect(unique(as.character(group_ids[[group_name]])), universe_ids), universe_ids)
+  })
+  group_sizes <- lengths(group_indices)
+
+  if (any(group_sizes == 0L)) {
+    stop("At least one candidate overlay group has no genes in the resolution matrix.", call. = FALSE)
+  }
+
+  observed_x <- do.call(rbind, lapply(group_indices, function(indices) feature_matrix[indices, , drop = FALSE]))
+  observed_groups <- rep(group_order, times = group_sizes)
+  observed <- compute_overlay_pseudo_f(observed_x, observed_groups)
+
+  set.seed(seed)
+  null_f <- replicate(n_perm, {
+    permuted_indices <- unlist(lapply(group_sizes, function(group_size) {
+      sample.int(nrow(feature_matrix), size = group_size, replace = FALSE)
+    }), use.names = FALSE)
+    permuted_x <- feature_matrix[permuted_indices, , drop = FALSE]
+    permuted_groups <- rep(group_order, times = group_sizes)
+    compute_overlay_pseudo_f(permuted_x, permuted_groups)$PseudoF
+  })
+
+  data.frame(
+    Group_1 = group_order[[1]],
+    Group_2 = group_order[[2]],
+    Group_3 = group_order[[3]],
+    Group_4 = group_order[[4]],
+    Group1Size = group_sizes[[1]],
+    Group2Size = group_sizes[[2]],
+    Group3Size = group_sizes[[3]],
+    Group4Size = group_sizes[[4]],
+    N = nrow(observed_x),
+    P = ncol(observed_x),
+    DfBetween = observed$DfBetween,
+    DfWithin = observed$DfWithin,
+    SSB = observed$SSB,
+    SSW = observed$SSW,
+    R2 = observed$R2,
+    PseudoF = observed$PseudoF,
+    PValue = (sum(null_f >= observed$PseudoF) + 1) / (n_perm + 1),
+    Permutations = n_perm,
+    NullModel = "Independent random gene sets of matched size sampled from the protein-coding universe; overlap among permuted sets allowed",
+    stringsAsFactors = FALSE
+  )
+}
+
+
 draw_radar_panel <- function(components, panel_title, panel_tag, panel_palette) {
   fmsb::radarchart(
     components$radar_df,
@@ -362,39 +445,60 @@ overlay_group_order <- c(
   "SSDOs",
   "Innocenti and Morrow SA candidates",
   "Ruzicka et al. SA candidates",
-  "Neal candidates"
+  "Brigos-Baril et al. (2026) candidates"
 )
 overlay_palette <- c(
   "SSDOs" = "#D55E00",
   "Innocenti and Morrow SA candidates" = "#7B3294",
   "Ruzicka et al. SA candidates" = "#E6AB02",
-  "Neal candidates" = "#B2182B"
+  "Brigos-Baril et al. (2026) candidates" = "#B2182B"
+)
+overlay_legend <- expression(
+  "SSDOs",
+  "Innocenti and Morrow SA candidates",
+  "Ruzicka et al. SA candidates",
+  "Brigos-Baril " * italic("et al.") * " (2026) candidates"
 )
 
 innocenti_candidate_ids <- intersect(load_innocenti_candidate_ids(gene_reference), resolution_membership$FlyBaseID)
 ruzicka_candidate_ids <- intersect(load_ruzicka_candidate_ids(), resolution_membership$FlyBaseID)
-neal_candidate_ids <- intersect(load_neal_candidate_ids(), resolution_membership$FlyBaseID)
+brigos_candidate_ids <- intersect(load_brigos_candidate_ids(), resolution_membership$FlyBaseID)
 
 main_plot_data <- assign_resolution_groups(resolution_membership, ssdo_ids, disease_ids, ortholog_ids)
 innocenti_plot_data <- assign_split_candidate_groups(resolution_membership, innocenti_candidate_ids, ssdo_ids, disease_ids, ortholog_ids)
 ruzicka_plot_data <- assign_split_candidate_groups(resolution_membership, ruzicka_candidate_ids, ssdo_ids, disease_ids, ortholog_ids)
-neal_plot_data <- assign_split_candidate_groups(resolution_membership, neal_candidate_ids, ssdo_ids, disease_ids, ortholog_ids)
+brigos_plot_data <- assign_split_candidate_groups(resolution_membership, brigos_candidate_ids, ssdo_ids, disease_ids, ortholog_ids)
 
 main_components <- build_radar_components(main_plot_data, "PlotGroup", main_group_order, feature_order, feature_labels)
 innocenti_components <- build_radar_components(innocenti_plot_data, "PlotGroup", candidate_group_order, feature_order, feature_labels)
 ruzicka_components <- build_radar_components(ruzicka_plot_data, "PlotGroup", candidate_group_order, feature_order, feature_labels)
-neal_components <- build_radar_components(neal_plot_data, "PlotGroup", candidate_group_order, feature_order, feature_labels)
+brigos_components <- build_radar_components(brigos_plot_data, "PlotGroup", candidate_group_order, feature_order, feature_labels)
 overlay_components <- build_overlay_radar_components(
   resolution_membership,
   group_ids = list(
     "SSDOs" = ssdo_ids,
     "Innocenti and Morrow SA candidates" = innocenti_candidate_ids,
     "Ruzicka et al. SA candidates" = ruzicka_candidate_ids,
-    "Neal candidates" = neal_candidate_ids
+    "Brigos-Baril et al. (2026) candidates" = brigos_candidate_ids
   ),
   group_order = overlay_group_order,
   feature_order = feature_order,
   feature_labels = feature_labels
+)
+overlay_multivariate_test <- run_overlay_multivariate_test(
+  data = resolution_membership,
+  group_ids = list(
+    "SSDOs" = ssdo_ids,
+    "Innocenti and Morrow SA candidates" = innocenti_candidate_ids,
+    "Ruzicka et al. SA candidates" = ruzicka_candidate_ids,
+    "Brigos-Baril et al. (2026) candidates" = brigos_candidate_ids
+  ),
+  group_order = overlay_group_order
+)
+write.csv(
+  overlay_multivariate_test,
+  summary_path("FigS6_SSDO_candidate_overlay_multivariate_test.csv"),
+  row.names = FALSE
 )
 
 png(
@@ -429,8 +533,8 @@ draw_radar_panel(
 
 par(mar = c(2.8, 2.8, 3.3, 2.8))
 draw_radar_panel(
-  neal_components,
-  "Neal (2024)",
+  brigos_components,
+  expression("Brigos-Baril " * italic("et al.") * " (2026)"),
   "D",
   candidate_palette
 )
@@ -473,7 +577,7 @@ draw_radar_panel(
 
 legend(
   "bottom",
-  legend = overlay_group_order,
+  legend = overlay_legend,
   horiz = FALSE,
   bty = "n",
   ncol = 2,

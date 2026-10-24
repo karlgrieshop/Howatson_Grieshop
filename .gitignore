@@ -5,7 +5,11 @@
 .DS_Store
 
 # Large local-only raw data inputs
-Data/inputs/
+Data/inputs/*
+!Data/inputs/README.md
 Data/unused/
 side/
-Tables/
+Tables/*
+!Tables/table1_sa_prob_mag_permutation_docx.R
+!Tables/tableS1_candidate_enrichment_docx.R
+!Tables/tableS2_candidate_context_docx.R

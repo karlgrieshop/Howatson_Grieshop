@@ -46,16 +46,14 @@ dir.create(sup_figure_path(), recursive = TRUE, showWarnings = FALSE)
 ordered_gene_types <- c(
   "SSDOs",
   "Innocenti and Morrow SA candidates",
-  "Ruzicka et al. SA candidates",
-  "Neal candidates"
+  "Ruzicka et al. SA candidates"
 )
 original_gene_types <- c("SSDOs", "Disease orthologues", "Orthologues", "Background")
 
 gene_type_palette <- c(
   "SSDOs" = "#D55E00",
   "Innocenti and Morrow SA candidates" = "#7B3294",
-  "Ruzicka et al. SA candidates" = "#E6AB02",
-  "Neal candidates" = "#B2182B"
+  "Ruzicka et al. SA candidates" = "#E6AB02"
 )
 reference_line_palette <- c(
   "Disease orthologues" = "#0072B2",
@@ -66,8 +64,7 @@ reference_line_palette <- c(
 gene_type_labels <- c(
   "SSDOs" = "SSDOs",
   "Innocenti and Morrow SA candidates" = "Innocenti & Morrow candidates",
-  "Ruzicka et al. SA candidates" = "Ruzicka et al. candidates",
-  "Neal candidates" = "Neal candidates"
+  "Ruzicka et al. SA candidates" = "Ruzicka et al. candidates"
 )
 
 
@@ -204,38 +201,6 @@ build_ruzicka_probability_values <- function(gene_reference) {
 }
 
 
-build_neal_probability_values <- function(gene_reference) {
-  snps <- read.delim(
-    input_path("true_cmh_results.txt"),
-    header = FALSE,
-    stringsAsFactors = FALSE
-  )
-
-  colnames(snps) <- c(
-    "Chromosome",
-    "Basepair",
-    "Reference",
-    paste0("Sample_", 1:28),
-    "Log10_pvalue",
-    "LogOdds"
-  )
-
-  snps <- snps |>
-    transmute(
-      chromosome = as.character(Chromosome),
-      position = as.integer(Basepair),
-      Value = as.numeric(Log10_pvalue)
-    ) |>
-    filter(!is.na(Value), is.finite(Value))
-
-  map_snp_metric_to_genes(
-    snp_values = snps,
-    gene_reference = gene_reference,
-    source_label = "Neal (2024) from true_cmh_results.txt (max Log10_pvalue)"
-  )
-}
-
-
 build_ruzicka_magnitude_values <- function(gene_reference) {
   assoc <- read.delim(
     input_path("Assoc_Data.txt"),
@@ -253,38 +218,6 @@ build_ruzicka_magnitude_values <- function(gene_reference) {
     snp_values = assoc[, c("chromosome", "position", "Value")],
     gene_reference = gene_reference,
     source_label = "Ruzicka et al. from Assoc_Data.txt (max Wald_Stat)"
-  )
-}
-
-
-build_neal_magnitude_values <- function(gene_reference) {
-  snps <- read.delim(
-    input_path("true_cmh_results.txt"),
-    header = FALSE,
-    stringsAsFactors = FALSE
-  )
-
-  colnames(snps) <- c(
-    "Chromosome",
-    "Basepair",
-    "Reference",
-    paste0("Sample_", 1:28),
-    "Log10_pvalue",
-    "LogOdds"
-  )
-
-  snps <- snps |>
-    transmute(
-      chromosome = as.character(Chromosome),
-      position = as.integer(Basepair),
-      Value = abs(as.numeric(LogOdds))
-    ) |>
-    filter(!is.na(Value), is.finite(Value))
-
-  map_snp_metric_to_genes(
-    snp_values = snps,
-    gene_reference = gene_reference,
-    source_label = "Neal (2024) from true_cmh_results.txt (max abs LogOdds)"
   )
 }
 
@@ -327,19 +260,6 @@ load_ruzicka_candidate_ids <- function() {
     check.names = FALSE
   ) |>
     transmute(FlyBaseID = as.character(`Flybase gene ID`)) |>
-    filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
-    pull(FlyBaseID) |>
-    unique()
-}
-
-
-load_neal_candidate_ids <- function() {
-  read.csv(
-    input_path("gene_hits_snps_90.csv"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  ) |>
-    transmute(FlyBaseID = as.character(ensembl_gene_id)) |>
     filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
     pull(FlyBaseID) |>
     unique()
@@ -455,19 +375,15 @@ ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors =
   unique()
 innocenti_candidate_ids <- intersect(load_innocenti_candidate_ids(gene_reference), protein_coding_gene_reference$FlyBaseID)
 ruzicka_candidate_ids <- intersect(load_ruzicka_candidate_ids(), protein_coding_gene_reference$FlyBaseID)
-neal_candidate_ids <- intersect(load_neal_candidate_ids(), protein_coding_gene_reference$FlyBaseID)
 
 group_ids <- list(
   "SSDOs" = ssdo_ids,
   "Innocenti and Morrow SA candidates" = innocenti_candidate_ids,
-  "Ruzicka et al. SA candidates" = ruzicka_candidate_ids,
-  "Neal candidates" = neal_candidate_ids
+  "Ruzicka et al. SA candidates" = ruzicka_candidate_ids
 )
 
 ruz_prob_values <- build_ruzicka_probability_values(protein_coding_gene_reference)
-neal_prob_values <- build_neal_probability_values(protein_coding_gene_reference)
 ruz_mag_values <- build_ruzicka_magnitude_values(protein_coding_gene_reference)
-neal_mag_values <- build_neal_magnitude_values(protein_coding_gene_reference)
 
 ruz_prob_summary <- ruz_prob_values |>
   assign_overlay_gene_types(group_ids = group_ids) |>
@@ -475,15 +391,6 @@ ruz_prob_summary <- ruz_prob_values |>
 ruz_prob_reference <- ruz_prob_values |>
   assign_original_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
   bootstrap_group_summaries(group_levels = original_gene_types, seed = 21L) |>
-  filter(as.character(GeneType) %in% names(reference_line_palette)) |>
-  transmute(LineGroup = as.character(GeneType), yintercept = q50)
-
-neal_prob_summary <- neal_prob_values |>
-  assign_overlay_gene_types(group_ids = group_ids) |>
-  bootstrap_group_summaries(seed = 12L)
-neal_prob_reference <- neal_prob_values |>
-  assign_original_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
-  bootstrap_group_summaries(group_levels = original_gene_types, seed = 22L) |>
   filter(as.character(GeneType) %in% names(reference_line_palette)) |>
   transmute(LineGroup = as.character(GeneType), yintercept = q50)
 
@@ -496,62 +403,33 @@ ruz_mag_reference <- ruz_mag_values |>
   filter(as.character(GeneType) %in% names(reference_line_palette)) |>
   transmute(LineGroup = as.character(GeneType), yintercept = q50)
 
-neal_mag_summary <- neal_mag_values |>
-  assign_overlay_gene_types(group_ids = group_ids) |>
-  bootstrap_group_summaries(seed = 14L)
-neal_mag_reference <- neal_mag_values |>
-  assign_original_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
-  bootstrap_group_summaries(group_levels = original_gene_types, seed = 24L) |>
-  filter(as.character(GeneType) %in% names(reference_line_palette)) |>
-  transmute(LineGroup = as.character(GeneType), yintercept = q50)
-
 panel_a <- plot_metric_panel(
   summary_data = ruz_prob_summary,
   reference_lines = ruz_prob_reference,
   y_label = "Prob. of SA polymorphism",
-  show_x_axis = FALSE,
+  show_x_axis = TRUE,
   show_y_title = TRUE,
-  title = expression("Ruzicka " * italic("et al.") * " (2019)"),
+  title = NULL,
   tag = "A"
 )
 
 panel_b <- plot_metric_panel(
-  summary_data = neal_prob_summary,
-  reference_lines = neal_prob_reference,
-  y_label = "Prob. of SA polymorphism",
-  show_x_axis = FALSE,
-  show_y_title = FALSE,
-  title = "Neal (2024)",
-  tag = "B"
-)
-
-panel_c <- plot_metric_panel(
   summary_data = ruz_mag_summary,
   reference_lines = ruz_mag_reference,
   y_label = "SA effect",
   show_x_axis = TRUE,
   show_y_title = TRUE,
   title = NULL,
-  tag = "C"
+  tag = "B"
 )
 
-panel_d <- plot_metric_panel(
-  summary_data = neal_mag_summary,
-  reference_lines = neal_mag_reference,
-  y_label = "SA effect",
-  show_x_axis = TRUE,
-  show_y_title = FALSE,
-  title = NULL,
-  tag = "D"
-)
-
-figure_context <- (panel_a | panel_b) / (panel_c | panel_d)
+figure_context <- panel_a | panel_b
 
 ggsave(
   filename = sup_figure_path("FigS2_context.png"),
   plot = figure_context,
   width = 12,
-  height = 10,
+  height = 5.5,
   dpi = 300,
   bg = "white"
 )

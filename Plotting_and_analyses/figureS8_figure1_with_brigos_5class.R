@@ -1,4 +1,4 @@
-# Figure 1-style SA probability/magnitude with Brigos as a 5th class.
+# Supplementary FigS8: SA probability/magnitude with Brigos as a 5th class.
 # Brigos-first assignment rule:
 #   Brigos -> SSDOs -> Disease orthologues -> Orthologues -> Background
 
@@ -32,6 +32,7 @@ input_path <- function(...) file.path(project_root, "Data", "inputs", ...)
 output_path <- function(...) file.path(project_root, "Data", "outputs", ...)
 summary_path <- function(...) file.path(project_root, "Data", "Summary_tables", ...)
 figure_path <- function(...) file.path(project_root, "Figures", ...)
+sup_figure_path <- function(...) file.path(project_root, "Sup_figures", ...)
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -231,17 +232,6 @@ build_ruzicka_probability_values <- function(gene_reference) {
                           "Ruzicka et al. from Assoc_Data.txt (max -log10 Wald_P)")
 }
 
-build_neal_probability_values <- function(gene_reference) {
-  snps <- read.delim(input_path("true_cmh_results.txt"), header = FALSE, stringsAsFactors = FALSE)
-  colnames(snps) <- c("Chromosome","Basepair","Reference",paste0("Sample_", 1:28),"Log10_pvalue","LogOdds")
-  
-  snps <- snps |>
-    transmute(chromosome = as.character(Chromosome), position = as.integer(Basepair), Value = as.numeric(Log10_pvalue)) |>
-    filter(!is.na(Value), is.finite(Value))
-  
-  map_snp_metric_to_genes(snps, gene_reference, "Neal (2024) from true_cmh_results.txt (max Log10_pvalue)")
-}
-
 build_ruzicka_magnitude_values <- function(gene_reference) {
   assoc <- read.delim(input_path("Assoc_Data.txt"), stringsAsFactors = FALSE, check.names = FALSE) |>
     transmute(chromosome = as.character(Chromosome), position = as.integer(Basepair), Value = as.numeric(Wald_Stat)) |>
@@ -249,17 +239,6 @@ build_ruzicka_magnitude_values <- function(gene_reference) {
   
   map_snp_metric_to_genes(assoc[, c("chromosome", "position", "Value")], gene_reference,
                           "Ruzicka et al. from Assoc_Data.txt (max Wald_Stat)")
-}
-
-build_neal_magnitude_values <- function(gene_reference) {
-  snps <- read.delim(input_path("true_cmh_results.txt"), header = FALSE, stringsAsFactors = FALSE)
-  colnames(snps) <- c("Chromosome","Basepair","Reference",paste0("Sample_", 1:28),"Log10_pvalue","LogOdds")
-  
-  snps <- snps |>
-    transmute(chromosome = as.character(Chromosome), position = as.integer(Basepair), Value = abs(as.numeric(LogOdds))) |>
-    filter(!is.na(Value), is.finite(Value))
-  
-  map_snp_metric_to_genes(snps, gene_reference, "Neal (2024) from true_cmh_results.txt (max abs LogOdds)")
 }
 
 plot_metric_panel <- function(summary_data, y_label = NULL, show_x_axis = TRUE, show_y_title = TRUE, title = NULL, tag = NULL) {
@@ -299,91 +278,56 @@ ruz_prob_raw <- assign_gene_types_5class(
   build_ruzicka_probability_values(protein_coding_gene_reference),
   ssdo_ids, disease_ids, ortholog_ids, brigos_ids
 )
-neal_prob_raw <- assign_gene_types_5class(
-  build_neal_probability_values(protein_coding_gene_reference),
-  ssdo_ids, disease_ids, ortholog_ids, brigos_ids
-)
-
 ruz_prob_summary <- bootstrap_group_summaries(ruz_prob_raw, seed = 11L)
-neal_prob_summary <- bootstrap_group_summaries(neal_prob_raw, seed = 12L)
 
 ruz_prob_tests <- pairwise_tests_within_study(ruz_prob_raw)
-neal_prob_tests <- pairwise_tests_within_study(neal_prob_raw)
 
 write.csv(ruz_prob_summary, summary_path("Ruzicka_et_al_SA_probability_plot_data_brigos5.csv"), row.names = FALSE)
-write.csv(neal_prob_summary, summary_path("Neal_2024_SA_probability_plot_data_brigos5.csv"), row.names = FALSE)
 write.csv(ruz_prob_tests, summary_path("Ruzicka_et_al_SA_probability_permutation_tests_brigos5.csv"), row.names = FALSE)
-write.csv(neal_prob_tests, summary_path("Neal_2024_SA_probability_permutation_tests_brigos5.csv"), row.names = FALSE)
 
 # Magnitude summaries
 ruz_mag_raw <- assign_gene_types_5class(
   build_ruzicka_magnitude_values(protein_coding_gene_reference),
   ssdo_ids, disease_ids, ortholog_ids, brigos_ids
 )
-neal_mag_raw <- assign_gene_types_5class(
-  build_neal_magnitude_values(protein_coding_gene_reference),
-  ssdo_ids, disease_ids, ortholog_ids, brigos_ids
-)
 
 ruz_mag_summary <- bootstrap_group_summaries(ruz_mag_raw, seed = 21L)
-neal_mag_summary <- bootstrap_group_summaries(neal_mag_raw, seed = 22L)
 
 ruz_mag_tests <- pairwise_tests_within_study(ruz_mag_raw)
-neal_mag_tests <- pairwise_tests_within_study(neal_mag_raw)
 
 write.csv(ruz_mag_summary, summary_path("Ruzicka_et_al_SA_magnitude_plot_data_brigos5.csv"), row.names = FALSE)
-write.csv(neal_mag_summary, summary_path("Neal_2024_SA_magnitude_plot_data_brigos5.csv"), row.names = FALSE)
 write.csv(ruz_mag_tests, summary_path("Ruzicka_et_al_SA_magnitude_permutation_tests_brigos5.csv"), row.names = FALSE)
-write.csv(neal_mag_tests, summary_path("Neal_2024_SA_magnitude_permutation_tests_brigos5.csv"), row.names = FALSE)
 
-# Figure 1-style 2x2 layout with 5-class summaries
+# Two-panel Ruzicka probability/effect layout with 5-class summaries
 panel_a <- plot_metric_panel(
   summary_data = ruz_prob_summary,
   y_label = "Prob. of SA polymorphism",
-  show_x_axis = FALSE,
+  show_x_axis = TRUE,
   show_y_title = TRUE,
-  title = expression("Ruzicka " * italic("et al.") * " (2019)"),
+  title = NULL,
   tag = "A"
 )
 
 panel_b <- plot_metric_panel(
-  summary_data = neal_prob_summary,
-  y_label = "Prob. of SA polymorphism",
-  show_x_axis = FALSE,
-  show_y_title = FALSE,
-  title = "Neal (2024)",
-  tag = "B"
-)
-
-panel_c <- plot_metric_panel(
   summary_data = ruz_mag_summary,
   y_label = "SA effect",
   show_x_axis = TRUE,
   show_y_title = TRUE,
   title = NULL,
-  tag = "C"
+  tag = "B"
 )
 
-panel_d <- plot_metric_panel(
-  summary_data = neal_mag_summary,
-  y_label = "SA effect",
-  show_x_axis = TRUE,
-  show_y_title = FALSE,
-  title = NULL,
-  tag = "D"
-)
-
-figure_1_brigos5 <- (panel_a | panel_b) / (panel_c | panel_d)
+figure_1_brigos5 <- panel_a | panel_b
 
 ggsave(
-  filename = figure_path("Fig1_SA_Probability_and_Magnitude_Brigos5.png"),
+  filename = sup_figure_path("FigS8_SA_Probability_and_Magnitude_Brigos5.png"),
   plot = figure_1_brigos5,
   width = 13.5,
-  height = 10,
+  height = 5.5,
   dpi = 300,
   bg = "white"
 )
 
 message("Done:")
 message(" - Rebuilt probability/magnitude summaries with Brigos 5th class")
-message(" - Rebuilt Figure 1 style plot: Figures/Fig1_SA_Probability_and_Magnitude_Brigos5.png")
+message(" - Rebuilt supplementary Figure S8: Sup_figures/FigS8_SA_Probability_and_Magnitude_Brigos5.png")

@@ -1,11 +1,7 @@
 # SA probability plots
 #
-# This script restores the four-group SA probability plots from the original
-# study-specific inputs now present in `Data/`.
-#
-# - Ruzicka et al.: SNP-level p-values from `Assoc_Data.txt`, mapped to genes
-# - Neal (2024): SNP-level `-log10(p)` values from
-#   `true_cmh_results.txt`, mapped to genes
+# This script rebuilds the Ruzicka et al. SA-probability summaries from
+# SNP-level p-values in `Assoc_Data.txt`, mapped to genes.
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -290,38 +286,6 @@ build_ruzicka_values <- function(gene_reference) {
 }
 
 
-build_neal_values <- function(gene_reference) {
-  snps <- read.delim(
-    input_path("true_cmh_results.txt"),
-    header = FALSE,
-    stringsAsFactors = FALSE
-  )
-
-  colnames(snps) <- c(
-    "Chromosome",
-    "Basepair",
-    "Reference",
-    paste0("Sample_", 1:28),
-    "Log10_pvalue",
-    "LogOdds"
-  )
-
-  snps <- snps |>
-    transmute(
-      chromosome = as.character(Chromosome),
-      position = as.integer(Basepair),
-      Value = as.numeric(Log10_pvalue)
-    ) |>
-    filter(!is.na(Value), is.finite(Value))
-
-  map_snp_metric_to_genes(
-    snp_values = snps,
-    gene_reference = gene_reference,
-    source_label = "Neal (2024) from true_cmh_results.txt (max Log10_pvalue)"
-  )
-}
-
-
 gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
 protein_coding_gene_reference <- gene_reference |>
   filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), gene_biotype == "protein_coding")
@@ -335,11 +299,6 @@ study_specs <- list(
   list(
     name = "Ruzicka et al.",
     values = build_ruzicka_values(protein_coding_gene_reference),
-    y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
-  ),
-  list(
-    name = "Neal_2024",
-    values = build_neal_values(protein_coding_gene_reference),
     y_label = expression("Prob. (" * -italic(log)[10] * "(" * italic(P) * ")) of SA polymorphism")
   )
 )

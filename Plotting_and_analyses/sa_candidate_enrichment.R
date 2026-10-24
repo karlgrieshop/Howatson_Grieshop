@@ -1,7 +1,7 @@
 # Candidate SA-gene enrichment analyses for FigS1 / TableS1.
-# For each study, we define a study-specific assay universe and test whether
-# the focal gene class is enriched for candidate SA genes relative to that
-# background, exporting both summary statistics and exact overlapping gene IDs.
+# Each candidate set is tested in its appropriate assay-matched universe:
+# Innocenti and Morrow (Affymetrix), Ruzicka et al. (SNP-mapped), and
+# Brigos-Baril et al. (protein-coding genes).
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -199,44 +199,6 @@ load_ruzicka_matched_universe <- function(gene_reference) {
 }
 
 
-load_neal_candidates <- function() {
-  read.csv(
-    input_path("gene_hits_snps_90.csv"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  ) |>
-    transmute(FlyBaseID = as.character(ensembl_gene_id)) |>
-    filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
-    distinct()
-}
-
-
-load_neal_matched_universe <- function(gene_reference) {
-  snps <- read.delim(
-    input_path("true_cmh_results.txt"),
-    header = FALSE,
-    stringsAsFactors = FALSE
-  )
-
-  colnames(snps) <- c(
-    "Chromosome",
-    "Basepair",
-    "Reference",
-    paste0("Sample_", 1:28),
-    "Log10_pvalue",
-    "LogOdds"
-  )
-
-  snps <- snps |>
-    transmute(
-      chromosome = as.character(Chromosome),
-      position = as.integer(Basepair)
-    )
-
-  map_snp_positions_to_genes(snps, gene_reference)
-}
-
-
 # Core enrichment helper: compare the focal gene set against the non-focal
 # genes present in the same study-specific assay universe.
 
@@ -309,18 +271,29 @@ gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFact
 ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
+
+brigos_ids <- read.csv(output_path("brigos_barril_ids_strict.csv"), stringsAsFactors = FALSE) |>
+  transmute(FlyBaseID = as.character(FlyBaseID)) |>
+  filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
+  distinct() |>
+  pull(FlyBaseID)
+
 disease_only_ids <- setdiff(disease_ids, ssdo_ids)
 ortholog_only_ids <- setdiff(ortholog_ids, disease_ids)
-study_order <- c("Innocenti and Morrow", "Ruzicka et al.", "Neal_2024")
+study_order <- c(
+  "Innocenti and Morrow",
+  "Ruzicka et al.",
+  "Brigos-Baril et al. (2026)"
+)
 study_display_order <- c(
   "Innocenti and Morrow (2010)",
   "Ruzicka <i>et al.</i> (2019)",
-  "Neal (2024)"
+  "Brigos-Baril <i>et al.</i> (2026)"
 )
 study_display_map <- c(
   "Innocenti and Morrow" = "Innocenti and Morrow (2010)",
   "Ruzicka et al." = "Ruzicka <i>et al.</i> (2019)",
-  "Neal_2024" = "Neal (2024)"
+  "Brigos-Baril et al. (2026)" = "Brigos-Baril <i>et al.</i> (2026)"
 )
 focal_order <- c("SSDOs", "Disease orthologues", "Orthologues")
 panel_order <- c(
@@ -328,126 +301,65 @@ panel_order <- c(
   "SA genes among Disease Orthologues",
   "SA genes among Orthologues"
 )
-
-innocenti <- load_innocenti_candidates(gene_reference)
-ruzicka_ids <- load_ruzicka_candidates()
-neal_ids <- load_neal_candidates()
+panel_labels <- c(
+  "SSDOs" = "SA genes among SSDOs",
+  "Disease orthologues" = "SA genes among Disease Orthologues",
+  "Orthologues" = "SA genes among Orthologues"
+)
 
 # ---- Main analysis workflow -----------------------------------------------
 
 matched_universes <- list(
   "Innocenti and Morrow" = load_innocenti_matched_universe(gene_reference)$FlyBaseID,
   "Ruzicka et al." = load_ruzicka_matched_universe(gene_reference)$FlyBaseID,
-  "Neal_2024" = load_neal_matched_universe(gene_reference)$FlyBaseID
+  "Brigos-Baril et al. (2026)" = gene_reference |>
+    filter(
+      gene_biotype == "protein_coding",
+      !is.na(FlyBaseID),
+      grepl("^FBgn", FlyBaseID)
+    ) |>
+    pull(FlyBaseID) |>
+    unique()
 )
 
-ssdo_results <- list(
-  run_enrichment_test(
-    universe_ids = matched_universes[["Innocenti and Morrow"]],
-    focal_ids = ssdo_ids,
-    candidate_ids = innocenti$ids$FlyBaseID,
-    study_name = "Innocenti and Morrow",
-    universe_type = "Study-matched universe",
-    source_note = "Affx_Dros_2.0 array-assayed genes",
-    focal_group = "SSDOs",
-    panel_label = "SA genes among SSDOs"
-  ),
-  run_enrichment_test(
-    universe_ids = matched_universes[["Ruzicka et al."]],
-    focal_ids = ssdo_ids,
-    candidate_ids = ruzicka_ids$FlyBaseID,
-    study_name = "Ruzicka et al.",
-    universe_type = "Study-matched universe",
-    source_note = "Genes represented by SNPs in Assoc_Data.txt",
-    focal_group = "SSDOs",
-    panel_label = "SA genes among SSDOs"
-  ),
-  run_enrichment_test(
-    universe_ids = matched_universes[["Neal_2024"]],
-    focal_ids = ssdo_ids,
-    candidate_ids = neal_ids$FlyBaseID,
-    study_name = "Neal_2024",
-    universe_type = "Study-matched universe",
-    source_note = "Genes represented by SNPs in true_cmh_results.txt",
-    focal_group = "SSDOs",
-    panel_label = "SA genes among SSDOs"
-  )
+candidate_ids <- list(
+  "Innocenti and Morrow" = load_innocenti_candidates(gene_reference)$ids$FlyBaseID,
+  "Ruzicka et al." = load_ruzicka_candidates()$FlyBaseID,
+  "Brigos-Baril et al. (2026)" = brigos_ids
+)
+source_notes <- c(
+  "Innocenti and Morrow" = "Affymetrix array-assayed genes",
+  "Ruzicka et al." = "Genes represented by SNPs in Assoc_Data.txt",
+  "Brigos-Baril et al. (2026)" = "Protein-coding FBgn gene universe"
+)
+focal_sets <- list(
+  "SSDOs" = ssdo_ids,
+  "Disease orthologues" = disease_only_ids,
+  "Orthologues" = ortholog_only_ids
 )
 
-disease_results <- list(
-  run_enrichment_test(
-    universe_ids = matched_universes[["Innocenti and Morrow"]],
-    focal_ids = disease_only_ids,
-    candidate_ids = innocenti$ids$FlyBaseID,
-    study_name = "Innocenti and Morrow",
-    universe_type = "Study-matched universe",
-    source_note = "Affx_Dros_2.0 array-assayed genes",
-    focal_group = "Disease orthologues",
-    panel_label = "SA genes among Disease Orthologues"
-  ),
-  run_enrichment_test(
-    universe_ids = matched_universes[["Ruzicka et al."]],
-    focal_ids = disease_only_ids,
-    candidate_ids = ruzicka_ids$FlyBaseID,
-    study_name = "Ruzicka et al.",
-    universe_type = "Study-matched universe",
-    source_note = "Genes represented by SNPs in Assoc_Data.txt",
-    focal_group = "Disease orthologues",
-    panel_label = "SA genes among Disease Orthologues"
-  ),
-  run_enrichment_test(
-    universe_ids = matched_universes[["Neal_2024"]],
-    focal_ids = disease_only_ids,
-    candidate_ids = neal_ids$FlyBaseID,
-    study_name = "Neal_2024",
-    universe_type = "Study-matched universe",
-    source_note = "Genes represented by SNPs in true_cmh_results.txt",
-    focal_group = "Disease orthologues",
-    panel_label = "SA genes among Disease Orthologues"
-  )
-)
-
-orthologue_results <- list(
-  run_enrichment_test(
-    universe_ids = matched_universes[["Innocenti and Morrow"]],
-    focal_ids = ortholog_only_ids,
-    candidate_ids = innocenti$ids$FlyBaseID,
-    study_name = "Innocenti and Morrow",
-    universe_type = "Study-matched universe",
-    source_note = "Affx_Dros_2.0 array-assayed genes",
-    focal_group = "Orthologues",
-    panel_label = "SA genes among Orthologues"
-  ),
-  run_enrichment_test(
-    universe_ids = matched_universes[["Ruzicka et al."]],
-    focal_ids = ortholog_only_ids,
-    candidate_ids = ruzicka_ids$FlyBaseID,
-    study_name = "Ruzicka et al.",
-    universe_type = "Study-matched universe",
-    source_note = "Genes represented by SNPs in Assoc_Data.txt",
-    focal_group = "Orthologues",
-    panel_label = "SA genes among Orthologues"
-  ),
-  run_enrichment_test(
-    universe_ids = matched_universes[["Neal_2024"]],
-    focal_ids = ortholog_only_ids,
-    candidate_ids = neal_ids$FlyBaseID,
-    study_name = "Neal_2024",
-    universe_type = "Study-matched universe",
-    source_note = "Genes represented by SNPs in true_cmh_results.txt",
-    focal_group = "Orthologues",
-    panel_label = "SA genes among Orthologues"
-  )
-)
-
-all_results <- c(ssdo_results, disease_results, orthologue_results)
+all_results <- unlist(lapply(names(focal_sets), function(focal_group) {
+  lapply(study_order, function(study_name) {
+    run_enrichment_test(
+      universe_ids = matched_universes[[study_name]],
+      focal_ids = focal_sets[[focal_group]],
+      candidate_ids = candidate_ids[[study_name]],
+      study_name = study_name,
+      universe_type = "Study-matched universe",
+      source_note = source_notes[[study_name]],
+      focal_group = focal_group,
+      panel_label = unname(panel_labels[[focal_group]])
+    )
+  })
+}), recursive = FALSE)
 
 summary_table <- bind_rows(lapply(all_results, `[[`, "summary")) |>
   mutate(
     FocalGroup = factor(FocalGroup, levels = focal_order),
     Study = factor(Study, levels = study_order)
   ) |>
-  arrange(FocalGroup, Study)
+  arrange(FocalGroup, Study) |>
+  mutate(PAdjustBH = p.adjust(PValue, method = "BH"))
 
 plot_data <- bind_rows(lapply(all_results, `[[`, "plot_data")) |>
   mutate(
@@ -471,6 +383,19 @@ write.csv(
   row.names = FALSE
 )
 
+overlap_table <- bind_rows(lapply(all_results, `[[`, "overlap")) |>
+  mutate(
+    FocalGroup = factor(FocalGroup, levels = focal_order),
+    Study = factor(Study, levels = study_order)
+  ) |>
+  arrange(FocalGroup, Study, FlyBaseID)
+
+write.csv(
+  overlap_table,
+  summary_path("TableS1_SA_Candidate_Enrichment_Overlaps.csv"),
+  row.names = FALSE
+)
+
 sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCandidate, fill = FillGroup)) +
   geom_col(width = 0.6, colour = "black") +
   geom_text(aes(label = Label), vjust = -0.5, size = 4) +
@@ -487,7 +412,7 @@ sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCand
         ),
         StudyDisplay = factor(recode(as.character(Study), !!!study_display_map), levels = study_display_order)
       ) |>
-      filter(PValue < 0.05) |>
+      filter(PAdjustBH < 0.05) |>
       mutate(x = 1.5, y = max(plot_data$ProportionCandidate) * 1.12, label = "*"),
     aes(x = x, y = y, label = label),
     inherit.aes = FALSE,
@@ -518,7 +443,11 @@ sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCand
 ggsave(
   filename = sup_figure_path("FigS1_SA_Candidate_Enrichment.png"),
   plot = sa_enrichment_plot,
-  width = 11,
+  width = 15,
   height = 10.1,
   dpi = 300
 )
+
+message("Summary table: ", summary_path("TableS1_SA_Candidate_Enrichment_Tests.csv"))
+message("Overlap table: ", summary_path("TableS1_SA_Candidate_Enrichment_Overlaps.csv"))
+message("Figure: ", sup_figure_path("FigS1_SA_Candidate_Enrichment.png"))

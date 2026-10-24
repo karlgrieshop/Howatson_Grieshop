@@ -1,5 +1,5 @@
-# Assemble the four study-specific SA probability / magnitude panels into the
-# tracked Figure 1 manuscript layout. The underlying single-study summary tables
+# Assemble the Ruzicka et al. SA probability / magnitude panels into the
+# tracked Figure 1 manuscript layout. The underlying summary tables
 # are generated upstream by `sa_probability_plots.R` and `sa_magnitude_plots.R`.
 
 find_project_root <- function(start = getwd()) {
@@ -210,38 +210,6 @@ build_ruzicka_probability_values <- function(gene_reference) {
 }
 
 
-build_neal_probability_values <- function(gene_reference) {
-  snps <- read.delim(
-    input_path("true_cmh_results.txt"),
-    header = FALSE,
-    stringsAsFactors = FALSE
-  )
-
-  colnames(snps) <- c(
-    "Chromosome",
-    "Basepair",
-    "Reference",
-    paste0("Sample_", 1:28),
-    "Log10_pvalue",
-    "LogOdds"
-  )
-
-  snps <- snps |>
-    transmute(
-      chromosome = as.character(Chromosome),
-      position = as.integer(Basepair),
-      Value = as.numeric(Log10_pvalue)
-    ) |>
-    filter(!is.na(Value), is.finite(Value))
-
-  map_snp_metric_to_genes(
-    snp_values = snps,
-    gene_reference = gene_reference,
-    source_label = "Neal (2024) from true_cmh_results.txt (max Log10_pvalue)"
-  )
-}
-
-
 build_ruzicka_magnitude_values <- function(gene_reference) {
   assoc <- read.delim(
     input_path("Assoc_Data.txt"),
@@ -259,38 +227,6 @@ build_ruzicka_magnitude_values <- function(gene_reference) {
     snp_values = assoc[, c("chromosome", "position", "Value")],
     gene_reference = gene_reference,
     source_label = "Ruzicka et al. from Assoc_Data.txt (max Wald_Stat)"
-  )
-}
-
-
-build_neal_magnitude_values <- function(gene_reference) {
-  snps <- read.delim(
-    input_path("true_cmh_results.txt"),
-    header = FALSE,
-    stringsAsFactors = FALSE
-  )
-
-  colnames(snps) <- c(
-    "Chromosome",
-    "Basepair",
-    "Reference",
-    paste0("Sample_", 1:28),
-    "Log10_pvalue",
-    "LogOdds"
-  )
-
-  snps <- snps |>
-    transmute(
-      chromosome = as.character(Chromosome),
-      position = as.integer(Basepair),
-      Value = abs(as.numeric(LogOdds))
-    ) |>
-    filter(!is.na(Value), is.finite(Value))
-
-  map_snp_metric_to_genes(
-    snp_values = snps,
-    gene_reference = gene_reference,
-    source_label = "Neal (2024) from true_cmh_results.txt (max abs LogOdds)"
   )
 }
 
@@ -360,14 +296,6 @@ ruz_prob_summary <- if (file.exists(summary_path("Ruzicka_et_al_SA_probability_p
     bootstrap_group_summaries()
 }
 
-neal_prob_summary <- if (file.exists(summary_path("Neal_2024_SA_probability_plot_data.csv"))) {
-  read_saved_summary("Neal_2024_SA_probability_plot_data.csv")
-} else {
-  build_neal_probability_values(protein_coding_gene_reference) |>
-    assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
-    bootstrap_group_summaries()
-}
-
 ruz_mag_summary <- if (file.exists(summary_path("Ruzicka_et_al_SA_magnitude_plot_data.csv"))) {
   read_saved_summary("Ruzicka_et_al_SA_magnitude_plot_data.csv")
 } else {
@@ -376,57 +304,31 @@ ruz_mag_summary <- if (file.exists(summary_path("Ruzicka_et_al_SA_magnitude_plot
     bootstrap_group_summaries()
 }
 
-neal_mag_summary <- if (file.exists(summary_path("Neal_2024_SA_magnitude_plot_data.csv"))) {
-  read_saved_summary("Neal_2024_SA_magnitude_plot_data.csv")
-} else {
-  build_neal_magnitude_values(protein_coding_gene_reference) |>
-    assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
-    bootstrap_group_summaries()
-}
-
 panel_a <- plot_metric_panel(
   summary_data = ruz_prob_summary,
   y_label = "Prob. of SA polymorphism",
-  show_x_axis = FALSE,
+  show_x_axis = TRUE,
   show_y_title = TRUE,
-  title = expression("Ruzicka " * italic("et al.") * " (2019)"),
+  title = NULL,
   tag = "A"
 )
 
 panel_b <- plot_metric_panel(
-  summary_data = neal_prob_summary,
-  y_label = "Prob. of SA polymorphism",
-  show_x_axis = FALSE,
-  show_y_title = FALSE,
-  title = "Neal (2024)",
-  tag = "B"
-)
-
-panel_c <- plot_metric_panel(
   summary_data = ruz_mag_summary,
   y_label = "SA effect",
   show_x_axis = TRUE,
   show_y_title = TRUE,
   title = NULL,
-  tag = "C"
+  tag = "B"
 )
 
-panel_d <- plot_metric_panel(
-  summary_data = neal_mag_summary,
-  y_label = "SA effect",
-  show_x_axis = TRUE,
-  show_y_title = FALSE,
-  title = NULL,
-  tag = "D"
-)
-
-figure_1 <- (panel_a | panel_b) / (panel_c | panel_d)
+figure_1 <- panel_a | panel_b
 
 ggsave(
   filename = figure_path("Fig1_SA_Probability_and_Magnitude.png"),
   plot = figure_1,
   width = 12,
-  height = 10,
+  height = 5.5,
   dpi = 300,
   bg = "white"
 )

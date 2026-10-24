@@ -233,38 +233,6 @@ build_ruzicka_probability_values <- function(gene_reference) {
 }
 
 
-build_neal_probability_values <- function(gene_reference) {
-  snps <- read.delim(
-    input_path("true_cmh_results.txt"),
-    header = FALSE,
-    stringsAsFactors = FALSE
-  )
-
-  colnames(snps) <- c(
-    "Chromosome",
-    "Basepair",
-    "Reference",
-    paste0("Sample_", 1:28),
-    "Log10_pvalue",
-    "LogOdds"
-  )
-
-  snps <- snps |>
-    transmute(
-      chromosome = as.character(Chromosome),
-      position = as.integer(Basepair),
-      Value = as.numeric(Log10_pvalue)
-    ) |>
-    filter(!is.na(Value), is.finite(Value))
-
-  map_snp_metric_to_genes(
-    snp_values = snps,
-    gene_reference = gene_reference,
-    source_label = "Neal (2024) from true_cmh_results.txt (max Log10_pvalue)"
-  )
-}
-
-
 build_ruzicka_magnitude_values <- function(gene_reference) {
   assoc <- read.delim(
     input_path("Assoc_Data.txt"),
@@ -282,38 +250,6 @@ build_ruzicka_magnitude_values <- function(gene_reference) {
     snp_values = assoc[, c("chromosome", "position", "Value")],
     gene_reference = gene_reference,
     source_label = "Ruzicka et al. from Assoc_Data.txt (max Wald_Stat)"
-  )
-}
-
-
-build_neal_magnitude_values <- function(gene_reference) {
-  snps <- read.delim(
-    input_path("true_cmh_results.txt"),
-    header = FALSE,
-    stringsAsFactors = FALSE
-  )
-
-  colnames(snps) <- c(
-    "Chromosome",
-    "Basepair",
-    "Reference",
-    paste0("Sample_", 1:28),
-    "Log10_pvalue",
-    "LogOdds"
-  )
-
-  snps <- snps |>
-    transmute(
-      chromosome = as.character(Chromosome),
-      position = as.integer(Basepair),
-      Value = abs(as.numeric(LogOdds))
-    ) |>
-    filter(!is.na(Value), is.finite(Value))
-
-  map_snp_metric_to_genes(
-    snp_values = snps,
-    gene_reference = gene_reference,
-    source_label = "Neal (2024) from true_cmh_results.txt (max abs LogOdds)"
   )
 }
 
@@ -411,62 +347,35 @@ panel_a_summary <- build_ruzicka_probability_values(protein_coding_gene_referenc
   attach_sbge_panels(sbge_whole = sbge_whole) |>
   summarise_sbge_panels(seed = 101)
 
-panel_b_summary <- build_neal_probability_values(protein_coding_gene_reference) |>
-  assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
-  attach_sbge_panels(sbge_whole = sbge_whole) |>
-  summarise_sbge_panels(seed = 201)
-
 panel_c_summary <- build_ruzicka_magnitude_values(protein_coding_gene_reference) |>
   assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
   attach_sbge_panels(sbge_whole = sbge_whole) |>
   summarise_sbge_panels(seed = 301)
 
-panel_d_summary <- build_neal_magnitude_values(protein_coding_gene_reference) |>
-  assign_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
-  attach_sbge_panels(sbge_whole = sbge_whole) |>
-  summarise_sbge_panels(seed = 401)
-
-
 panel_a <- plot_sbge_panel(
   summary_data = panel_a_summary,
   y_label = "Prob. of SA polymorphism",
-  title = expression("Ruzicka " * italic("et al.") * " (2019)"),
+  title = NULL,
   tag = "A",
-  show_x_title = FALSE
-)
-
-panel_b <- plot_sbge_panel(
-  summary_data = panel_b_summary,
-  y_label = "Prob. of SA polymorphism",
-  title = "Neal (2024)",
-  tag = "B",
   show_x_title = FALSE
 )
 
 panel_c <- plot_sbge_panel(
   summary_data = panel_c_summary,
   y_label = "SA effect",
-  title = expression("Ruzicka " * italic("et al.") * " (2019)"),
-  tag = "C",
-  show_x_title = FALSE
-)
-
-panel_d <- plot_sbge_panel(
-  summary_data = panel_d_summary,
-  y_label = "SA effect",
-  title = "Neal (2024)",
-  tag = "D",
+  title = NULL,
+  tag = "B",
   show_x_title = TRUE
 )
 
 
-figure_s2 <- panel_a / panel_b / panel_c / panel_d
+figure_s2 <- panel_a / panel_c
 
 ggsave(
   filename = sup_figure_path("FigS3_sa_prob_mag.png"),
   plot = figure_s2,
   width = 12,
-  height = 18,
+  height = 9,
   dpi = 300,
   bg = "white"
 )

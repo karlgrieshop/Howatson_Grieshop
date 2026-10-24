@@ -1,12 +1,7 @@
 # SA magnitude plots
 #
-# This script restores four-group SA magnitude plots from the original
-# study-specific inputs now present in `Data/`.
-#
-# - Ruzicka et al.: SNP-level Wald chi-squared statistics from `Assoc_Data.txt`,
-#   mapped to genes
-# - Neal (2024): SNP-level absolute log-odds ratios from
-#   `true_cmh_results.txt`, mapped to genes
+# This script rebuilds the Ruzicka et al. SA-magnitude summaries from
+# SNP-level Wald chi-squared statistics in `Assoc_Data.txt`, mapped to genes.
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -287,38 +282,6 @@ build_ruzicka_values <- function(gene_reference) {
 }
 
 
-build_neal_values <- function(gene_reference) {
-  snps <- read.delim(
-    input_path("true_cmh_results.txt"),
-    header = FALSE,
-    stringsAsFactors = FALSE
-  )
-
-  colnames(snps) <- c(
-    "Chromosome",
-    "Basepair",
-    "Reference",
-    paste0("Sample_", 1:28),
-    "Log10_pvalue",
-    "LogOdds"
-  )
-
-  snps <- snps |>
-    transmute(
-      chromosome = as.character(Chromosome),
-      position = as.integer(Basepair),
-      Value = abs(as.numeric(LogOdds))
-    ) |>
-    filter(!is.na(Value), is.finite(Value))
-
-  map_snp_metric_to_genes(
-    snp_values = snps,
-    gene_reference = gene_reference,
-    source_label = "Neal (2024) from true_cmh_results.txt (max abs LogOdds)"
-  )
-}
-
-
 gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFactors = FALSE)
 protein_coding_gene_reference <- gene_reference |>
   filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID), gene_biotype == "protein_coding")
@@ -333,11 +296,6 @@ study_specs <- list(
     name = "Ruzicka et al.",
     values = build_ruzicka_values(protein_coding_gene_reference),
     y_label = expression("SA effect (Wald " * chi^2 * ")")
-  ),
-  list(
-    name = "Neal_2024",
-    values = build_neal_values(protein_coding_gene_reference),
-    y_label = expression("SA effect (" * italic(Log) * " Odds Ratio)")
   )
 )
 

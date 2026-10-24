@@ -10,8 +10,8 @@ This repo includes the code to support Howatson and Grieshop (2026) Phil Trans B
 ## Contents
 
 - **Main figures:** `Figures/Fig1_SA_Probability_and_Magnitude.png`, `Figures/Fig2_rmf_tau.png`, `Figures/Fig3_rlns_tajD_DoS.png`, `Figures/Fig4_sa_res_radar.png`
-- **Supplementary figures:** `Sup_figures/FigS1_SA_Candidate_Enrichment.png`, `Sup_figures/FigS2_context.png`, `Sup_figures/FigS3_sa_prob_mag.png`, `Sup_figures/FigS4_rmf_tau.png`, `Sup_figures/FigS5_rlns_tajD_DoS.png`, `Sup_figures/FigS6_radar_context.png`, `Sup_figures/FigS7_SSDO_candidate_overlay.png`
-- **Tables and data frames:** `Data/outputs/` and `Data/Summary_tables/`
+- **Supplementary figures:** `Sup_figures/FigS1_SA_Candidate_Enrichment.png`, `Sup_figures/FigS2_context.png`, `Sup_figures/FigS3_sa_prob_mag.png`, `Sup_figures/FigS4_rmf_tau.png`, `Sup_figures/FigS5_rlns_tajD_DoS.png`, `Sup_figures/FigS6_radar_context.png`, `Sup_figures/FigS7_SSDO_candidate_overlay.png`, `Sup_figures/FigS8_SA_Probability_and_Magnitude_Brigos5.png`
+- **Tables and data frames:** `Data/outputs/`, `Data/Summary_tables/`, and generated Word tables in `Tables/`
 - **Code:** `Data_wrangling/`, `Plotting_and_analyses/`, and `Sup_plotting_and_analyses/`
 
 ## Repository layout
@@ -24,8 +24,9 @@ Data/
 Data_wrangling/                active wrangling/build scripts
 Plotting_and_analyses/         active main-figure and main-text analysis scripts
 Sup_plotting_and_analyses/     active supplementary figure scripts
+Tables/            table-generation scripts and local Word outputs
 Figures/           final main-figure PNGs (Fig1–Fig4)
-Sup_figures/       final supplementary PNGs (FigS1–FigS7)
+Sup_figures/       final supplementary PNGs (FigS1–FigS8)
 ```
 
 ## Input provenance
@@ -37,7 +38,6 @@ All files below should be supplied locally in `Data/inputs/` from the accession 
 | `SBGEandSSSdataForMBE.csv` | Singh and Agrawal (2023) | [add DOI] |
 | `FileS7.txt` | Fraïsse et al. (2019) | [add DOI] |
 | `Assoc_Data.txt`, `Ruzicka_et_al_pbio.3000244.s008.csv` | Ruzicka et al. (2019) | [add DOI] |
-| `true_cmh_results.txt`, `gene_hits_snps_90.csv` | Neal (2024) | [add accession / note] |
 | `Innocenti_and_Morrow_ANTAGONISTIC.csv` | Innocenti and Morrow (2010) | [add DOI] |
 | `DifferentialGeneExpression.whole.bodies.tsv`, `Sex.Reversed.AI.test.tsv`, `Heads.FDR.test.for.AI.tsv`, `Gonads.FDR.test.for.AI.tsv`, `Genes.with.Sex.Reversed.AI.tsv`, `Genes.for.analysis.final.tsv` | Mishra et al. ASE study | [add DOI] |
 | `Mishra.sig.SSS_filt25.txt`, `dimorphic.subset.list_wDsRedgenes.txt`, `all.exclude.txt` | Grieshop et al. (2025) / MaleLimitedEvo locally supplied SSS tested, final, and excluded-gene lists | [add DOI / note] |
@@ -55,7 +55,7 @@ The repository keeps the summary tables needed for the **already-summarized pane
 
 This shortcut works directly from the kept plot-data tables in `Data/Summary_tables/`.
 
-**Still upstream-dependent:** `FigS1`, `FigS2`, `FigS3`, `Fig4`, `FigS6`, and `FigS7` are rebuilt from their active analysis scripts rather than from preassembled panel-summary tables alone.
+**Still upstream-dependent:** `FigS1`, `FigS2`, `FigS3`, `Fig4`, `FigS6`, `FigS7`, and `FigS8` are rebuilt from their active analysis scripts rather than from preassembled panel-summary tables alone.
 
 ## Full active workflow
 
@@ -77,6 +77,10 @@ Run these from the repository root.
 14. `Rscript Data_wrangling/build_sa_resolution_inputs.R`
 15. `Rscript Plotting_and_analyses/figure4_sa_resolution.R`
 16. `Rscript Sup_plotting_and_analyses/figureS6_figureS7_radar_context.R`
+17. `Rscript Plotting_and_analyses/figureS8_figure1_with_brigos_5class.R`
+18. `Rscript Tables/table1_sa_prob_mag_permutation_docx.R`
+19. `Rscript Tables/tableS1_candidate_enrichment_docx.R`
+20. `Rscript Tables/tableS2_candidate_context_docx.R`
 
 ## What each active area does
 
@@ -84,11 +88,12 @@ Run these from the repository root.
 - `Data_wrangling/build_mishra_whole_body_sbge_bins.R` rebuilds the active five-bin Mishra whole-body SBGE classification using the MaleLimitedEvo thresholds.
 - `Plotting_and_analyses/boot_permute_metrics.R` writes the kept four-group metric plot-data and permutation-test tables for Tajima’s *D*, *r*<sub>*MF*</sub>, *pi*<sub>*rN*</sub>, tissue specificity, and *DoS*, with BH correction applied within each metric across the full six pairwise group comparisons.
 - `Plotting_and_analyses/sa_probability_plots.R` and `Plotting_and_analyses/sa_magnitude_plots.R` write the kept study-level SA summary tables used in Fig1. These remain separate because they each rebuild a study-specific summary surface and corresponding within-study permutation family.
-- `Plotting_and_analyses/sa_candidate_enrichment.R` generates **FigS1** and **TableS1**.
-- `Sup_plotting_and_analyses/figureS2_context.R` generates **FigS2**, a Fig1-style four-panel context figure comparing SSDOs to the Innocenti, Ruzicka, and Neal candidate SA-gene sets, with original Fig1 non-SSDO bootstrap means shown as blue/green/grey horizontal reference lines.
+- `Plotting_and_analyses/sa_candidate_enrichment.R` generates **FigS1** and **TableS1**, testing enrichment of Innocenti and Morrow, Ruzicka et al., and Brigos-Baril et al. (2026) candidate genes among SSDOs, disease orthologues, and orthologues. The first two tests use their study-matched assay universes; Brigos candidates are tested in the protein-coding-gene universe. Fisher exact-test P-values are BH-adjusted across all nine comparisons.
+- `Sup_plotting_and_analyses/figureS2_context.R` generates **FigS2**, a two-panel Ruzicka SA-probability/effect context figure with original Fig1 non-SSDO bootstrap means shown as blue/green/grey horizontal reference lines.
 - `Data_wrangling/build_sa_resolution_inputs.R` assembles the study-matched SA-resolution feature tables for **Fig4** and the radar supplements, storing `TRUE`/`FALSE` only within each mechanism's source-study universe and `NA` outside it; it also exports the corresponding feature-universe summary. `SSS` now uses the locally supplied `Mishra.sig.SSS_filt25.txt` tested-gene frame together with the DsRed-restored final list in `dimorphic.subset.list_wDsRedgenes.txt`; `Dup` remains the only protein-coding-genome fallback denominator.
 - `Plotting_and_analyses/figure4_sa_resolution.R` generates **Fig4** and the kept SA-resolution statistical summaries using those study-matched per-feature denominators.
-- `Sup_plotting_and_analyses/figureS6_figureS7_radar_context.R` generates **FigS6**, a four-panel study-matched SA-resolution radar-context figure with panel A reprinting the Fig4 SSDO comparison and panels B-D replacing the orange focal group with the Innocenti, Ruzicka, and Neal candidate SA-gene sets while retaining the same split background categories; it also generates **FigS7**, a study-matched single-panel overlay comparing SSDOs directly with the three study-specific SA-candidate sets.
+- `Sup_plotting_and_analyses/figureS6_figureS7_radar_context.R` generates **FigS6**, a four-panel study-matched SA-resolution radar-context figure with panel A reprinting the Fig4 SSDO comparison and panels B-D showing the Innocenti, Ruzicka, and Brigos-Baril et al. (2026) candidate gene sets while retaining the same split background categories; it also generates **FigS7**, a study-matched single-panel overlay comparing SSDOs with those three candidate sets.
+- `Plotting_and_analyses/figureS8_figure1_with_brigos_5class.R` generates the two-panel **FigS8** Brigos-Baril et al. (2026) sensitivity figure from the Ruzicka probability and effect metrics.
 
 ## Notes
 

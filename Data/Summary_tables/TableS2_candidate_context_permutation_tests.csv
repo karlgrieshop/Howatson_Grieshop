@@ -1,9 +1,5 @@
 "Metric","Comparison","group_1","group_2","obs_diff","group_1_mean","group_2_mean","n_group_1","n_group_2","n_shared","n_group_1_only","n_group_2_only","p_value","p_adjust_bh"
-"Ruzicka SA probability","SSDOs vs Innocenti and Morrow candidates","SSDOs","Innocenti and Morrow candidates",0.1147996119984,1.05890600093486,0.944106388936463,540,852,41,499,811,0.005999400059994,0.011998800119988
-"Ruzicka SA probability","SSDOs vs Neal (2024) candidates","SSDOs","Neal (2024) candidates",0.042011398381167,1.05890600093486,1.0168946025537,540,269,23,517,246,0.435956404359564,0.435956404359564
-"Neal SA probability","SSDOs vs Innocenti and Morrow candidates","SSDOs","Innocenti and Morrow candidates",0.274115276411325,1.94124988779618,1.66713461138485,471,647,33,438,614,0.0006999300069993,0.0013998600139986
-"Neal SA probability","SSDOs vs Ruzicka et al. candidates","SSDOs","Ruzicka et al. candidates",0.153915689801751,1.94124988779618,1.78733419799443,471,323,21,450,302,0.115888411158884,0.115888411158884
-"Ruzicka SA effect","SSDOs vs Innocenti and Morrow candidates","SSDOs","Innocenti and Morrow candidates",0.166278511867501,1.17798274074074,1.01170422887324,540,852,41,499,811,0.0020997900209979,0.0041995800419958
-"Ruzicka SA effect","SSDOs vs Neal (2024) candidates","SSDOs","Neal (2024) candidates",0.120688919179402,1.17798274074074,1.05729382156134,540,269,23,517,246,0.0940905909409059,0.0940905909409059
-"Neal SA effect","SSDOs vs Innocenti and Morrow candidates","SSDOs","Innocenti and Morrow candidates",0.454768273867302,3.389914892569,2.9351466187017,471,647,33,438,614,0.0006999300069993,0.0013998600139986
-"Neal SA effect","SSDOs vs Ruzicka et al. candidates","SSDOs","Ruzicka et al. candidates",0.361775649844544,3.389914892569,3.02813924272446,471,323,21,450,302,0.0150984901509849,0.0150984901509849
+"Ruzicka SA probability","SSDOs vs Innocenti and Morrow candidates","SSDOs","Innocenti and Morrow candidates",0.1147996119984,1.05890600093486,0.944106388936463,540,852,41,499,811,0.005999400059994,0.005999400059994
+"Ruzicka SA probability","SSDOs vs Ruzicka et al. candidates","SSDOs","Ruzicka et al. candidates",-1.85345348817453,1.05890600093486,2.91235948910939,540,427,22,518,405,9.99900009999e-05,0.0001999800019998
+"Ruzicka SA effect","SSDOs vs Innocenti and Morrow candidates","SSDOs","Innocenti and Morrow candidates",0.166278511867501,1.17798274074074,1.01170422887324,540,852,41,499,811,0.0020997900209979,0.0020997900209979
+"Ruzicka SA effect","SSDOs vs Ruzicka et al. candidates","SSDOs","Ruzicka et al. candidates",-1.23869016558244,1.17798274074074,2.41667290632319,540,427,22,518,405,9.99900009999e-05,0.0001999800019998

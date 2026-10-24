@@ -297,62 +297,6 @@ assign_collapsed_resolution_groups <- function(data) {
 }
 
 
-# These helpers recover the external candidate SA gene sets used for
-# mechanism-level enrichment against independent SA studies.
-load_neal_candidate_ids <- function() {
-  read.csv(
-    input_path("gene_hits_snps_90.csv"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  ) |>
-    transmute(FlyBaseID = as.character(ensembl_gene_id)) |>
-    filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
-    distinct() |>
-    pull(FlyBaseID)
-}
-
-
-load_ruzicka_candidate_ids <- function() {
-  read.csv(
-    input_path("Ruzicka_et_al_pbio.3000244.s008.csv"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  ) |>
-    transmute(FlyBaseID = as.character(`Flybase gene ID`)) |>
-    filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
-    distinct() |>
-    pull(FlyBaseID)
-}
-
-
-assign_candidate_groups <- function(data, candidate_ids, group_var = "CandidateGroup") {
-  data |>
-    mutate(
-      !!group_var := ifelse(
-        FlyBaseID %in% candidate_ids,
-        "Candidate SA genes",
-        "Background genes"
-      )
-    )
-}
-
-
-assign_split_candidate_groups <- function(data, candidate_ids, group_var = "CandidateGroup") {
-  disease_only_ids <- setdiff(disease_ids, ssdo_ids)
-  ortholog_only_ids <- setdiff(ortholog_ids, union(ssdo_ids, disease_ids))
-
-  data |>
-    mutate(
-      !!group_var := case_when(
-        FlyBaseID %in% candidate_ids ~ "Candidate SA genes",
-        FlyBaseID %in% disease_only_ids ~ "Disease orthologues",
-        FlyBaseID %in% ortholog_only_ids ~ "Orthologues",
-        TRUE ~ "Background"
-      )
-    )
-}
-
-
 run_candidate_resolution_enrichment <- function(universe_ids, focal_ids, feature_ids, study_name, feature_name, source_note) {
   analysis_df <- data.frame(FlyBaseID = unique(universe_ids), stringsAsFactors = FALSE) |>
     mutate(
@@ -622,18 +566,6 @@ study_matched_family <- run_enrichment_family()
 
 resolution_plot_data <- assign_resolution_groups(resolution_membership)
 collapsed_resolution_plot_data <- assign_collapsed_resolution_groups(resolution_membership)
-neal_candidate_ids <- intersect(load_neal_candidate_ids(), resolution_membership$FlyBaseID)
-ruzicka_candidate_ids <- intersect(load_ruzicka_candidate_ids(), resolution_membership$FlyBaseID)
-neal_candidate_plot_data <- assign_candidate_groups(
-  resolution_membership,
-  neal_candidate_ids,
-  group_var = "NealCandidateGroup"
-)
-ruzicka_candidate_plot_data <- assign_candidate_groups(
-  resolution_membership,
-  ruzicka_candidate_ids,
-  group_var = "RuzickaCandidateGroup"
-)
 enrichment_results <- study_matched_family$results
 
 
