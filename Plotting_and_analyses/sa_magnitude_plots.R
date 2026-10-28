@@ -302,8 +302,7 @@ study_specs <- list(
 for (study_spec in study_specs) {
   raw_data <- assign_gene_types(study_spec$values, ssdo_ids, disease_ids, ortholog_ids)
   summary_data <- bootstrap_group_summaries(raw_data)
-  # As for SA probability, each study now contributes the full six within-study
-  # group contrasts so the BH family is study-specific rather than cross-study.
+  # Apply BH correction across all six within-study group contrasts.
   tests_data <- pairwise_tests_within_study(raw_data)
   plot_object <- plot_metric_distribution(summary_data, study_spec$y_label)
 

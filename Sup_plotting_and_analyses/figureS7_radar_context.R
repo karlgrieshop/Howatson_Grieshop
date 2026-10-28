@@ -107,73 +107,6 @@ load_brigos_candidate_ids <- function() {
 }
 
 
-build_radar_components <- function(data, group_var, group_order, feature_order, feature_labels) {
-  radar_summary <- bind_rows(lapply(group_order, function(group_name) {
-    subset_df <- data |>
-      filter(.data[[group_var]] == group_name)
-
-      data.frame(
-        Group = group_name,
-        Feature = feature_order,
-        FeatureLabel = unname(feature_labels[feature_order]),
-        Percent = vapply(feature_order, function(feature_name) {
-          100 * mean(subset_df[[feature_name]], na.rm = TRUE)
-        }, numeric(1)),
-        NConsidered = vapply(feature_order, function(feature_name) {
-          sum(!is.na(subset_df[[feature_name]]))
-        }, integer(1)),
-        stringsAsFactors = FALSE
-      )
-    }))
-
-  if (any(radar_summary$NConsidered == 0L)) {
-    empty_rows <- radar_summary |>
-      filter(NConsidered == 0L) |>
-      transmute(Label = paste(Group, Feature, sep = " / ")) |>
-      pull(Label)
-
-    stop(
-      paste(
-        "At least one supplementary group-feature combination has zero study-matched genes:",
-        paste(empty_rows, collapse = ", ")
-      ),
-      call. = FALSE
-    )
-  }
-
-  max_percent <- ceiling(max(radar_summary$Percent, na.rm = TRUE) / 10) * 10
-  max_percent <- max(max_percent, 10)
-  radial_step <- if (max_percent <= 50) 10 else 20
-  radial_breaks <- seq(0, max_percent, by = radial_step)
-  plot_group_order <- rev(group_order)
-
-  radar_matrix <- rbind(
-    rep(max_percent, length(feature_order)),
-    rep(0, length(feature_order)),
-    do.call(
-      rbind,
-      lapply(plot_group_order, function(group_name) {
-        radar_summary |>
-          filter(Group == group_name) |>
-          arrange(match(Feature, feature_order)) |>
-          pull(Percent)
-      })
-    )
-  )
-
-  radar_df <- as.data.frame(radar_matrix, stringsAsFactors = FALSE)
-  colnames(radar_df) <- unname(feature_labels[feature_order])
-  rownames(radar_df) <- c("max", "min", plot_group_order)
-
-  list(
-    summary = radar_summary,
-    radar_df = radar_df,
-    radial_breaks = radial_breaks,
-    plot_group_order = plot_group_order
-  )
-}
-
-
 build_overlay_radar_components <- function(data, group_ids, group_order, feature_order, feature_labels) {
   radar_summary <- bind_rows(lapply(group_order, function(group_name) {
     subset_ids <- unique(as.character(group_ids[[group_name]]))
@@ -357,40 +290,6 @@ draw_radar_panel <- function(components, panel_title, panel_tag, panel_palette) 
 }
 
 
-assign_resolution_groups <- function(data, ssdo_ids, disease_ids, ortholog_ids) {
-  disease_only_ids <- setdiff(disease_ids, ssdo_ids)
-  ortholog_only_ids <- setdiff(ortholog_ids, union(ssdo_ids, disease_ids))
-
-  data |>
-    mutate(
-      PlotGroup = case_when(
-        FlyBaseID %in% ssdo_ids ~ "SSDOs",
-        FlyBaseID %in% disease_only_ids ~ "Disease orthologues",
-        FlyBaseID %in% ortholog_only_ids ~ "Orthologues",
-        TRUE ~ "Background"
-      )
-    )
-}
-
-
-assign_split_candidate_groups <- function(data, candidate_ids, ssdo_ids, disease_ids, ortholog_ids) {
-  disease_only_ids <- setdiff(disease_ids, ssdo_ids)
-  ortholog_only_ids <- setdiff(ortholog_ids, union(ssdo_ids, disease_ids))
-  excluded_ssdo_ids <- setdiff(ssdo_ids, candidate_ids)
-
-  data |>
-    filter(!(FlyBaseID %in% excluded_ssdo_ids)) |>
-    mutate(
-      PlotGroup = case_when(
-        FlyBaseID %in% candidate_ids ~ "Candidate SA genes",
-        FlyBaseID %in% disease_only_ids ~ "Disease orthologues",
-        FlyBaseID %in% ortholog_only_ids ~ "Orthologues",
-        TRUE ~ "Background"
-      )
-    )
-}
-
-
 resolution_membership_path <- output_path("sa_resolution_feature_membership.csv")
 resolution_notes_path <- summary_path("sa_resolution_feature_notes.csv")
 
@@ -419,28 +318,6 @@ gene_reference <- read.csv(output_path("dmel_gene_reference.csv"), stringsAsFact
 ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactors = FALSE) |>
   pull(FlyBaseID) |>
   unique()
-disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFactors = FALSE) |>
-  pull(FlyBaseID) |>
-  unique()
-ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |>
-  pull(FlyBaseID) |>
-  unique()
-
-main_group_order <- c("SSDOs", "Disease orthologues", "Orthologues", "Background")
-candidate_group_order <- c("Candidate SA genes", "Disease orthologues", "Orthologues", "Background")
-
-main_palette <- c(
-  "SSDOs" = "#D55E00",
-  "Disease orthologues" = "#0072B2",
-  "Orthologues" = "#009E73",
-  "Background" = "#999999"
-)
-candidate_palette <- c(
-  "Candidate SA genes" = "#D55E00",
-  "Disease orthologues" = "#0072B2",
-  "Orthologues" = "#009E73",
-  "Background" = "#999999"
-)
 overlay_group_order <- c(
   "SSDOs",
   "Innocenti and Morrow SA candidates",
@@ -464,15 +341,6 @@ innocenti_candidate_ids <- intersect(load_innocenti_candidate_ids(gene_reference
 ruzicka_candidate_ids <- intersect(load_ruzicka_candidate_ids(), resolution_membership$FlyBaseID)
 brigos_candidate_ids <- intersect(load_brigos_candidate_ids(), resolution_membership$FlyBaseID)
 
-main_plot_data <- assign_resolution_groups(resolution_membership, ssdo_ids, disease_ids, ortholog_ids)
-innocenti_plot_data <- assign_split_candidate_groups(resolution_membership, innocenti_candidate_ids, ssdo_ids, disease_ids, ortholog_ids)
-ruzicka_plot_data <- assign_split_candidate_groups(resolution_membership, ruzicka_candidate_ids, ssdo_ids, disease_ids, ortholog_ids)
-brigos_plot_data <- assign_split_candidate_groups(resolution_membership, brigos_candidate_ids, ssdo_ids, disease_ids, ortholog_ids)
-
-main_components <- build_radar_components(main_plot_data, "PlotGroup", main_group_order, feature_order, feature_labels)
-innocenti_components <- build_radar_components(innocenti_plot_data, "PlotGroup", candidate_group_order, feature_order, feature_labels)
-ruzicka_components <- build_radar_components(ruzicka_plot_data, "PlotGroup", candidate_group_order, feature_order, feature_labels)
-brigos_components <- build_radar_components(brigos_plot_data, "PlotGroup", candidate_group_order, feature_order, feature_labels)
 overlay_components <- build_overlay_radar_components(
   resolution_membership,
   group_ids = list(
@@ -497,66 +365,9 @@ overlay_multivariate_test <- run_overlay_multivariate_test(
 )
 write.csv(
   overlay_multivariate_test,
-  summary_path("FigS6_SSDO_candidate_overlay_multivariate_test.csv"),
+  summary_path("FigS7_SSDO_candidate_overlay_multivariate_test.csv"),
   row.names = FALSE
 )
-
-png(
-  filename = sup_figure_path("FigS6_radar_context.png"),
-  width = 3600,
-  height = 3900,
-  res = 300,
-  bg = "white"
-)
-
-layout(matrix(c(1, 2, 3, 4, 5, 5), nrow = 3, byrow = TRUE), heights = c(15, 15, 2.3))
-par(family = "sans", xpd = NA)
-
-par(mar = c(2.8, 2.8, 3.3, 2.8))
-draw_radar_panel(main_components, "SSDOs (Figure 4)", "A", main_palette)
-
-par(mar = c(2.8, 2.8, 3.3, 2.8))
-draw_radar_panel(
-  innocenti_components,
-  expression("Innocenti and Morrow (2010)"),
-  "B",
-  candidate_palette
-)
-
-par(mar = c(2.8, 2.8, 3.3, 2.8))
-draw_radar_panel(
-  ruzicka_components,
-  expression("Ruzicka " * italic("et al.") * " (2019)"),
-  "C",
-  candidate_palette
-)
-
-par(mar = c(2.8, 2.8, 3.3, 2.8))
-draw_radar_panel(
-  brigos_components,
-  expression("Brigos-Baril " * italic("et al.") * " (2026)"),
-  "D",
-  candidate_palette
-)
-
-par(mar = c(0, 0, 0, 0))
-plot.new()
-legend(
-  "center",
-  legend = c("SSDOs / Candidate SA genes", "Disease orthologues", "Orthologues", "Background"),
-  horiz = FALSE,
-  ncol = 2,
-  bty = "n",
-  lty = 1,
-  lwd = 5,
-  col = c("#D55E00", "#0072B2", "#009E73", "#999999"),
-  cex = 1.2,
-  seg.len = 3,
-  x.intersp = 0.9,
-  y.intersp = 1.2
-)
-
-dev.off()
 
 png(
   filename = sup_figure_path("FigS7_SSDO_candidate_overlay.png"),

@@ -1,4 +1,4 @@
-# Supplementary FigS8: SA probability/magnitude with Brigos as a 5th class.
+# Supplementary FigS4: SA effect with Brigos as a 5th class.
 # Brigos-first assignment rule:
 #   Brigos -> SSDOs -> Disease orthologues -> Orthologues -> Background
 
@@ -38,7 +38,6 @@ suppressPackageStartupMessages({
   library(data.table)
   library(dplyr)
   library(ggplot2)
-  library(patchwork)
 })
 
 # ------------------------------------------------------------
@@ -222,16 +221,6 @@ assign_gene_types_5class <- function(raw_values, ssdo_ids, disease_ids, ortholog
 }
 
 # Study-specific builders (same logic as your current scripts)
-build_ruzicka_probability_values <- function(gene_reference) {
-  assoc <- read.delim(input_path("Assoc_Data.txt"), stringsAsFactors = FALSE, check.names = FALSE) |>
-    transmute(chromosome = as.character(Chromosome), position = as.integer(Basepair), p_value = as.numeric(Wald_P)) |>
-    filter(!is.na(p_value), p_value > 0, p_value <= 1) |>
-    mutate(Value = -log10(pmax(p_value, .Machine$double.xmin)))
-  
-  map_snp_metric_to_genes(assoc[, c("chromosome", "position", "Value")], gene_reference,
-                          "Ruzicka et al. from Assoc_Data.txt (max -log10 Wald_P)")
-}
-
 build_ruzicka_magnitude_values <- function(gene_reference) {
   assoc <- read.delim(input_path("Assoc_Data.txt"), stringsAsFactors = FALSE, check.names = FALSE) |>
     transmute(chromosome = as.character(Chromosome), position = as.integer(Basepair), Value = as.numeric(Wald_Stat)) |>
@@ -246,6 +235,10 @@ plot_metric_panel <- function(summary_data, y_label = NULL, show_x_axis = TRUE, 
     geom_pointrange(aes(ymin = q05, ymax = q95), linewidth = 1.2) +
     geom_text(aes(y = q95, label = SampleSize), size = 3.8, colour = "black", vjust = -0.75) +
     scale_colour_manual(values = gene_type_palette, drop = FALSE) +
+    scale_x_discrete(labels = expression(
+      atop("Brigos-Baril", italic("et al.") * " (2026)"),
+      "SSDOs", "Disease orthologues", "Orthologues", "Background"
+    )) +
     scale_y_continuous(expand = expansion(mult = c(0.03, 0.14))) +
     labs(x = NULL, y = if (show_y_title) y_label else NULL, title = title, tag = tag) +
     publication_theme()
@@ -273,18 +266,6 @@ disease_ids <- read.csv(output_path("all_disease_ortholog_ids.csv"), stringsAsFa
 ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 brigos_ids <- read.csv(output_path("brigos_barril_ids_strict.csv"), stringsAsFactors = FALSE) |> pull(FlyBaseID) |> unique()
 
-# Probability summaries
-ruz_prob_raw <- assign_gene_types_5class(
-  build_ruzicka_probability_values(protein_coding_gene_reference),
-  ssdo_ids, disease_ids, ortholog_ids, brigos_ids
-)
-ruz_prob_summary <- bootstrap_group_summaries(ruz_prob_raw, seed = 11L)
-
-ruz_prob_tests <- pairwise_tests_within_study(ruz_prob_raw)
-
-write.csv(ruz_prob_summary, summary_path("Ruzicka_et_al_SA_probability_plot_data_brigos5.csv"), row.names = FALSE)
-write.csv(ruz_prob_tests, summary_path("Ruzicka_et_al_SA_probability_permutation_tests_brigos5.csv"), row.names = FALSE)
-
 # Magnitude summaries
 ruz_mag_raw <- assign_gene_types_5class(
   build_ruzicka_magnitude_values(protein_coding_gene_reference),
@@ -298,36 +279,23 @@ ruz_mag_tests <- pairwise_tests_within_study(ruz_mag_raw)
 write.csv(ruz_mag_summary, summary_path("Ruzicka_et_al_SA_magnitude_plot_data_brigos5.csv"), row.names = FALSE)
 write.csv(ruz_mag_tests, summary_path("Ruzicka_et_al_SA_magnitude_permutation_tests_brigos5.csv"), row.names = FALSE)
 
-# Two-panel Ruzicka probability/effect layout with 5-class summaries
-panel_a <- plot_metric_panel(
-  summary_data = ruz_prob_summary,
-  y_label = "Prob. of SA polymorphism",
-  show_x_axis = TRUE,
-  show_y_title = TRUE,
-  title = NULL,
-  tag = "A"
-)
-
-panel_b <- plot_metric_panel(
+figure_1_brigos5 <- plot_metric_panel(
   summary_data = ruz_mag_summary,
   y_label = "SA effect",
   show_x_axis = TRUE,
   show_y_title = TRUE,
-  title = NULL,
-  tag = "B"
+  title = NULL
 )
 
-figure_1_brigos5 <- panel_a | panel_b
-
 ggsave(
-  filename = sup_figure_path("FigS8_SA_Probability_and_Magnitude_Brigos5.png"),
+  filename = sup_figure_path("FigS4_SA_Magnitude_Brigos5.png"),
   plot = figure_1_brigos5,
-  width = 13.5,
+  width = 8,
   height = 5.5,
   dpi = 300,
   bg = "white"
 )
 
 message("Done:")
-message(" - Rebuilt probability/magnitude summaries with Brigos 5th class")
-message(" - Rebuilt supplementary Figure S8: Sup_figures/FigS8_SA_Probability_and_Magnitude_Brigos5.png")
+message(" - Rebuilt SA-effect summaries with Brigos 5th class")
+message(" - Rebuilt supplementary Figure S4: Sup_figures/FigS4_SA_Magnitude_Brigos5.png")

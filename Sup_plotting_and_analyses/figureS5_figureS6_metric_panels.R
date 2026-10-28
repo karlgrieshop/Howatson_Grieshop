@@ -135,7 +135,7 @@ tajd_data <- read_summary_data("tajD Plot Data.csv")
 dos_data <- read_summary_data("DoS Plot Data.csv")
 
 
-figure_s3 <- (
+figure_s5 <- (
   plot_metric_panel_by_sbge(
     summary_data = rmf_data,
     y_label = expression(italic(r)[italic(MF)]),
@@ -153,7 +153,7 @@ figure_s3 <- (
   theme(legend.position = "top")
 
 
-figure_s4 <- (
+figure_s6 <- (
   plot_metric_panel_by_sbge(
     summary_data = rlnd_data,
     y_label = expression(tilde(pi)[italic(r) * italic(N)]),
@@ -178,8 +178,8 @@ figure_s4 <- (
 
 
 ggsave(
-  filename = sup_figure_path("FigS4_rmf_tau.png"),
-  plot = figure_s3,
+  filename = sup_figure_path("FigS5_rmf_tau.png"),
+  plot = figure_s5,
   width = two_panel_width,
   height = two_panel_height,
   dpi = 300,
@@ -187,8 +187,8 @@ ggsave(
 )
 
 ggsave(
-  filename = sup_figure_path("FigS5_rlns_tajD_DoS.png"),
-  plot = figure_s4,
+  filename = sup_figure_path("FigS6_rlns_tajD_DoS.png"),
+  plot = figure_s6,
   width = three_panel_width,
   height = three_panel_height,
   dpi = 300,

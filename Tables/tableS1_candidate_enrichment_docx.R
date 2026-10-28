@@ -83,7 +83,6 @@ table_s1 <- read.csv(input_file, stringsAsFactors = FALSE) |>
     Overlap_count = as.integer(OverlapCount),
     Odds_Ratio = format_3dp(as.numeric(OddsRatio)),
     P_Value = format_p(as.numeric(PValue)),
-    BH_Adjusted_P = format_p(as.numeric(PAdjustBH)),
     LCI = format_3dp(as.numeric(ConfLow)),
     UCI = format_3dp(as.numeric(ConfHigh))
   ) |>
@@ -101,7 +100,6 @@ ft <- flextable(table_s1) |>
     Overlap_count = "Overlap\ncount",
     Odds_Ratio = "Odds\nRatio",
     P_Value = "",
-    BH_Adjusted_P = "BH-adjusted\nP-value",
     LCI = "LCI",
     UCI = "UCI"
   ) |>
@@ -123,7 +121,6 @@ ft <- flextable(table_s1) |>
   width(j = "Overlap_count", width = 0.68) |>
   width(j = "Odds_Ratio", width = 0.62) |>
   width(j = "P_Value", width = 0.62) |>
-  width(j = "BH_Adjusted_P", width = 0.72) |>
   width(j = c("LCI", "UCI"), width = 0.56) |>
   set_table_properties(layout = "fixed")
 
@@ -134,15 +131,6 @@ ft <- compose(
   j = "P_Value",
   value = as_paragraph(as_i("P"), "-value")
 )
-
-ft <- compose(
-  ft,
-  i = 1,
-  part = "header",
-  j = "BH_Adjusted_P",
-  value = as_paragraph("BH-adjusted ", as_i("P"), "-value")
-)
-
 
 doc <- read_docx() |>
   body_set_default_section(value = portrait_section) |>

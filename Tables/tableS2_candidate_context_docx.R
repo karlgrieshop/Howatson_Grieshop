@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Build Table S2 as an editable Word document in a Table 1-style layout using
-# overlap-aware candidate-context permutation tests for the Fig. S2 panels.
+# overlap-aware candidate-context permutation tests for Fig. S3.
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -33,6 +33,7 @@ input_path <- function(...) file.path(project_root, "Data", "inputs", ...)
 output_path <- function(...) file.path(project_root, "Data", "outputs", ...)
 summary_path <- function(...) file.path(project_root, "Data", "Summary_tables", ...)
 table_path <- function(...) file.path(project_root, "Tables", ...)
+source(file.path(project_root, "Data_wrangling", "load_grieshop_candidate_ids.R"))
 
 
 suppressPackageStartupMessages({
@@ -50,7 +51,8 @@ dir.create(table_path(), recursive = TRUE, showWarnings = FALSE)
 ordered_groups <- c(
   "SSDOs",
   "Innocenti and Morrow candidates",
-  "Ruzicka et al. candidates"
+  "Ruzicka et al. candidates",
+  "Grieshop et al. (2025) candidates"
 )
 
 
@@ -155,28 +157,6 @@ load_ruzicka_candidate_ids <- function() {
     filter(!is.na(FlyBaseID), grepl("^FBgn", FlyBaseID)) |>
     pull(FlyBaseID) |>
     unique()
-}
-
-
-build_ruzicka_probability_values <- function(gene_reference) {
-  assoc <- read.delim(
-    input_path("Assoc_Data.txt"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  ) |>
-    transmute(
-      chromosome = as.character(Chromosome),
-      position = as.integer(Basepair),
-      p_value = as.numeric(Wald_P)
-    ) |>
-    filter(!is.na(p_value), p_value > 0, p_value <= 1) |>
-    mutate(Value = -log10(pmax(p_value, .Machine$double.xmin)))
-
-  map_snp_metric_to_genes(
-    snp_values = assoc[, c("chromosome", "position", "Value")],
-    gene_reference = gene_reference,
-    source_label = "Ruzicka et al. SA probability"
-  )
 }
 
 
@@ -321,26 +301,18 @@ format_p_value <- function(x) {
 }
 
 
-metric_titles <- c(
-  "Ruzicka SA probability" = "Ruzicka et al. (2019) SA probability",
-  "Ruzicka SA effect" = "Ruzicka et al. (2019) SA effect"
-)
-
-
 group_labels <- c(
   "SSDOs" = "SSDOs",
   "Innocenti and Morrow candidates" = "Innocenti and Morrow candidates",
+  "Grieshop et al. (2025) candidates" = "Grieshop et al. (2025) candidates",
   "Ruzicka et al. candidates" = "Ruzicka et al. candidates"
 )
 
 
 metric_comparisons <- list(
-  "Ruzicka SA probability" = c(
-    "SSDOs vs Innocenti and Morrow candidates",
-    "SSDOs vs Ruzicka et al. candidates"
-  ),
   "Ruzicka SA effect" = c(
     "SSDOs vs Innocenti and Morrow candidates",
+    "SSDOs vs Grieshop et al. (2025) candidates",
     "SSDOs vs Ruzicka et al. candidates"
   )
 )
@@ -355,20 +327,23 @@ ssdo_ids <- read.csv(output_path("sexspecific_disease_ids.csv"), stringsAsFactor
   unique()
 innocenti_candidate_ids <- intersect(load_innocenti_candidate_ids(gene_reference), protein_coding_gene_reference$FlyBaseID)
 ruzicka_candidate_ids <- intersect(load_ruzicka_candidate_ids(), protein_coding_gene_reference$FlyBaseID)
+grieshop_candidate_ids <- intersect(
+  load_grieshop_candidate_ids(input_path("DE.summary.tsv")),
+  protein_coding_gene_reference$FlyBaseID
+)
 
 group_ids <- list(
   "SSDOs" = ssdo_ids,
   "Innocenti and Morrow candidates" = innocenti_candidate_ids,
+  "Grieshop et al. (2025) candidates" = grieshop_candidate_ids,
   "Ruzicka et al. candidates" = ruzicka_candidate_ids
 )
 
 metric_inputs <- list(
-  "Ruzicka SA probability" = build_ruzicka_probability_values(protein_coding_gene_reference),
   "Ruzicka SA effect" = build_ruzicka_magnitude_values(protein_coding_gene_reference)
 )
 
 metric_seeds <- c(
-  "Ruzicka SA probability" = 100L,
   "Ruzicka SA effect" = 300L
 )
 
@@ -401,6 +376,7 @@ write.csv(
 
 display_comparison_order <- c(
   "SSDOs vs Innocenti and Morrow candidates",
+  "SSDOs vs Grieshop et al. (2025) candidates",
   "SSDOs vs Ruzicka et al. candidates"
 )
 
@@ -440,30 +416,15 @@ build_block_df <- function(metric_name, block_label) {
 }
 
 
-probability_df <- build_block_df(
-  metric_name = "Ruzicka SA probability",
-  block_label = "SA probability"
-)
-
 magnitude_df <- build_block_df(
   metric_name = "Ruzicka SA effect",
-  block_label = "SA magnitude"
+  block_label = "SA effect"
 )
 
 table_s2 <- bind_rows(
   data.frame(
     Comparison = "",
-    Observed_Difference = "SA probability",
-    P_Value = "",
-    BH_Adjusted_P = "",
-    Block = "block",
-    stringsAsFactors = FALSE
-  ),
-  probability_df |>
-    mutate(Block = "data"),
-  data.frame(
-    Comparison = "",
-    Observed_Difference = "SA magnitude",
+    Observed_Difference = "SA effect",
     P_Value = "",
     BH_Adjusted_P = "",
     Block = "block",

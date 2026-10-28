@@ -1,10 +1,10 @@
-"FocalGroup","Study","UniverseType","Source","UniverseSize","FocalCount","CandidateCount","OverlapCount","OddsRatio","PValue","ConfLow","ConfHigh","PAdjustBH"
-"SSDOs","Innocenti and Morrow","Study-matched universe","Affymetrix array-assayed genes",17103,560,915,41,1.41622611656631,0.0441072833795502,0.997018597079725,1.96442087520801,0.0793931100831904
-"SSDOs","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,540,488,22,1.28732091094784,0.262411933617008,0.791784464711592,1.99415119070617,0.295213425319134
-"SSDOs","Brigos-Baril et al. (2026)","Study-matched universe","Protein-coding FBgn gene universe",13986,568,210,25,3.29275786211577,1.4115470576123e-06,2.05862227146309,5.06810981905998,4.23464117283689e-06
-"Disease orthologues","Innocenti and Morrow","Study-matched universe","Affymetrix array-assayed genes",17103,4466,915,278,1.25050014250732,0.00288213598187268,1.07742391246094,1.44849162548418,0.00648480595921354
-"Disease orthologues","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,4163,488,151,1.18725416174082,0.0890348225233479,0.969951977099712,1.44797694732635,0.114473343244304
-"Disease orthologues","Brigos-Baril et al. (2026)","Study-matched universe","Protein-coding FBgn gene universe",13986,4512,210,116,2.63295377559471,5.21739949266979e-12,1.98368984779592,3.50227119085651,4.69565954340281e-11
-"Orthologues","Innocenti and Morrow","Study-matched universe","Affymetrix array-assayed genes",17103,3936,915,275,1.47024321704349,4.24626522052643e-07,1.26569504767408,1.70443211632706,1.91081934923689e-06
-"Orthologues","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,3697,488,101,0.801760483503651,0.0537652962631169,0.635472774578422,1.00397041489274,0.0806479443946753
-"Orthologues","Brigos-Baril et al. (2026)","Study-matched universe","Protein-coding FBgn gene universe",13986,4012,210,65,1.11629947315492,0.489031030862207,0.818002586666608,1.50951890268529,0.489031030862207
+"FocalGroup","Study","UniverseType","Source","UniverseSize","FocalCount","CandidateCount","OverlapCount","OddsRatio","PValue","ConfLow","ConfHigh"
+"SSDOs","Innocenti and Morrow","Study-matched universe","Affymetrix array-assayed genes",17103,560,915,41,1.41622611656631,0.0441072833795502,0.997018597079725,1.96442087520801
+"SSDOs","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,540,488,22,1.28732091094784,0.262411933617008,0.791784464711592,1.99415119070617
+"SSDOs","Brigos-Baril et al. (2026)","Study-matched universe","Protein-coding FBgn gene universe",13986,568,210,25,3.29275786211577,1.4115470576123e-06,2.05862227146309,5.06810981905998
+"Disease orthologues","Innocenti and Morrow","Study-matched universe","Affymetrix array-assayed genes",17103,4466,915,278,1.25050014250732,0.00288213598187268,1.07742391246094,1.44849162548418
+"Disease orthologues","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,4163,488,151,1.18725416174082,0.0890348225233479,0.969951977099712,1.44797694732635
+"Disease orthologues","Brigos-Baril et al. (2026)","Study-matched universe","Protein-coding FBgn gene universe",13986,4512,210,116,2.63295377559471,5.21739949266979e-12,1.98368984779592,3.50227119085651
+"Orthologues","Innocenti and Morrow","Study-matched universe","Affymetrix array-assayed genes",17103,3936,915,275,1.47024321704349,4.24626522052643e-07,1.26569504767408,1.70443211632706
+"Orthologues","Ruzicka et al.","Study-matched universe","Genes represented by SNPs in Assoc_Data.txt",15131,3697,488,101,0.801760483503651,0.0537652962631169,0.635472774578422,1.00397041489274
+"Orthologues","Brigos-Baril et al. (2026)","Study-matched universe","Protein-coding FBgn gene universe",13986,4012,210,65,1.11629947315492,0.489031030862207,0.818002586666608,1.50951890268529

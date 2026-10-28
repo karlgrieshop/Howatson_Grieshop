@@ -29,14 +29,15 @@ find_project_root <- function(start = getwd()) {
 project_root <- find_project_root()
 input_path <- function(...) file.path(project_root, "Data", "inputs", ...)
 output_path <- function(...) file.path(project_root, "Data", "outputs", ...)
+summary_path <- function(...) file.path(project_root, "Data", "Summary_tables", ...)
 sup_figure_path <- function(...) file.path(project_root, "Sup_figures", ...)
+source(file.path(project_root, "Data_wrangling", "load_grieshop_candidate_ids.R"))
 
 
 suppressPackageStartupMessages({
   library(data.table)
   library(dplyr)
   library(ggplot2)
-  library(patchwork)
 })
 
 
@@ -46,6 +47,7 @@ dir.create(sup_figure_path(), recursive = TRUE, showWarnings = FALSE)
 ordered_gene_types <- c(
   "SSDOs",
   "Innocenti and Morrow SA candidates",
+  "Grieshop et al. (2025) SA candidates",
   "Ruzicka et al. SA candidates"
 )
 original_gene_types <- c("SSDOs", "Disease orthologues", "Orthologues", "Background")
@@ -53,6 +55,7 @@ original_gene_types <- c("SSDOs", "Disease orthologues", "Orthologues", "Backgro
 gene_type_palette <- c(
   "SSDOs" = "#D55E00",
   "Innocenti and Morrow SA candidates" = "#7B3294",
+  "Grieshop et al. (2025) SA candidates" = "#333333",
   "Ruzicka et al. SA candidates" = "#E6AB02"
 )
 reference_line_palette <- c(
@@ -61,10 +64,11 @@ reference_line_palette <- c(
   "Background" = "#999999"
 )
 
-gene_type_labels <- c(
-  "SSDOs" = "SSDOs",
-  "Innocenti and Morrow SA candidates" = "Innocenti & Morrow candidates",
-  "Ruzicka et al. SA candidates" = "Ruzicka et al. candidates"
+gene_type_labels <- expression(
+  "SSDOs",
+  "Innocenti and Morrow candidates",
+  "Grieshop " * italic("et al.") * " candidates",
+  "Ruzicka " * italic("et al.") * " candidates"
 )
 
 
@@ -176,28 +180,6 @@ map_snp_metric_to_genes <- function(snp_values, gene_reference, source_label) {
       Source = source_label,
       .groups = "drop"
     )
-}
-
-
-build_ruzicka_probability_values <- function(gene_reference) {
-  assoc <- read.delim(
-    input_path("Assoc_Data.txt"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  ) |>
-    transmute(
-      chromosome = as.character(Chromosome),
-      position = as.integer(Basepair),
-      p_value = as.numeric(Wald_P)
-    ) |>
-    filter(!is.na(p_value), p_value > 0, p_value <= 1) |>
-    mutate(Value = -log10(pmax(p_value, .Machine$double.xmin)))
-
-  map_snp_metric_to_genes(
-    snp_values = assoc[, c("chromosome", "position", "Value")],
-    gene_reference = gene_reference,
-    source_label = "Ruzicka et al. from Assoc_Data.txt (max -log10 Wald_P)"
-  )
 }
 
 
@@ -375,60 +357,66 @@ ortholog_ids <- read.csv(output_path("all_ortholog_ids.csv"), stringsAsFactors =
   unique()
 innocenti_candidate_ids <- intersect(load_innocenti_candidate_ids(gene_reference), protein_coding_gene_reference$FlyBaseID)
 ruzicka_candidate_ids <- intersect(load_ruzicka_candidate_ids(), protein_coding_gene_reference$FlyBaseID)
+grieshop_ids <- load_grieshop_candidate_ids(input_path("DE.summary.tsv"))
+grieshop_group <- "Grieshop et al. (2025) SA candidates"
 
 group_ids <- list(
   "SSDOs" = ssdo_ids,
   "Innocenti and Morrow SA candidates" = innocenti_candidate_ids,
+  "Grieshop et al. (2025) SA candidates" = intersect(grieshop_ids, protein_coding_gene_reference$FlyBaseID),
   "Ruzicka et al. SA candidates" = ruzicka_candidate_ids
 )
 
-ruz_prob_values <- build_ruzicka_probability_values(protein_coding_gene_reference)
 ruz_mag_values <- build_ruzicka_magnitude_values(protein_coding_gene_reference)
 
-ruz_prob_summary <- ruz_prob_values |>
-  assign_overlay_gene_types(group_ids = group_ids) |>
-  bootstrap_group_summaries(seed = 11L)
-ruz_prob_reference <- ruz_prob_values |>
-  assign_original_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
-  bootstrap_group_summaries(group_levels = original_gene_types, seed = 21L) |>
-  filter(as.character(GeneType) %in% names(reference_line_palette)) |>
-  transmute(LineGroup = as.character(GeneType), yintercept = q50)
-
-ruz_mag_summary <- ruz_mag_values |>
-  assign_overlay_gene_types(group_ids = group_ids) |>
-  bootstrap_group_summaries(seed = 13L)
+overlay_values <- assign_overlay_gene_types(ruz_mag_values, group_ids = group_ids)
+# Keep the original groups' bootstrap draws unchanged when adding a candidate set.
+base_groups <- setdiff(ordered_gene_types, grieshop_group)
+ruz_mag_summary <- bind_rows(
+  overlay_values |>
+    filter(GeneType != grieshop_group) |>
+    mutate(GeneType = factor(GeneType, levels = base_groups)) |>
+    bootstrap_group_summaries(group_levels = base_groups, seed = 13L),
+  overlay_values |>
+    filter(GeneType == grieshop_group) |>
+    droplevels() |>
+    bootstrap_group_summaries(group_levels = grieshop_group, seed = 13L)
+) |>
+  mutate(GeneType = factor(GeneType, levels = ordered_gene_types)) |>
+  arrange(GeneType)
 ruz_mag_reference <- ruz_mag_values |>
   assign_original_gene_types(ssdo_ids = ssdo_ids, disease_ids = disease_ids, ortholog_ids = ortholog_ids) |>
   bootstrap_group_summaries(group_levels = original_gene_types, seed = 23L) |>
   filter(as.character(GeneType) %in% names(reference_line_palette)) |>
   transmute(LineGroup = as.character(GeneType), yintercept = q50)
 
-panel_a <- plot_metric_panel(
-  summary_data = ruz_prob_summary,
-  reference_lines = ruz_prob_reference,
-  y_label = "Prob. of SA polymorphism",
-  show_x_axis = TRUE,
-  show_y_title = TRUE,
-  title = NULL,
-  tag = "A"
-)
+grieshop_audit <- data.frame(FlyBaseID = grieshop_ids) |>
+  mutate(InProteinCodingUniverse = FlyBaseID %in% protein_coding_gene_reference$FlyBaseID) |>
+  left_join(ruz_mag_values |> select(FlyBaseID, Value), by = "FlyBaseID") |>
+  mutate(
+    IncludedInPlot = InProteinCodingUniverse & !is.na(Value),
+    SourceFile = "Data/inputs/DE.summary.tsv",
+    Selection = "Sig == TRUE"
+  )
+dir.create(summary_path(), recursive = TRUE, showWarnings = FALSE)
+write.csv(grieshop_audit, summary_path("FigS3_Grieshop_candidate_audit.csv"), row.names = FALSE)
+write.csv(overlay_values, summary_path("FigS3_gene_level_values.csv"), row.names = FALSE)
+write.csv(ruz_mag_summary, summary_path("FigS3_bootstrap_summaries.csv"), row.names = FALSE)
+write.csv(ruz_mag_reference, summary_path("FigS3_reference_lines.csv"), row.names = FALSE)
 
-panel_b <- plot_metric_panel(
+figure_context <- plot_metric_panel(
   summary_data = ruz_mag_summary,
   reference_lines = ruz_mag_reference,
   y_label = "SA effect",
   show_x_axis = TRUE,
   show_y_title = TRUE,
-  title = NULL,
-  tag = "B"
+  title = NULL
 )
 
-figure_context <- panel_a | panel_b
-
 ggsave(
-  filename = sup_figure_path("FigS2_context.png"),
+  filename = sup_figure_path("FigS3_sa_mag_context.png"),
   plot = figure_context,
-  width = 12,
+  width = 11,
   height = 5.5,
   dpi = 300,
   bg = "white"

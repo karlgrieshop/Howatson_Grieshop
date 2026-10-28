@@ -10,6 +10,6 @@ Data/inputs/*
 Data/unused/
 side/
 Tables/*
-!Tables/table1_sa_prob_mag_permutation_docx.R
+!Tables/table1_sa_magnitude_permutation_docx.R
 !Tables/tableS1_candidate_enrichment_docx.R
 !Tables/tableS2_candidate_context_docx.R

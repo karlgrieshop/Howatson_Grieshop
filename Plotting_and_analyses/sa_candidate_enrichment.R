@@ -306,6 +306,11 @@ panel_labels <- c(
   "Disease orthologues" = "SA genes among Disease Orthologues",
   "Orthologues" = "SA genes among Orthologues"
 )
+row_axis_labels <- c(
+  "SA genes among SSDOs" = "% among SSDOs",
+  "SA genes among Disease Orthologues" = "% among Disease orthologues",
+  "SA genes among Orthologues" = "% among Orthologues"
+)
 
 # ---- Main analysis workflow -----------------------------------------------
 
@@ -358,8 +363,7 @@ summary_table <- bind_rows(lapply(all_results, `[[`, "summary")) |>
     FocalGroup = factor(FocalGroup, levels = focal_order),
     Study = factor(Study, levels = study_order)
   ) |>
-  arrange(FocalGroup, Study) |>
-  mutate(PAdjustBH = p.adjust(PValue, method = "BH"))
+  arrange(FocalGroup, Study)
 
 plot_data <- bind_rows(lapply(all_results, `[[`, "plot_data")) |>
   mutate(
@@ -412,7 +416,7 @@ sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCand
         ),
         StudyDisplay = factor(recode(as.character(Study), !!!study_display_map), levels = study_display_order)
       ) |>
-      filter(PAdjustBH < 0.05) |>
+      filter(PValue < 0.05) |>
       mutate(x = 1.5, y = max(plot_data$ProportionCandidate) * 1.12, label = "*"),
     aes(x = x, y = y, label = label),
     inherit.aes = FALSE,
@@ -422,7 +426,7 @@ sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCand
   facet_grid(
     PanelLabel ~ StudyDisplay,
     switch = "y",
-    labeller = labeller(PanelLabel = function(x) rep("% SA genes", length(x)))
+    labeller = labeller(PanelLabel = as_labeller(row_axis_labels))
   ) +
   scale_fill_manual(values = c("SSDOs" = "#D55E00", "Disease orthologues" = "#0072B2", "Orthologues" = "#009E73", "Other genes" = "#999999")) +
   scale_y_continuous(

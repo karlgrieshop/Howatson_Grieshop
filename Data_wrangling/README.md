@@ -14,9 +14,11 @@ This directory contains the **active build scripts** that create canonical inter
    Builds the Affymetrix Drosophila Genome 2.0 probe reference used to define the Innocenti and Morrow (2010) assay universe for FigS1.
 
 4. `build_sa_resolution_inputs.R`  
-   Assembles the study-matched Fig4 / FigS6 / FigS7 feature-membership table, feature-set table, and feature-universe table. This is the most involved wrangling step in the repository.
+   Assembles the study-matched Fig4 / FigS7 feature-membership table, feature-set table, and feature-universe table. This is the most involved wrangling step in the repository.
 
 ## Brief notes on the more involved transformations
+
+`load_grieshop_candidate_ids.R` is a shared input helper sourced by FigS3 and TableS2, not a standalone build step. It validates `Data/inputs/DE.summary.tsv` and selects the 695 unique significant Grieshop et al. (2025) genes using `Sig == TRUE`.
 
 - **SSDO compilation:** the SSDO, disease-orthologue, and orthologue sets are standardized onto local FBgn-based reference tables so downstream scripts use a single canonical gene-ID space.
 - **Affymetrix universe:** the Innocenti and Morrow enrichment tests use the genes represented on the Affymetrix Drosophila Genome 2.0 array rather than the broader protein-coding background.

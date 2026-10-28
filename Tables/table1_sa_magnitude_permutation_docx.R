@@ -1,5 +1,5 @@
 # Build Table 1 as an editable Word document in a compact manuscript-ready
-# layout using the tracked SA probability / SA magnitude permutation summaries.
+# layout using the tracked SA-effect permutation summaries.
 # The BH-adjusted columns are read from the study-specific CSVs after those have
 # been recalculated within each study across the full six pairwise contrasts.
 
@@ -40,7 +40,6 @@ suppressPackageStartupMessages({
 
 
 required_files <- c(
-  "Ruzicka_et_al_SA_probability_permutation_tests.csv",
   "Ruzicka_et_al_SA_magnitude_permutation_tests.csv"
 )
 
@@ -99,17 +98,7 @@ read_perm_table <- function(filename) {
 table_1 <- bind_rows(
   data.frame(
     Comparison = "",
-    Observed_Difference = "SA probability",
-    P_Value = "",
-    BH_Adjusted_P = "",
-    Block = "block",
-    stringsAsFactors = FALSE
-  ),
-  read_perm_table("Ruzicka_et_al_SA_probability_permutation_tests.csv") |>
-    mutate(Block = "data"),
-  data.frame(
-    Comparison = "",
-    Observed_Difference = "SA magnitude",
+    Observed_Difference = "SA effect",
     P_Value = "",
     BH_Adjusted_P = "",
     Block = "block",
