@@ -78,7 +78,9 @@ publication_theme <- function(base_size = 13) {
       axis.line = element_blank(),
       plot.title = element_text(size = base_size + 3, hjust = 0.5),
       plot.tag = element_text(size = base_size + 4, face = "bold"),
-      legend.position = "none",
+      legend.position = "top",
+      legend.title = element_text(size = base_size + 2, face = "bold"),
+      legend.text = element_text(size = base_size + 1),
       panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5),
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
@@ -290,7 +292,8 @@ plot_sbge_panel <- function(summary_data, y_label, title = NULL, tag = NULL, sho
       x = if (show_x_title) "Sex Bias Category" else NULL,
       y = y_label,
       title = title,
-      tag = tag
+      tag = tag,
+      colour = "Gene Type"
     ) +
     publication_theme() +
     theme(

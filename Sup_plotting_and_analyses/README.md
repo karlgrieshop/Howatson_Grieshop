@@ -18,8 +18,8 @@ This directory contains the active scripts for the retained **supplementary figu
    - `Sup_figures/FigS5_rmf_tau.png`
    - `Sup_figures/FigS6_rlns_tajD_DoS.png`
 
-5. `figureS7_radar_context.R`
-   Builds `Sup_figures/FigS7_SSDO_candidate_overlay.png`, the study-matched single-panel overlay comparing SSDOs with Innocenti, Ruzicka, and Brigos-Baril et al. (2026) candidate sets. It exports `FigS7_SSDO_candidate_overlay_multivariate_test.csv`. Candidate sets can overlap and retain the same study-matched per-feature denominators as Fig4.
+5. `figureS7_resolution_stages.R`
+   Builds `Sup_figures/FigS7_resolution_stages.png`: rMF (A) and SA effects (B) for Penultimate (MB or TS) versus Ultimate (HMB or HTS) genes within the four standard, mutually exclusive gene categories. Uses the existing protein-coding reference, `SBGEandSSSdataForMBE.csv` (`rmf`), `Assoc_Data.txt` (maximum mapped `Wald_Stat`), and `sa_resolution_feature_membership.csv`; run the reference and SA-resolution wrangling first. A gene positive for either defining feature enters the corresponding stage once; genes positive for both stages remain in both. Missing feature flags do not count as positive. Metric-specific available-gene universes are retained rather than intersected. Dots show medians of 5,000 bootstrap means with 95% percentile intervals; grey lines show all-category arithmetic means without stage filtering. Exports `FigS7_rmf_*`, `FigS7_sa_effect_*`, and `FigS7_genome_wide_reference_means.csv` to `Data/Summary_tables/`. Each metric has four two-sided overlap-aware tests (10,000 permutations), with BH correction separately across its four tests. The former radar generator and outputs are archived in `side/archived_figS7_radar_context/`.
 
 The SBGE-stratified component PNGs are no longer kept as tracked standalone outputs.
 

@@ -19,7 +19,7 @@ This directory contains the active main-text plotting scripts together with the 
    - `Figures/Fig3_rlns_tajD_DoS.png`
 
 5. `sa_candidate_enrichment.R`
-   Runs the FigS1 / TableS1 Fisher enrichment tests for Innocenti and Morrow candidates in their array-assayed universe, Ruzicka et al. candidates in their SNP-mapped universe, and Brigos-Baril et al. (2026) candidates in the protein-coding-gene universe. Each comparison is a descriptive annotation reported with its nominal two-sided P-value, without multiple-testing adjustment. Asterisks indicate nominal P < 0.05, not family-wide significance.
+   Runs the FigS1 / TableS1 Fisher enrichment tests for Innocenti and Morrow candidates in their array-assayed universe, Ruzicka et al. candidates in their SNP-mapped universe, and Brigos-Baril et al. (2026) candidates in the protein-coding-gene universe. TableS1 retains raw two-sided P-values and adds BH-adjusted P-values across all nine tests. FigS1 asterisks indicate BH-adjusted P < 0.05 across that same nine-test family.
 
    Each bar shows the percentage of study candidates within the focal group or its complement in that column's universe, not the percentage of candidates belonging to the focal group. For example, the Innocenti and Morrow SSDO bar is 41/560 (7.3%); 560 is the number of array-assayed SSDOs, while the matched candidate set contains 915 genes. Disease orthologues exclude SSDOs, and orthologues exclude disease orthologues; "other genes" is the complement of the focal group, not just the Background category.
 

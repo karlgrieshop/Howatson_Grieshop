@@ -83,6 +83,7 @@ table_s1 <- read.csv(input_file, stringsAsFactors = FALSE) |>
     Overlap_count = as.integer(OverlapCount),
     Odds_Ratio = format_3dp(as.numeric(OddsRatio)),
     P_Value = format_p(as.numeric(PValue)),
+    P_BH = format_p(as.numeric(PAdjustedBH)),
     LCI = format_3dp(as.numeric(ConfLow)),
     UCI = format_3dp(as.numeric(ConfHigh))
   ) |>
@@ -100,6 +101,7 @@ ft <- flextable(table_s1) |>
     Overlap_count = "Overlap\ncount",
     Odds_Ratio = "Odds\nRatio",
     P_Value = "",
+    P_BH = "",
     LCI = "LCI",
     UCI = "UCI"
   ) |>
@@ -113,14 +115,15 @@ ft <- flextable(table_s1) |>
   border_outer(part = "all", border = fp_border(color = "black", width = 1)) |>
   border_inner_h(part = "all", border = fp_border(color = "black", width = 0.75)) |>
   border_inner_v(part = "all", border = fp_border(color = "black", width = 0)) |>
-  width(j = "Focal_Group", width = 1.00) |>
+  width(j = "Focal_Group", width = 0.85) |>
   width(j = "Study", width = 0.55) |>
   width(j = "Total", width = 0.50) |>
   width(j = "Focal_Count", width = 0.62) |>
-  width(j = "Candidate_Count", width = 0.68) |>
-  width(j = "Overlap_count", width = 0.68) |>
+  width(j = "Candidate_Count", width = 0.62) |>
+  width(j = "Overlap_count", width = 0.62) |>
   width(j = "Odds_Ratio", width = 0.62) |>
   width(j = "P_Value", width = 0.62) |>
+  width(j = "P_BH", width = 0.62) |>
   width(j = c("LCI", "UCI"), width = 0.56) |>
   set_table_properties(layout = "fixed")
 
@@ -130,6 +133,17 @@ ft <- compose(
   part = "header",
   j = "P_Value",
   value = as_paragraph(as_i("P"), "-value")
+)
+ft <- compose(
+  ft,
+  i = 1,
+  part = "header",
+  j = "P_BH",
+  value = as_paragraph(as_i("P"), " (BH)")
+)
+ft <- add_footer_lines(
+  ft,
+  values = "Raw two-sided Fisher P-values and BH-adjusted P-values across all nine focal-group by candidate-study tests."
 )
 
 doc <- read_docx() |>

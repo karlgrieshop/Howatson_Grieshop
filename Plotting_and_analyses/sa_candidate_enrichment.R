@@ -363,7 +363,11 @@ summary_table <- bind_rows(lapply(all_results, `[[`, "summary")) |>
     FocalGroup = factor(FocalGroup, levels = focal_order),
     Study = factor(Study, levels = study_order)
   ) |>
-  arrange(FocalGroup, Study)
+  arrange(FocalGroup, Study) |>
+  mutate(
+    PAdjustedBH = p.adjust(PValue, method = "BH"),
+    AdjustmentFamily = "All nine focal-group by candidate-study Fisher tests in Table S1"
+  )
 
 plot_data <- bind_rows(lapply(all_results, `[[`, "plot_data")) |>
   mutate(
@@ -416,7 +420,7 @@ sa_enrichment_plot <- ggplot(plot_data, aes(x = DisplayGroup, y = ProportionCand
         ),
         StudyDisplay = factor(recode(as.character(Study), !!!study_display_map), levels = study_display_order)
       ) |>
-      filter(PValue < 0.05) |>
+      filter(PAdjustedBH < 0.05) |>
       mutate(x = 1.5, y = max(plot_data$ProportionCandidate) * 1.12, label = "*"),
     aes(x = x, y = y, label = label),
     inherit.aes = FALSE,
