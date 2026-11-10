@@ -1,0 +1,8 @@
+# Historical manifests hash the original CSV/TSV bytes, including CRLF endings.
+*.csv -text whitespace=trailing-space,space-before-tab,cr-at-eol
+# Empty final TSV fields legitimately end in tabs; do not strip them.
+*.tsv -text whitespace=-blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# Provenance includes hashed source snapshots, JSON records, and matrix text.
+**/provenance/** -text
+failed_job_4935248_scripts/** -text
+logs/** -text

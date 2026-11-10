@@ -10,3 +10,10 @@ Data/inputs/*
 Data/unused/
 side/
 
+# Fly-human conservation: retain code, compact tables, and provenance in Git.
+fly_human_conservation/references/
+fly_human_conservation/alignment_*/alignments/
+fly_human_conservation/mapping_*/tables/protein_candidates.csv
+fly_human_conservation/.venv*/
+fly_human_conservation/**/__pycache__/
+

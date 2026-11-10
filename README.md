@@ -13,6 +13,7 @@ This repo includes the code to support Howatson and Grieshop (2026) Phil Trans B
 - **Supplementary figures:** `Sup_figures/FigS1_SA_Candidate_Enrichment.png`, `Sup_figures/FigS2_sa_mag.png`, `Sup_figures/FigS3_sa_mag_context.png`, `Sup_figures/FigS4_SA_Magnitude_Brigos5.png`, `Sup_figures/FigS5_rmf_tau.png`, `Sup_figures/FigS6_rlns_tajD_DoS.png`, `Sup_figures/FigS7_resolution_stages.png`
 - **Tables and data frames:** `Data/outputs/`, `Data/Summary_tables/`, and generated Word tables in `Tables/`
 - **Code:** `Data_wrangling/`, `Plotting_and_analyses/`, and `Sup_plotting_and_analyses/`
+- **Exploratory fly-human conservation:** [`fly_human_conservation/`](fly_human_conservation/README.md), with tracked gene-level conservation metrics and local-analysis handoff instructions; separate from canonical manuscript analyses.
 
 ## Repository layout
 
@@ -27,6 +28,7 @@ Sup_plotting_and_analyses/     active supplementary figure scripts
 Tables/            table-generation scripts and local Word outputs
 Figures/           final main-figure PNGs (Fig1–Fig4)
 Sup_figures/       final supplementary PNGs (FigS1–FigS7)
+fly_human_conservation/  exploratory protein conservation; code, compact results, provenance
 ```
 
 ## Input provenance

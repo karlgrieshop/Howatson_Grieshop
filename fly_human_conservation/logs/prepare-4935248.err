@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/gpfs/data/GrieshopLab/Karl/SSDOs_Howatson_Grieshop/side/fly_human_conservation/prepare_references.py", line 656, in <module>
+    main()
+  File "/gpfs/data/GrieshopLab/Karl/SSDOs_Howatson_Grieshop/side/fly_human_conservation/prepare_references.py", line 526, in main
+    hgnc, xref_counts = hgnc_mapping(refs / "human/xref.tsv.gz", requested)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/data/GrieshopLab/Karl/SSDOs_Howatson_Grieshop/side/fly_human_conservation/prepare_references.py", line 293, in hgnc_mapping
+    raise ValueError(f"Invalid gene ID in HGNC xref: {row}")
+ValueError: Invalid gene ID in HGNC xref: {'gene_stable_id': 'LRG_10', 'transcript_stable_id': '', 'protein_stable_id': '', 'xref_id': 'HGNC:9255', 'xref_label': 'PPIB', 'description': 'peptidylprolyl isomerase B', 'db_name': 'HGNC Symbol', 'info_type': 'DIRECT', 'source': '', 'ensembl_identity': '', 'xref_identity': ''}

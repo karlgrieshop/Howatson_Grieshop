@@ -1,0 +1,4 @@
+category,eligible_genes,selected_pairs,no_supplied_pair,HGNC_unmapped,HGNC_ambiguous,missing_valid_fly_protein,unique_HGNC_missing_valid_human_protein,ready_for_alignment,excluded_before_alignment,top_score_ties,one_to_one_selected,one_to_one_ready
+SSDOs,568,559,9,1,31,0,0,527,41,162,104,101
+Disease orthologues excluding SSDOs,4512,4512,0,14,303,0,0,4195,317,1185,796,750
+Orthologues excluding disease genes,4012,4012,0,3,295,0,1,3713,299,502,1552,1448

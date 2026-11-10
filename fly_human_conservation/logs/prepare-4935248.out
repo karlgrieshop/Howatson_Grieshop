@@ -1,0 +1,20 @@
+slurm/25.11.4
+python/anaconda/2024.10/3.12.7
+2026-11-10T13:12:51.535056+00:00 Canonical genes=9092, selected pairs=9083
+2026-11-10T13:12:51.537603+00:00 Retrieving https://ftp.ebi.ac.uk/pub/ensemblorganisms/GCA/000/001/405/29/ensembl/2026_04/geneset/md5sum.txt
+2026-11-10T13:13:01.312840+00:00 Retrieved and fingerprinted human/md5sum.txt
+2026-11-10T13:13:01.312898+00:00 Retrieving https://ftp.ebi.ac.uk/pub/ensemblorganisms/GCA/000/001/405/29/ensembl/2026_04/geneset/pep.fa.bgz
+2026-11-10T13:13:11.138335+00:00 Retrieved and fingerprinted human/pep.fa.bgz
+2026-11-10T13:13:11.138439+00:00 Retrieving https://ftp.ebi.ac.uk/pub/ensemblorganisms/GCA/000/001/405/29/ensembl/2026_04/geneset/genes.gtf.bgz
+2026-11-10T13:13:29.628920+00:00 Retrieved and fingerprinted human/genes.gtf.bgz
+2026-11-10T13:13:29.629002+00:00 Retrieving https://ftp.ebi.ac.uk/pub/ensemblorganisms/GCA/000/001/405/29/ensembl/2026_04/geneset/xref.tsv.gz
+2026-11-10T13:13:41.948630+00:00 Retrieved and fingerprinted human/xref.tsv.gz
+2026-11-10T13:13:41.948731+00:00 Retrieving https://ftp.ensembl.org/pub/release-115/fasta/drosophila_melanogaster/pep/CHECKSUMS
+2026-11-10T13:13:42.018375+00:00 Retrieved and fingerprinted fly/pep.CHECKSUMS
+2026-11-10T13:13:42.018424+00:00 Retrieving https://ftp.ensembl.org/pub/release-115/gtf/drosophila_melanogaster/CHECKSUMS
+2026-11-10T13:13:42.062565+00:00 Retrieved and fingerprinted fly/gtf.CHECKSUMS
+2026-11-10T13:13:42.062609+00:00 Retrieving https://ftp.ensembl.org/pub/release-115/fasta/drosophila_melanogaster/pep/Drosophila_melanogaster.BDGP6.54.pep.all.fa.gz
+2026-11-10T13:13:42.234249+00:00 Retrieved and fingerprinted fly/Drosophila_melanogaster.BDGP6.54.pep.all.fa.gz
+2026-11-10T13:13:42.234331+00:00 Retrieving https://ftp.ensembl.org/pub/release-115/gtf/drosophila_melanogaster/Drosophila_melanogaster.BDGP6.54.115.gtf.gz
+2026-11-10T13:13:42.373349+00:00 Retrieved and fingerprinted fly/Drosophila_melanogaster.BDGP6.54.115.gtf.gz
+2026-11-10T13:13:42.382164+00:00 Reading full human HGNC xref

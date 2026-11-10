@@ -1,0 +1,31 @@
+{
+  "started_utc": "2026-11-10T14:12:37.286351+00:00",
+  "slurm_job_id": "4935733",
+  "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:27:36) [GCC 11.2.0]",
+  "biopython": "1.86",
+  "numpy": "1.26.4",
+  "python_executable": "/gpfs/data/GrieshopLab/Karl/SSDOs_Howatson_Grieshop/side/fly_human_conservation/.venv_alignment_biopython186_numpy1264/bin/python",
+  "mapping_directory": "side/fly_human_conservation/mapping_4935338",
+  "method": {
+    "mode": "global",
+    "substitution_matrix": "BLOSUM62",
+    "gap_open_score": -10.0,
+    "gap_extend_score": -0.5,
+    "score_epsilon": 1e-06,
+    "gap_cost": "10 + (gap_length - 1) * 0.5, including terminal gaps",
+    "tie_rule": "first optimal traceback from pinned Biopython, fly as target",
+    "masking": "nonstandard residues to X for scoring only; originals retained",
+    "identity": "100 * exact standard-residue matches / all alignment columns",
+    "fly_coverage": "100 * residue-residue columns / full fly protein length",
+    "human_coverage": "100 * residue-residue columns / full human protein length",
+    "coverage_masking": "masked residues count as present, not as gaps"
+  },
+  "algorithm": "Gotoh global alignment algorithm",
+  "aligner_parameters": "Pairwise sequence aligner with parameters\n  substitution_matrix: <Array object at 0x148c5115c050>\n  open_internal_insertion_score: -10.000000\n  extend_internal_insertion_score: -0.500000\n  open_left_insertion_score: -10.000000\n  extend_left_insertion_score: -0.500000\n  open_right_insertion_score: -10.000000\n  extend_right_insertion_score: -0.500000\n  open_internal_deletion_score: -10.000000\n  extend_internal_deletion_score: -0.500000\n  open_left_deletion_score: -10.000000\n  extend_left_deletion_score: -0.500000\n  open_right_deletion_score: -10.000000\n  extend_right_deletion_score: -0.500000\n  mode: global\n",
+  "source_documentation": "https://biopython.org/docs/1.86/Tutorial/chapter_pairwise.html",
+  "git_commit": "ec52a101adad05399dce3759c76fd189cf9f93f4",
+  "packages": [
+    "biopython==1.86",
+    "numpy==1.26.4"
+  ]
+}
