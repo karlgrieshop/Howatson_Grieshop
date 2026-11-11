@@ -1,5 +1,6 @@
 """Global alignments and conservation metrics for fixed, previously selected pairs."""
 
+import argparse
 import csv
 import hashlib
 import json
@@ -221,12 +222,13 @@ def load_pairs(mapping):
     return sorted(pairs, key=lambda row: row["FlyBaseID"]), repmap, audit
 
 
-def validated_inputs():
+def validated_inputs(mapping=None):
+    mapping = mapping or MAPPING
     paths = [
-        MAPPING / "tables" / name
+        mapping / "tables" / name
         for name in ("selected_pairs.csv", "representative_proteins.csv", "gene_mapping_audit.csv")
     ] + [
-        MAPPING / "provenance" / name
+        mapping / "provenance" / name
         for name in ("PREPARATION_COMPLETE.json", "input_manifest.csv", "reference_manifest.tsv", "execution.json")
     ] + [
         SIDE / name for name in (
@@ -234,15 +236,27 @@ def validated_inputs():
             "test_align_proteins.py", "prepare_references.py",
         )
     ]
+    if mapping != MAPPING:
+        completion = json.loads((mapping / "provenance/PREPARATION_COMPLETE.json").read_text())
+        output_manifest = mapping / "provenance/output_manifest.csv"
+        if preparation.sha256(output_manifest) != completion.get("output_manifest_sha256"):
+            raise ValueError("Recovery mapping output manifest differs from completion record")
+        for row in preparation.read_rows(output_manifest, ["path", "bytes", "sha256"]):
+            path = (mapping / row["path"]).resolve()
+            if not path.is_relative_to(mapping.resolve()):
+                raise ValueError(f"Recovery mapping manifest path escapes output directory: {path}")
+            if path.stat().st_size != int(row["bytes"]) or preparation.sha256(path) != row["sha256"]:
+                raise ValueError(f"Recovery mapping output changed: {path}")
+        paths.extend([output_manifest, SIDE / "align_recovered.sh"])
     for row in preparation.read_rows(
-        MAPPING / "provenance/input_manifest.csv", ["path", "bytes", "sha256"]
+        mapping / "provenance/input_manifest.csv", ["path", "bytes", "sha256"]
     ):
         path = ROOT / row["path"]
         if path.stat().st_size != int(row["bytes"]) or preparation.sha256(path) != row["sha256"]:
             raise ValueError(f"Canonical/orthology input changed since preparation: {path}")
         paths.append(path)
     sources = preparation.read_rows(
-        MAPPING / "provenance/reference_manifest.tsv",
+        mapping / "provenance/reference_manifest.tsv",
         ["path", "bytes", "sha256", "verified", "provider_checksum"],
     )
     sequences = {}
@@ -285,7 +299,7 @@ def save_alignment(path, pair, fly, human, fly_aligned, human_aligned, alignment
         handle.write("\n")
 
 
-def main():
+def main(mapping=None):
     job_id = os.environ.get("SLURM_JOB_ID", "")
     if not re.fullmatch(r"[0-9]+", job_id):
         raise RuntimeError("Run biological alignments through SLURM")
@@ -293,8 +307,9 @@ def main():
     if output.exists():
         raise FileExistsError(f"Refusing to overwrite {output}")
     aligner = create_aligner()
-    manifest, fastas = validated_inputs()
-    pairs, representatives, audit = load_pairs(MAPPING)
+    mapping = mapping or MAPPING
+    manifest, fastas = validated_inputs(mapping)
+    pairs, representatives, audit = load_pairs(mapping)
     output.mkdir()
     for name in ("alignments", "tables", "provenance"):
         (output / name).mkdir()
@@ -307,7 +322,7 @@ def main():
         "started_utc": preparation.now(), "slurm_job_id": job_id,
         "python": sys.version, "biopython": Bio.__version__, "numpy": numpy.__version__,
         "python_executable": sys.executable,
-        "mapping_directory": str(MAPPING.relative_to(ROOT)), "method": METHOD,
+        "mapping_directory": str(mapping.relative_to(ROOT)), "method": METHOD,
         "algorithm": aligner.algorithm, "aligner_parameters": str(aligner),
         "source_documentation": "https://biopython.org/docs/1.86/Tutorial/chapter_pairwise.html",
         "git_commit": subprocess.run(
@@ -421,4 +436,15 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--mapping-dir", type=Path,
+        help="Repository-relative completed mapping directory (default: mapping_4935338).",
+    )
+    arguments = parser.parse_args()
+    mapping = None
+    if arguments.mapping_dir is not None:
+        mapping = (ROOT / arguments.mapping_dir).resolve()
+        if mapping.parent != SIDE.resolve() or not re.fullmatch(r"mapping_[0-9]+", mapping.name):
+            parser.error("--mapping-dir must name a job-specific mapping directory under fly_human_conservation")
+    main(mapping)

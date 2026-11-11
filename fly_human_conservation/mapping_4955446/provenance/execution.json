@@ -1,0 +1,21 @@
+{
+  "started_utc": "2026-11-11T12:49:04.878121+00:00",
+  "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:27:36) [GCC 11.2.0]",
+  "platform": "Linux-4.18.0-553.182.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "slurm_job_id": "4955446",
+  "git_commit": "ed63a8daabb888ec83e9d6a0fae3ee3775de199d",
+  "entry_points_sha256": {
+    "prepare_references.py": "c2623f86b0c87446192f81a640ceb6318e0a0c6bfca28b4699a7cb3390724d92",
+    "prepare_references.sh": "5ff1e6084ed212145697a68fad2d2c85faea65e02ff8c1557c9c7f7fc1262d66",
+    "recover_mapping.sh": "cfa61e63c97a665d7d8b01b35ec72309f3755eb844a57dd5b01ad3bd11a6419c"
+  },
+  "stage": "reference_preparation_and_mapping_only",
+  "reuse_verified_references": true,
+  "reference_manifest_source_directory": "fly_human_conservation",
+  "approved_recovery_review": {
+    "path": "fly_human_conservation/recovery_review_4955170/tables/per_gene_resolution.csv",
+    "bytes": 1323516,
+    "sha256": "29f9d66162539f99a1ceceff1e367c03cfbd032c7eb54a10e6e1fca4f31a48fb"
+  },
+  "recovery_review_sha256": "29f9d66162539f99a1ceceff1e367c03cfbd032c7eb54a10e6e1fca4f31a48fb"
+}

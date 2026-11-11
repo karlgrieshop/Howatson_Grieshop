@@ -188,6 +188,24 @@ class AlignmentTests(unittest.TestCase):
             fastas["human"].write_bytes(b"changed")
             with self.assertRaisesRegex(ValueError, "Peptide reference differs"):
                 analysis.validated_inputs()
+            fastas["human"].write_bytes(b"synthetic reference")
+            output_manifest = mapping / "provenance/output_manifest.csv"
+            selected = mapping / "tables/selected_pairs.csv"
+            preparation.write_rows(output_manifest, [{
+                "path": "tables/selected_pairs.csv", "bytes": selected.stat().st_size,
+                "sha256": preparation.sha256(selected),
+            }], ["path", "bytes", "sha256"])
+            completion = mapping / "provenance/PREPARATION_COMPLETE.json"
+            complete = json.loads(completion.read_text())
+            complete["output_manifest_sha256"] = preparation.sha256(output_manifest)
+            completion.write_text(json.dumps(complete))
+            (self.root / "align_recovered.sh").write_text("recovered wrapper")
+            with patch.object(analysis, "MAPPING", self.root / "original_mapping"):
+                manifest, _ = analysis.validated_inputs(mapping)
+                self.assertTrue(any(row["path"] == "align_recovered.sh" for row in manifest))
+                selected.write_text(selected.read_text() + "\n")
+                with self.assertRaisesRegex(ValueError, "Recovery mapping output changed"):
+                    analysis.validated_inputs(mapping)
 
     def test_main_exports_metrics_audit_and_completion(self):
         mapping = self.make_mapping()
@@ -201,14 +219,16 @@ class AlignmentTests(unittest.TestCase):
             patch.object(analysis, "MAPPING", mapping),
         ):
             with patch.dict(os.environ, {"SLURM_JOB_ID": "123"}):
-                with patch.object(analysis, "validated_inputs", return_value=([], {"fly": "fly", "human": "human"})):
-                    with patch.object(analysis, "load_pairs", return_value=(pair, reps, audit)):
+                with patch.object(analysis, "validated_inputs", return_value=([], {"fly": "fly", "human": "human"})) as validate:
+                    with patch.object(analysis, "load_pairs", return_value=(pair, reps, audit)) as load:
                         with patch.object(analysis, "load_sequences", side_effect=[
                             {"FBpp1": "WUXW"}, {"ENSP1": "WUXWAA"},
                         ]):
                             with patch.object(analysis.subprocess, "run") as process:
                                 process.return_value.stdout = "test\n"
-                                analysis.main()
+                                analysis.main(mapping)
+                validate.assert_called_once_with(mapping)
+                load.assert_called_once_with(mapping)
                 with self.assertRaises(FileExistsError):
                     analysis.main()
         output = self.root / "alignment_123"

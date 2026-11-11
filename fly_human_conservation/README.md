@@ -114,10 +114,10 @@ definitions.
 
 ## Measured universes and mapping exclusions
 
-The recovery review completed on 2026-11-11. The user approved applying 628
-evidence-supported mappings; 29 cases remain excluded. No mappings or new
-alignments have yet been applied. The fresh mapping-only SLURM job is prepared
-and awaits approval of its exact submission command. See
+The recovery review completed on 2026-11-11. Mapping job 4955446 applied 628
+evidence-supported recoveries; 29 cases remain excluded. No new alignments
+have yet run. The recovered-alignment job awaits approval of its exact
+submission command. See
 [`RECOVERY_REVIEW.md`](RECOVERY_REVIEW.md) for the per-gene evidence, residual
 exclusions, and job specification.
 

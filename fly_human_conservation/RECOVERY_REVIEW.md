@@ -3,8 +3,8 @@
 This is a review of the original 657 exclusions, not a change to canonical
 categories, original pair ranking, protein rules, alignment definitions, or
 FigS8 statistics. Original mapping/alignment directories and logs are untouched.
-The review job has completed, but no mapping changes have been applied and no
-new alignments have been run.
+The review and recovered mapping jobs have completed; no new alignments have
+been run.
 
 ## Initial per-gene review
 
@@ -17,7 +17,7 @@ This is explicitly **preflight**, not a completed full-reference adjudication.
 Only compact tracked audits and two bounded HGNC REST records were read.
 The HGNC JSONs, retrieval URLs/dates, hashes, input/output manifests, and
 `REVIEW_COMPLETE.json` are under the preflight directory's `provenance/`.
-No original exclusion is yet recovered/applied. Category counts remain:
+At preflight, no original exclusion had been recovered. Initial counts were:
 
 | Category | Canonical eligible | Originally measured | Excluded | Full-graph one-to-one eligible / measured / excluded |
 |---|---:|---:|---:|---|
@@ -205,7 +205,7 @@ unique direct HGNC xref. A valid representative protein was then confirmed
 under the original rule. This is stronger evidence than protein availability
 alone, but current HGNC identity records postdate the fixed annotation
 genebuild. The user approved applying exactly these 628 proposals on
-2026-11-11; they have not yet been applied.
+2026-11-11; successful mapping job 4955446 applied them.
 
 The 29 residual exclusions are:
 
@@ -220,13 +220,14 @@ The 29 residual exclusions are:
   locus classified non-protein-coding). Neither is substituted with a
   historical or alternative protein.
 
-Projected mapped counts after the approved recoveries are 558/568 SSDOs,
+Mapping-ready counts after the approved recoveries are 558/568 SSDOs,
 4,498/4,512 disease-only, and 4,007/4,012 orthologue-only (9,063/9,092 total).
 Among these proposals, 3, 46, and 103 respectively carry the original
 full-graph one-to-one flag; these flags have not been recomputed. The
-projections are not measured counts; no fresh alignments have run.
+mapping-ready counts are not measured conservation results; no fresh alignments
+have run.
 
-## Approved mapping job: awaiting exact-command approval
+## Mapping job
 
 The mapping-only runner is `fly_human_conservation/recover_mapping.sh`. Before
 submission it verifies the exact approved review-table hash, all 657 excluded
@@ -237,7 +238,7 @@ Only the 628 reviewed decisions marked
 retained as excluded; no pair selection, category, reference, protein, or
 alignment definition changes.
 
-Proposed command, **not yet submitted**:
+Command submitted by the user:
 
 ```bash
 sbatch fly_human_conservation/recover_mapping.sh
@@ -257,8 +258,7 @@ sbatch fly_human_conservation/recover_mapping.sh
   inspected, a separate alignment command and resource request will be
   presented for approval.
 
-The exact command still requires user approval before submission. Track compact
-tables/scripts/provenance only; do not push.
+Track compact tables/scripts/provenance only; do not push.
 
 ### Failed mapping attempt 4955385 and replacement
 
@@ -283,7 +283,7 @@ mapping audits and the failed job's fixed-reference representatives: exactly
 original handoff check pass. No references were rescanned or results generated
 on the login node for this diagnostic.
 
-Replacement command, awaiting approval:
+Replacement command submitted by the user:
 
 ```bash
 sbatch fly_human_conservation/recover_mapping.sh
@@ -293,5 +293,52 @@ Resources, inputs, assumptions, and outputs remain as specified above: 1 CPU,
 8 GB, 2 hours on `compute`/`bio`, no downloads or alignments, and a fresh
 `mapping_NEWJOBID/` plus `logs/recover-map-NEWJOBID.{out,err}`. The approved
 review snapshot and original scientific definitions do not change. The failed
-job directory will not be reused or overwritten. Full regeneration still
-requires SLURM; successful compact-input validation is not a completed rerun.
+job directory was not reused or overwritten.
+
+### Successful replacement 4955446
+
+Job 4955446 completed (exit 0, 1:25, maximum RSS 564,880 KiB). All 16
+mapping-output files matched their recorded hashes, and the alignment loader
+accepted the completed mapping. Exactly 628 previously excluded genes now
+have the approved ENSG and representative protein; every other original
+gene-mapping row is unchanged. The original selected HGNC, DIOPT score,
+category, fly protein and full-graph one-to-one flag were preserved.
+
+| Category | Canonical eligible | Mapping-ready | Excluded | One-to-one eligible / ready / excluded |
+|---|---:|---:|---:|---|
+| SSDOs | 568 | 558 | 10 | 104 / 104 / 0 |
+| Disease excluding SSDOs | 4,512 | 4,498 | 14 | 796 / 796 / 0 |
+| Orthologues excluding disease | 4,012 | 4,007 | 5 | 1,552 / 1,551 / 1 |
+
+Outputs are in `mapping_4955446/`; its `recovery_mapping_audit.csv` records
+all 657 original exclusions. The 29 residual cases and two pseudogene-locus
+decisions are described above. Bulk `protein_candidates.csv` remains ignored;
+compact mapping tables and provenance are tracked. Logs for both the failed
+and successful jobs remain available.
+
+### Proposed alignment of recovered mapping
+
+```bash
+sbatch fly_human_conservation/align_recovered.sh
+```
+
+Resources: `compute`, account `bio`, 1 CPU, 16 GB, 8 hours, existing email
+notifications. Required inputs: completed `mapping_4955446/`, its mapping
+output manifest and original review/canonical inputs, fixed human/fly peptide
+references, and the existing isolated Biopython 1.86 / NumPy 1.26.4
+environment at
+`side/fly_human_conservation/.venv_alignment_biopython186_numpy1264/`.
+No installation or downloads are performed.
+
+The job rechecks mapping fingerprints and inputs, then aligns the 9,063 ready
+pairs using the same representative proteins, global Gotoh/BLOSUM62, affine
+gap penalties, nonstandard-residue masking, and metric definitions as job
+4935733. It writes fresh `alignment_JOBID/{tables,provenance,alignments}/`
+and `logs/recovered-align-JOBID.{out,err}`, refusing existing outputs.
+Individual alignments remain ignored; compact tables and provenance will be
+tracked after verification. The 2,451 one-to-one-ready pairs retain the
+original full-graph definition; these counts are not measured until alignment
+succeeds. The 29 excluded genes remain excluded, and shared human partners
+remain a limitation of the main-set statistical analysis.
+
+This exact alignment command requires separate approval before submission.
