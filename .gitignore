@@ -16,4 +16,6 @@ fly_human_conservation/alignment_*/alignments/
 fly_human_conservation/mapping_*/tables/protein_candidates.csv
 fly_human_conservation/.venv*/
 fly_human_conservation/**/__pycache__/
+fly_human_conservation/recovery_review_*/downloads/
+fly_human_conservation/recovery_review_*/tables/candidate_proteins.csv
 

@@ -1,0 +1,55 @@
+{
+  "completed_utc": "2026-11-11T11:46:16.574527+00:00",
+  "mode": "preflight",
+  "reviewed_excluded_fly_genes": 657,
+  "decisions": {
+    "pending_evidence_review": 655,
+    "authoritative_ENSG_lead_pending_fixed_annotation": 1,
+    "retain_excluded_HGNC_nonprotein_locus": 1
+  },
+  "category_counts": [
+    {
+      "category": "SSDOs",
+      "canonical_eligible": 568,
+      "original_measured": 527,
+      "original_excluded": 41,
+      "proposed_additional_mappings_not_applied": 0,
+      "projected_mapped_if_approved": 527,
+      "remaining_unresolved_or_unsupported": 41,
+      "original_full_graph_one_to_one_eligible": 104,
+      "original_one_to_one_measured": 101,
+      "original_one_to_one_excluded": 3,
+      "proposed_one_to_one_additional": 0
+    },
+    {
+      "category": "Disease orthologues excluding SSDOs",
+      "canonical_eligible": 4512,
+      "original_measured": 4195,
+      "original_excluded": 317,
+      "proposed_additional_mappings_not_applied": 0,
+      "projected_mapped_if_approved": 4195,
+      "remaining_unresolved_or_unsupported": 317,
+      "original_full_graph_one_to_one_eligible": 796,
+      "original_one_to_one_measured": 750,
+      "original_one_to_one_excluded": 46,
+      "proposed_one_to_one_additional": 0
+    },
+    {
+      "category": "Orthologues excluding disease genes",
+      "canonical_eligible": 4012,
+      "original_measured": 3713,
+      "original_excluded": 299,
+      "proposed_additional_mappings_not_applied": 0,
+      "projected_mapped_if_approved": 3713,
+      "remaining_unresolved_or_unsupported": 299,
+      "original_full_graph_one_to_one_eligible": 1552,
+      "original_one_to_one_measured": 1448,
+      "original_one_to_one_excluded": 104,
+      "proposed_one_to_one_additional": 0
+    }
+  ],
+  "applied_mapping_changes": 0,
+  "alignments_run": 0,
+  "output_manifest_sha256": "efd453c9d75dd3f8ecea419b450d13a6ed7d009b6f7a7f9354043939408b2b52",
+  "note": "Proposed identities require review/approval; existing outputs are unchanged."
+}

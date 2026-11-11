@@ -1,0 +1,4 @@
+category,canonical_eligible,original_measured,original_excluded,proposed_additional_mappings_not_applied,projected_mapped_if_approved,remaining_unresolved_or_unsupported,original_full_graph_one_to_one_eligible,original_one_to_one_measured,original_one_to_one_excluded,proposed_one_to_one_additional
+SSDOs,568,527,41,0,527,41,104,101,3,0
+Disease orthologues excluding SSDOs,4512,4195,317,0,4195,317,796,750,46,0
+Orthologues excluding disease genes,4012,3713,299,0,3713,299,1552,1448,104,0

@@ -114,6 +114,12 @@ definitions.
 
 ## Measured universes and mapping exclusions
 
+Recovery review started on 2026-11-11. See
+[`RECOVERY_REVIEW.md`](RECOVERY_REVIEW.md) for the initial 657-gene evidence
+table, newly identified HGNC:0 placeholders/pseudogene evidence, missing raw
+SSDO sources, and the proposed review-only SLURM command awaiting approval.
+No recovery or new alignments have yet been applied.
+
 | Category | Canonical eligible | Initially aligned/measured | One-to-one measured |
 |---|---:|---:|---:|
 | SSDOs | 568 | 527 | 101 |

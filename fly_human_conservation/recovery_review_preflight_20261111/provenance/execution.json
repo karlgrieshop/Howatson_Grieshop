@@ -1,0 +1,10 @@
+{
+  "started_utc": "2026-11-11T11:46:16.404487+00:00",
+  "preflight": true,
+  "slurm_job_id": "4954941",
+  "python": "3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 15:12:24) [GCC 11.2.0]",
+  "fixed_reference_release": "human GRCh38.p14 GCA_000001405.29 Ensembl genebuild 2026-04",
+  "HGNC_source_documentation": "https://www.genenames.org/download/archive/",
+  "git_commit": "1a205d97c44a2d4eb155adb3c96ace4e9c564a6a",
+  "biological_changes_applied": false
+}
