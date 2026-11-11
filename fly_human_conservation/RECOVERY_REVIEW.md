@@ -259,3 +259,39 @@ sbatch fly_human_conservation/recover_mapping.sh
 
 The exact command still requires user approval before submission. Track compact
 tables/scripts/provenance only; do not push.
+
+### Failed mapping attempt 4955385 and replacement
+
+The user submitted the mapping command above. Job 4955385 failed (exit 1,
+elapsed 1:24, maximum RSS 565,136 KiB) during review validation, after reference
+verification and representative-protein selection. No completed mapping or
+alignment was produced. Logs `logs/recover-map-4955385.{out,err}` and the
+partial `mapping_4955385/` directory are retained unchanged.
+
+The validator incorrectly compared the review's explicit `unassigned_no_pair`
+label for the nine no-pair SSDOs to the legacy mapping audit's `False` flag.
+The first failure was FBgn0003391. This was an implementation mismatch, not
+conflicting biological evidence or a failure of any of the 628 recoveries.
+Validation now expects `unassigned_no_pair` only when there is no selected
+pair; selected-pair flags are still checked exactly, and output flags remain
+unchanged. Regression checks use genuinely absent selected pairs and reject
+incorrectly labeled no-pair review records.
+
+All 657 actual review rows were checked read-only against original compact
+mapping audits and the failed job's fixed-reference representatives: exactly
+628 proposals pass and 29 remain excluded. All 14 mapping/review tests and the
+original handoff check pass. No references were rescanned or results generated
+on the login node for this diagnostic.
+
+Replacement command, awaiting approval:
+
+```bash
+sbatch fly_human_conservation/recover_mapping.sh
+```
+
+Resources, inputs, assumptions, and outputs remain as specified above: 1 CPU,
+8 GB, 2 hours on `compute`/`bio`, no downloads or alignments, and a fresh
+`mapping_NEWJOBID/` plus `logs/recover-map-NEWJOBID.{out,err}`. The approved
+review snapshot and original scientific definitions do not change. The failed
+job directory will not be reused or overwritten. Full regeneration still
+requires SLURM; successful compact-input validation is not a completed rerun.

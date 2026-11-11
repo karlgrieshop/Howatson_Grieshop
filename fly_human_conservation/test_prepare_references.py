@@ -171,6 +171,7 @@ class PreparationTests(unittest.TestCase):
             fly = f"FBgn{index + 1}"
             category = prepare.CATEGORIES[index % len(prepare.CATEGORIES)]
             categories[fly] = category
+            no_pair = decision == "pending_evidence_review"
             has_identity = (
                 index < 628
                 or decision == "retain_excluded_HGNC_nonprotein_locus"
@@ -178,7 +179,7 @@ class PreparationTests(unittest.TestCase):
             pair = {
                 "HGNC_ID": f"HGNC:{index + 1}" if has_identity else "",
                 "DIOPT_score": "8" if has_identity else "",
-                "one_to_one": index % 2 == 0,
+                "one_to_one": False if no_pair else index % 2 == 0,
             }
             if index < 628:
                 first, second = f"ENSG{index + 1}", f"ENSG{index + 1001}"
@@ -192,7 +193,8 @@ class PreparationTests(unittest.TestCase):
                 candidates = first
             else:
                 first, protein, candidates = "", "", ""
-            selected[fly] = pair
+            if not no_pair:
+                selected[fly] = pair
             original_rows.append({
                 "FlyBaseID": fly, "category": category,
                 "HGNC_ID": pair["HGNC_ID"], "DIOPT_score": pair["DIOPT_score"],
@@ -204,7 +206,9 @@ class PreparationTests(unittest.TestCase):
                 "selected_HGNC_ID": pair["HGNC_ID"],
                 "selected_DIOPT_score": pair["DIOPT_score"],
                 "original_candidate_ENSGs": candidates,
-                "original_one_to_one": str(pair["one_to_one"]),
+                "original_one_to_one": (
+                    "unassigned_no_pair" if no_pair else str(pair["one_to_one"])
+                ),
                 "decision": decision,
                 "proposed_HGNC_ID": pair["HGNC_ID"] if has_identity else "",
                 "proposed_ENSG_ID": first if has_identity else "",
@@ -220,6 +224,26 @@ class PreparationTests(unittest.TestCase):
                 )
                 self.assertEqual(len(proposals), 628)
                 self.assertEqual(len(rows), 657)
+                self.assertTrue(all(
+                    row["FlyBaseID"] not in proposals
+                    for row in rows
+                    if row["original_one_to_one"] == "unassigned_no_pair"
+                ))
+                mislabeled = [dict(row) for row in review_rows]
+                no_pair_index = next(
+                    index for index, row in enumerate(mislabeled)
+                    if row["original_one_to_one"] == "unassigned_no_pair"
+                )
+                mislabeled[no_pair_index]["original_one_to_one"] = "False"
+                mislabeled_path = Path(tmp) / "mislabeled_review.csv"
+                prepare.write_rows(
+                    mislabeled_path, mislabeled, list(mislabeled[0]),
+                )
+                with self.assertRaisesRegex(ValueError, "conflicts with the original"):
+                    prepare.approved_recovery_rows(
+                        mislabeled_path, categories, selected, hgnc, original_rows,
+                        human_proteins,
+                    )
                 altered = [dict(row) for row in review_rows]
                 altered[0]["proposed_ENSG_ID"] = "ENSG999999"
                 bad_path = Path(tmp) / "bad_review.csv"

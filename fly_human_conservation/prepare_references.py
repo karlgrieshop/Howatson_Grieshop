@@ -600,11 +600,15 @@ def approved_recovery_rows(
         fly = row["FlyBaseID"]
         pair = selected.get(fly)
         original = original_by_fly[fly]
+        expected_one_to_one = (
+            str(original["one_to_one"]) if pair is not None
+            else "unassigned_no_pair"
+        )
         if (
             row["category"] != categories[fly]
             or row["selected_HGNC_ID"] != original["HGNC_ID"]
             or row["selected_DIOPT_score"] != str(original["DIOPT_score"])
-            or row["original_one_to_one"] != str(original["one_to_one"])
+            or row["original_one_to_one"] != expected_one_to_one
         ):
             raise ValueError(f"Recovery review conflicts with the original selected pair: {fly}")
         if row["decision"] != "propose_recovery_authoritative_identity":
