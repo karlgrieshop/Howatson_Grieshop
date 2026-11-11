@@ -1,0 +1,5 @@
+#!genebuild-last-updated 2026-04
+#!genome-build-accession GCA_000001405.29
+#!genome-build GRCh38.p14
+#!genome-date 2023-04
+#!genome-version GRCh38
