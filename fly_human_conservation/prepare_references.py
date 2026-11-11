@@ -58,6 +58,9 @@ PAIR_COLUMNS = (
     "Dmel_gene_symbol", "Human_gene_symbol",
 )
 PROTEIN_ALPHABET = set("ACDEFGHIKLMNPQRSTVWYBXZJUO")
+RECOVERY_REVIEW_SHA256 = (
+    "29f9d66162539f99a1ceceff1e367c03cfbd032c7eb54a10e6e1fca4f31a48fb"
+)
 XREF_EXCLUSION_COLUMNS = [
     "HGNC_ID", "gene_stable_id", "transcript_stable_id", "protein_stable_id",
     "xref_label", "db_name", "info_type", "source", "exclusion_reason",
@@ -513,12 +516,19 @@ def representative_proteins(path, proteins, canonical, coding, species):
     return representatives, audit
 
 
-def mapping_rows(categories, selected, hgnc, fly_proteins, human_proteins):
+def mapping_rows(
+    categories, selected, hgnc, fly_proteins, human_proteins,
+    approved_recoveries=None,
+):
     rows = []
     for fly, category in sorted(categories.items()):
         pair = selected.get(fly)
         human = pair["HGNC_ID"] if pair else ""
-        mapped = sorted(hgnc.get(human, set()))
+        original_mapped = sorted(hgnc.get(human, set()))
+        recovery = (approved_recoveries or {}).get(fly)
+        mapped = (
+            [recovery["proposed_ENSG_ID"]] if recovery else original_mapped
+        )
         human_gene = mapped[0] if len(mapped) == 1 else ""
         fly_rep = fly_proteins.get(fly)
         human_rep = human_proteins.get(human_gene)
@@ -544,16 +554,102 @@ def mapping_rows(categories, selected, hgnc, fly_proteins, human_proteins):
             "one_to_one": pair["one_to_one"] if pair else False,
             "status": ";".join(reasons) or "ready_for_alignment",
         })
+        if approved_recoveries is not None:
+            rows[-1].update({
+                "original_human_gene_candidates": ";".join(original_mapped),
+                "original_human_gene_candidate_count": len(original_mapped),
+                "recovery_decision": (
+                    recovery["decision"] if recovery else "not_proposed"
+                ),
+                "recovery_applied": bool(recovery),
+            })
     return rows
 
 
-def main(reuse_verified_references=False):
+def approved_recovery_rows(
+    path, categories, selected, hgnc, original_rows, human_proteins,
+):
+    if sha256(path) != RECOVERY_REVIEW_SHA256:
+        raise ValueError(f"Recovery review differs from the approved snapshot: {path}")
+    rows = read_rows(path, [
+        "FlyBaseID", "category", "original_reason", "selected_HGNC_ID",
+        "selected_DIOPT_score", "original_candidate_ENSGs", "original_one_to_one",
+        "decision", "proposed_HGNC_ID", "proposed_ENSG_ID",
+        "proposed_protein_ID", "residual_uncertainty",
+    ])
+    if len(rows) != 657 or len({row["FlyBaseID"] for row in rows}) != len(rows):
+        raise ValueError("Approved recovery review must contain 657 unique fly genes")
+    expected_decisions = {
+        "propose_recovery_authoritative_identity": 628,
+        "manual_identifier_history_review_required": 18,
+        "pending_evidence_review": 9,
+        "retain_excluded_HGNC_nonprotein_locus": 2,
+    }
+    if Counter(row["decision"] for row in rows) != expected_decisions:
+        raise ValueError("Recovery review decisions differ from the approved 628/29 set")
+    original_by_fly = {row["FlyBaseID"]: row for row in original_rows}
+    originally_excluded = {
+        fly for fly, row in original_by_fly.items()
+        if row["status"] != "ready_for_alignment"
+    }
+    reviewed = {row["FlyBaseID"] for row in rows}
+    if reviewed != originally_excluded:
+        raise ValueError("Recovery review does not match the original excluded-gene universe")
+    proposals = {}
+    for row in rows:
+        fly = row["FlyBaseID"]
+        pair = selected.get(fly)
+        original = original_by_fly[fly]
+        if (
+            row["category"] != categories[fly]
+            or row["selected_HGNC_ID"] != original["HGNC_ID"]
+            or row["selected_DIOPT_score"] != str(original["DIOPT_score"])
+            or row["original_one_to_one"] != str(original["one_to_one"])
+        ):
+            raise ValueError(f"Recovery review conflicts with the original selected pair: {fly}")
+        if row["decision"] != "propose_recovery_authoritative_identity":
+            if row["decision"] == "retain_excluded_HGNC_nonprotein_locus":
+                candidates = sorted(hgnc.get(row["selected_HGNC_ID"], set()))
+                if (
+                    row["proposed_HGNC_ID"] != row["selected_HGNC_ID"]
+                    or row["proposed_ENSG_ID"] not in candidates
+                ):
+                    raise ValueError(f"Non-protein exclusion evidence changed for {fly}")
+            elif any(row[key] for key in (
+                "proposed_HGNC_ID", "proposed_ENSG_ID", "proposed_protein_ID",
+            )):
+                raise ValueError(f"Unapproved proposal present for {fly}")
+            continue
+        if pair is None:
+            raise ValueError(f"Recovery proposal has no original selected pair: {fly}")
+        candidates = sorted(hgnc.get(pair["HGNC_ID"], set()))
+        if (
+            row["original_reason"] != "HGNC_ambiguous"
+            or len(candidates) < 2
+            or row["proposed_HGNC_ID"] != pair["HGNC_ID"]
+            or row["proposed_ENSG_ID"] not in candidates
+            or row["original_candidate_ENSGs"] != ";".join(candidates)
+            or not re.fullmatch(r"ENSP[0-9]+", row["proposed_protein_ID"])
+        ):
+            raise ValueError(f"Recovery proposal does not resolve its original candidates: {fly}")
+        representative = human_proteins.get(row["proposed_ENSG_ID"])
+        if not representative or representative["protein_id"] != row["proposed_protein_ID"]:
+            raise ValueError(f"Recovery representative differs from fixed-reference selection: {fly}")
+        proposals[fly] = row
+    if len(proposals) != 628:
+        raise ValueError(f"Expected 628 approved recovery proposals, found {len(proposals)}")
+    return proposals, rows
+
+
+def main(reuse_verified_references=False, recovery_review=None):
     if not os.environ.get("SLURM_JOB_ID"):
         raise RuntimeError("Reference preparation must run through SLURM")
     job_id = os.environ["SLURM_JOB_ID"]
     if not re.fullmatch(r"[A-Za-z0-9_-]+", job_id):
         raise ValueError(f"Invalid SLURM job ID: {job_id}")
     side = SIDE / f"mapping_{job_id}" if reuse_verified_references else SIDE
+    if recovery_review and not reuse_verified_references:
+        raise ValueError("Applying recovery proposals requires verified-reference reuse mode")
     if reuse_verified_references and side.exists():
         raise FileExistsError(f"Refusing to overwrite existing {side}")
     for relative in INPUTS:
@@ -574,11 +670,21 @@ def main(reuse_verified_references=False):
     for name in output_dirs:
         (side / name).mkdir()
     table_dir = side / "tables"
-    inputs = [
+    canonical_inputs = [
         {"path": relative, "bytes": (ROOT / relative).stat().st_size,
          "sha256": sha256(ROOT / relative)}
         for relative in INPUTS
     ]
+    inputs = list(canonical_inputs)
+    if recovery_review:
+        recovery_path = Path(recovery_review).resolve()
+        if not recovery_path.is_relative_to(ROOT):
+            raise ValueError("Recovery review must be within the repository")
+        inputs.append({
+            "path": str(recovery_path.relative_to(ROOT)),
+            "bytes": recovery_path.stat().st_size,
+            "sha256": sha256(recovery_path),
+        })
     write_rows(side / "provenance/input_manifest.csv", inputs, ["path", "bytes", "sha256"])
     execution = {
         "started_utc": now(), "python": sys.version, "platform": platform.platform(),
@@ -589,17 +695,26 @@ def main(reuse_verified_references=False):
         ).stdout.strip(),
         "entry_points_sha256": {
             name: sha256(SIDE / name)
-            for name in ("prepare_references.py", "prepare_references.sh")
+            for name in (
+                "prepare_references.py", "prepare_references.sh",
+                *(("recover_mapping.sh",) if recovery_review else ()),
+            )
         },
         "stage": "reference_preparation_and_mapping_only",
         "reuse_verified_references": reuse_verified_references,
         "reference_manifest_source_directory": str(SIDE.relative_to(ROOT)),
     }
+    if recovery_review:
+        execution["approved_recovery_review"] = inputs[-1]
+        execution["recovery_review_sha256"] = RECOVERY_REVIEW_SHA256
     with (side / "provenance/execution.json").open("x") as handle:
         json.dump(execution, handle, indent=2)
         handle.write("\n")
     log(f"Canonical genes={len(categories)}, selected pairs={len(selected)}")
-    refs = reuse_references(SIDE, side, inputs) if reuse_verified_references else reference_files(side)
+    refs = (
+        reuse_references(SIDE, side, canonical_inputs)
+        if reuse_verified_references else reference_files(side)
+    )
     requested = {human for fly, human in tables["all_orthologs"]}
     log("Reading full human HGNC xref")
     hgnc, xref_counts, excluded_xrefs = hgnc_mapping(refs / "human/xref.tsv.gz", requested)
@@ -648,8 +763,18 @@ def main(reuse_verified_references=False):
         [row for species in ("fly", "human") for gene, row in sorted(representatives[species].items())],
         rep_columns,
     )
-    mapped = mapping_rows(
+    original_mapped = mapping_rows(
         categories, selected, hgnc, representatives["fly"], representatives["human"]
+    )
+    approved_recoveries, recovery_rows = ({}, [])
+    if recovery_review:
+        approved_recoveries, recovery_rows = approved_recovery_rows(
+            recovery_path, categories, selected, hgnc, original_mapped,
+            representatives["human"],
+        )
+    mapped = mapping_rows(
+        categories, selected, hgnc, representatives["fly"], representatives["human"],
+        approved_recoveries if recovery_review else None,
     )
     map_columns = list(mapped[0])
     write_rows(table_dir / "gene_mapping_audit.csv", mapped, map_columns)
@@ -725,15 +850,65 @@ def main(reuse_verified_references=False):
             ),
         }
         attrition.append(row)
+    if recovery_review:
+        expected_recovery_counts = {
+            "SSDOs": (558, 104),
+            "Disease orthologues excluding SSDOs": (4498, 796),
+            "Orthologues excluding disease genes": (4007, 1551),
+        }
+        observed_recovery_counts = {
+            row["category"]: (row["ready_for_alignment"], row["one_to_one_ready"])
+            for row in attrition
+        }
+        if observed_recovery_counts != expected_recovery_counts:
+            raise ValueError(
+                "Recovered mapping counts differ from the approved projected universes: "
+                f"{observed_recovery_counts}"
+            )
     write_rows(table_dir / "category_attrition.csv", attrition, list(attrition[0]))
+    if recovery_review:
+        recovery_columns = [
+            "FlyBaseID", "category", "original_reason", "selected_HGNC_ID",
+            "selected_DIOPT_score", "original_candidate_ENSGs", "original_one_to_one",
+            "decision", "proposed_HGNC_ID", "proposed_ENSG_ID",
+            "proposed_protein_ID", "residual_uncertainty",
+        ]
+        recovery_audit = [
+            {
+                **{column: row[column] for column in recovery_columns},
+                "applied": row["decision"] == "propose_recovery_authoritative_identity",
+            }
+            for row in recovery_rows
+        ]
+        write_rows(
+            table_dir / "recovery_mapping_audit.csv", recovery_audit,
+            [*recovery_columns, "applied"],
+        )
     for item in inputs:
         if sha256(ROOT / item["path"]) != item["sha256"]:
             raise RuntimeError(f"Input changed during execution: {item['path']}")
     log("Preparation complete; no alignment, conservation metrics, or statistical tests were run")
     for row in attrition:
         log(json.dumps(row, sort_keys=True))
+    completion = {
+        "completed_utc": now(), "category_attrition": attrition,
+    }
+    if recovery_review:
+        completion["recovery_proposals_applied"] = len(approved_recoveries)
+        output_files = [
+            {"path": str(path.relative_to(side)), "bytes": path.stat().st_size,
+             "sha256": sha256(path)}
+            for path in sorted(side.rglob("*")) if path.is_file()
+        ]
+        write_rows(
+            side / "provenance/output_manifest.csv", output_files,
+            ["path", "bytes", "sha256"],
+        )
+        completion["output_manifest_sha256"] = sha256(
+            side / "provenance/output_manifest.csv"
+        )
     with (side / "provenance/PREPARATION_COMPLETE.json").open("x") as handle:
-        json.dump({"completed_utc": now(), "category_attrition": attrition}, handle, indent=2)
+        json.dump(completion, handle, indent=2)
         handle.write("\n")
 
 
@@ -743,5 +918,12 @@ if __name__ == "__main__":
         "--reuse-verified-references", action="store_true",
         help="Reverify original downloads; write fresh mapping_JOBID outputs without overwriting.",
     )
+    parser.add_argument(
+        "--apply-reviewed-recoveries", type=Path,
+        help="Apply only the pinned 628 proposals from the completed per-gene review.",
+    )
     arguments = parser.parse_args()
-    main(reuse_verified_references=arguments.reuse_verified_references)
+    main(
+        reuse_verified_references=arguments.reuse_verified_references,
+        recovery_review=arguments.apply_reviewed_recoveries,
+    )

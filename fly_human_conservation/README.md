@@ -114,11 +114,12 @@ definitions.
 
 ## Measured universes and mapping exclusions
 
-Recovery review started on 2026-11-11. See
-[`RECOVERY_REVIEW.md`](RECOVERY_REVIEW.md) for the initial 657-gene evidence
-table, newly identified HGNC:0 placeholders/pseudogene evidence, missing raw
-SSDO sources, and the proposed review-only SLURM command awaiting approval.
-No recovery or new alignments have yet been applied.
+The recovery review completed on 2026-11-11. The user approved applying 628
+evidence-supported mappings; 29 cases remain excluded. No mappings or new
+alignments have yet been applied. The fresh mapping-only SLURM job is prepared
+and awaits approval of its exact submission command. See
+[`RECOVERY_REVIEW.md`](RECOVERY_REVIEW.md) for the per-gene evidence, residual
+exclusions, and job specification.
 
 | Category | Canonical eligible | Initially aligned/measured | One-to-one measured |
 |---|---:|---:|---:|

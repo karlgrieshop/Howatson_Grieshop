@@ -204,7 +204,8 @@ corroborates coding status, current/previous approved symbol, chromosome, and
 unique direct HGNC xref. A valid representative protein was then confirmed
 under the original rule. This is stronger evidence than protein availability
 alone, but current HGNC identity records postdate the fixed annotation
-genebuild; proposals remain unapplied pending approval.
+genebuild. The user approved applying exactly these 628 proposals on
+2026-11-11; they have not yet been applied.
 
 The 29 residual exclusions are:
 
@@ -219,14 +220,42 @@ The 29 residual exclusions are:
   locus classified non-protein-coding). Neither is substituted with a
   historical or alternative protein.
 
-If all proposals are approved, projected mapped counts are 558/568 SSDOs,
+Projected mapped counts after the approved recoveries are 558/568 SSDOs,
 4,498/4,512 disease-only, and 4,007/4,012 orthologue-only (9,063/9,092 total).
 Among these proposals, 3, 46, and 103 respectively carry the original
 full-graph one-to-one flag; these flags have not been recomputed. The
 projections are not measured counts; no fresh alignments have run.
 
-Before any mapping-generation submission, review the 628 rows and exact
-supporting evidence in the tables above. Any approved generation must use a
-fresh mapping/alignment output directory, retain original selection/protein/
-alignment definitions and graph flags, and leave the nine unsupported pairs
-excluded. Track compact tables/scripts/provenance only; do not push.
+## Approved mapping job: awaiting exact-command approval
+
+The mapping-only runner is `fly_human_conservation/recover_mapping.sh`. Before
+submission it verifies the exact approved review-table hash, all 657 excluded
+genes, all 628 selected-pair/candidate/protein correspondences, unchanged
+category and original one-to-one flag, and the expected projected attrition.
+Only the 628 reviewed decisions marked
+`propose_recovery_authoritative_identity` are applied. The remaining 29 are
+retained as excluded; no pair selection, category, reference, protein, or
+alignment definition changes.
+
+Proposed command, **not yet submitted**:
+
+```bash
+sbatch fly_human_conservation/recover_mapping.sh
+```
+
+- Resources: `compute`, account `bio`, 1 CPU, 8 GB, 2 hours; email notifications
+  to the existing address.
+- Inputs: canonical/source inputs and verified reference files used by
+  `mapping_4935338`, plus the tracked approved
+  `recovery_review_4955170/tables/per_gene_resolution.csv`. No external
+  downloads.
+- Outputs: fresh `mapping_JOBID/` with updated mapping tables, per-gene
+  recovery audit, input/reference/output manifests, and completion record;
+  logs `logs/recover-map-JOBID.{out,err}`. It refuses to overwrite an existing
+  job directory.
+- This job does **not** align proteins. After mapping completes and is
+  inspected, a separate alignment command and resource request will be
+  presented for approval.
+
+The exact command still requires user approval before submission. Track compact
+tables/scripts/provenance only; do not push.

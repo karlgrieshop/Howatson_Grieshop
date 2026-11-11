@@ -112,6 +112,124 @@ class PreparationTests(unittest.TestCase):
         ])
         self.assertEqual(rows[1]["human_gene_id"], "")
 
+    def test_approved_recovery_resolves_one_candidate_without_changing_pair_flags(self):
+        categories = {
+            "FBgn1": prepare.CATEGORIES[0],
+            "FBgn2": prepare.CATEGORIES[1],
+        }
+        selected = {
+            "FBgn1": {
+                "HGNC_ID": "HGNC:1", "DIOPT_score": 8, "one_to_one": False,
+            },
+            "FBgn2": {
+                "HGNC_ID": "HGNC:2", "DIOPT_score": 9, "one_to_one": True,
+            },
+        }
+        hgnc = {"HGNC:1": {"ENSG1", "ENSG2"}, "HGNC:2": {"ENSG3"}}
+        fly_proteins = {
+            "FBgn1": {"protein_id": "FBpp1"},
+            "FBgn2": {"protein_id": "FBpp2"},
+        }
+        human_proteins = {
+            gene: {"protein_id": "ENSP" + gene[-1]}
+            for gene in ("ENSG1", "ENSG2", "ENSG3")
+        }
+        unresolved = prepare.mapping_rows(
+            categories, selected, hgnc, fly_proteins, human_proteins,
+        )
+        self.assertEqual(unresolved[0]["status"], "HGNC_ambiguous")
+        recovered = prepare.mapping_rows(
+            categories, selected, hgnc, fly_proteins, human_proteins,
+            {"FBgn1": {
+                "decision": "propose_recovery_authoritative_identity",
+                "proposed_ENSG_ID": "ENSG1",
+            }},
+        )
+        self.assertEqual(recovered[0]["status"], "ready_for_alignment")
+        self.assertEqual(recovered[0]["human_gene_id"], "ENSG1")
+        self.assertEqual(recovered[0]["human_gene_candidates"], "ENSG1")
+        self.assertEqual(recovered[0]["human_gene_candidate_count"], 1)
+        self.assertEqual(recovered[0]["original_human_gene_candidates"], "ENSG1;ENSG2")
+        self.assertEqual(recovered[0]["original_human_gene_candidate_count"], 2)
+        self.assertTrue(recovered[0]["recovery_applied"])
+        self.assertFalse(recovered[0]["one_to_one"])
+        self.assertEqual(recovered[1]["human_gene_id"], "ENSG3")
+        self.assertFalse(recovered[1]["recovery_applied"])
+        self.assertTrue(recovered[1]["one_to_one"])
+
+    def test_approved_recovery_review_must_match_original_exclusions_and_candidates(self):
+        categories, selected, hgnc, original_rows, human_proteins, review_rows = (
+            {}, {}, {}, [], {}, []
+        )
+        decisions = (
+            ["propose_recovery_authoritative_identity"] * 628
+            + ["manual_identifier_history_review_required"] * 18
+            + ["pending_evidence_review"] * 9
+            + ["retain_excluded_HGNC_nonprotein_locus"] * 2
+        )
+        for index, decision in enumerate(decisions):
+            fly = f"FBgn{index + 1}"
+            category = prepare.CATEGORIES[index % len(prepare.CATEGORIES)]
+            categories[fly] = category
+            has_identity = (
+                index < 628
+                or decision == "retain_excluded_HGNC_nonprotein_locus"
+            )
+            pair = {
+                "HGNC_ID": f"HGNC:{index + 1}" if has_identity else "",
+                "DIOPT_score": "8" if has_identity else "",
+                "one_to_one": index % 2 == 0,
+            }
+            if index < 628:
+                first, second = f"ENSG{index + 1}", f"ENSG{index + 1001}"
+                hgnc[pair["HGNC_ID"]] = {first, second}
+                protein = f"ENSP{index + 1}"
+                human_proteins[first] = {"protein_id": protein}
+                candidates = ";".join(sorted((first, second)))
+            elif has_identity:
+                first, protein = f"ENSG{index + 1}", ""
+                hgnc[pair["HGNC_ID"]] = {first}
+                candidates = first
+            else:
+                first, protein, candidates = "", "", ""
+            selected[fly] = pair
+            original_rows.append({
+                "FlyBaseID": fly, "category": category,
+                "HGNC_ID": pair["HGNC_ID"], "DIOPT_score": pair["DIOPT_score"],
+                "one_to_one": pair["one_to_one"], "status": "excluded",
+            })
+            review_rows.append({
+                "FlyBaseID": fly, "category": category,
+                "original_reason": "HGNC_ambiguous" if index < 628 else "unresolved",
+                "selected_HGNC_ID": pair["HGNC_ID"],
+                "selected_DIOPT_score": pair["DIOPT_score"],
+                "original_candidate_ENSGs": candidates,
+                "original_one_to_one": str(pair["one_to_one"]),
+                "decision": decision,
+                "proposed_HGNC_ID": pair["HGNC_ID"] if has_identity else "",
+                "proposed_ENSG_ID": first if has_identity else "",
+                "proposed_protein_ID": protein,
+                "residual_uncertainty": "",
+            })
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "review.csv"
+            prepare.write_rows(path, review_rows, list(review_rows[0]))
+            with patch.object(prepare, "sha256", return_value=prepare.RECOVERY_REVIEW_SHA256):
+                proposals, rows = prepare.approved_recovery_rows(
+                    path, categories, selected, hgnc, original_rows, human_proteins,
+                )
+                self.assertEqual(len(proposals), 628)
+                self.assertEqual(len(rows), 657)
+                altered = [dict(row) for row in review_rows]
+                altered[0]["proposed_ENSG_ID"] = "ENSG999999"
+                bad_path = Path(tmp) / "bad_review.csv"
+                prepare.write_rows(bad_path, altered, list(altered[0]))
+                with self.assertRaisesRegex(ValueError, "does not resolve"):
+                    prepare.approved_recovery_rows(
+                        bad_path, categories, selected, hgnc, original_rows,
+                        human_proteins,
+                    )
+
     def test_unexpected_xref_namespace_still_fails_explicitly(self):
         xref = self.gz(
             "bad_xref.gz",
