@@ -1,0 +1,19 @@
+"AnalysisSet","Metric","Category","N","Eligible","ExcludedBeforeAlignment","MissingPercent","MeanPercent","CI95Low","CI95High","BootstrapReplicates","Seed"
+"All mapped orthologues","identity_percent","SSDOs",527,568,41,7.21830985915493,34.9472039528475,33.6642593661806,36.2748169463824,5000,102
+"All mapped orthologues","identity_percent","Disease orthologues excluding SSDOs",4195,4512,317,7.02570921985816,35.7591090189136,35.2525242955741,36.2329117150927,5000,103
+"All mapped orthologues","identity_percent","Orthologues excluding disease genes",3713,4012,299,7.45264207377866,34.903199458057,34.3814232865126,35.4163835415797,5000,104
+"All mapped orthologues","fly_coverage_percent","SSDOs",527,568,41,7.21830985915493,83.5753107437725,82.1908064996541,84.9649725481976,5000,202
+"All mapped orthologues","fly_coverage_percent","Disease orthologues excluding SSDOs",4195,4512,317,7.02570921985816,85.6610106805261,85.2229760607686,86.1110284965494,5000,203
+"All mapped orthologues","fly_coverage_percent","Orthologues excluding disease genes",3713,4012,299,7.45264207377866,84.9744063633199,84.4783916333405,85.459702917232,5000,204
+"All mapped orthologues","human_coverage_percent","SSDOs",527,568,41,7.21830985915493,88.7847851286758,87.6597476718751,89.8535176890545,5000,302
+"All mapped orthologues","human_coverage_percent","Disease orthologues excluding SSDOs",4195,4512,317,7.02570921985816,89.1862660260365,88.7981493731452,89.5702593060704,5000,303
+"All mapped orthologues","human_coverage_percent","Orthologues excluding disease genes",3713,4012,299,7.45264207377866,88.5491620392406,88.1322319514067,88.9556632438444,5000,304
+"One-to-one sensitivity","identity_percent","SSDOs",101,NA,NA,NA,38.3954226993124,35.5354566684117,41.3359363158856,5000,102
+"One-to-one sensitivity","identity_percent","Disease orthologues excluding SSDOs",750,NA,NA,NA,37.6038549828173,36.5410954117789,38.6708796590345,5000,103
+"One-to-one sensitivity","identity_percent","Orthologues excluding disease genes",1448,NA,NA,NA,35.9124074686609,35.1461335694322,36.7096526017688,5000,104
+"One-to-one sensitivity","fly_coverage_percent","SSDOs",101,NA,NA,NA,89.1972964896606,86.695810129258,91.4612067168319,5000,202
+"One-to-one sensitivity","fly_coverage_percent","Disease orthologues excluding SSDOs",750,NA,NA,NA,90.2525956747583,89.4838735506752,90.9680114226042,5000,203
+"One-to-one sensitivity","fly_coverage_percent","Orthologues excluding disease genes",1448,NA,NA,NA,87.2105192749734,86.5014050274712,87.8648115490713,5000,204
+"One-to-one sensitivity","human_coverage_percent","SSDOs",101,NA,NA,NA,90.2289628115375,88.1609953091488,92.0907242132528,5000,302
+"One-to-one sensitivity","human_coverage_percent","Disease orthologues excluding SSDOs",750,NA,NA,NA,89.6090855465552,88.79429934413,90.3856098865365,5000,303
+"One-to-one sensitivity","human_coverage_percent","Orthologues excluding disease genes",1448,NA,NA,NA,89.2786993051369,88.6955386482111,89.8510139810728,5000,304

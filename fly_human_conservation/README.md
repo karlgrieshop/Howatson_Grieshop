@@ -6,9 +6,10 @@ the user requested moving the work from ignored `side/fly_human_conservation/`
 to this tracked directory. No sequences, metrics, categories, or exclusion rules
 were changed during that move.
 
-**Everything needed for local statistics and plotting comes through Git.
-No `scp`, ignored raw inputs, reference downloads, alignment files, or Python
-environment are required for those next steps.** The user handles push/pull.
+The current compact inputs are tracked; local statistics and plotting need no
+raw sequences, reference downloads, alignments, or Python environment. The
+requested mapping recovery requires a fresh HPC output set to be committed or
+otherwise made available locally before rerunning FigS8.
 
 From the local repository root, verify the handoff with standard Python only:
 
@@ -36,66 +37,103 @@ representative-selection rules, one-to-one status, original sequence lengths and
 hashes, alignment score, masking counts, raw numerators/denominators, and three
 percentage metrics. Preserve these fields rather than remapping/reselecting.
 
-## Local agent: next analysis only
+## Local statistics and FigS8
 
-1. Read `.github/copilot-instructions.md` and this README. Do not rerun
-   preparation/alignment or change canonical analyses.
-2. Read the main gene table directly. Compare the three mutually exclusive
-   categories in the order SSDOs; disease excluding SSDOs; orthologues excluding
-   disease. Do not add Background or impute excluded genes as zero.
-3. For each of `identity_percent`, `fly_coverage_percent`, and
-   `human_coverage_percent`, export group arithmetic means and 95% percentile
-   bootstrap intervals (5,000 resamples, seed 1). Plot the observed arithmetic
-   means with intervals, measured sample sizes, and explicit percentage axes.
-4. For each metric separately, run the three two-sided pairwise differences
-   in arithmetic means (10,000 two-sample permutations; reproducible documented
-   seeds). Use the existing repository convention
-   `(exceedances + 1) / (n_perm + 1)` and apply BH across the three contrasts
-   within that metric. Keep the two directional coverage metrics distinct.
-5. Repeat on the existing one-to-one subset as a sensitivity analysis, with
-   its own reported denominators and separately labelled per-metric BH families.
-   Export raw/adjusted P-values, group sizes, mean differences, seeds, counts,
-   method, and bootstrap/plot-data tables. Do not interpret non-significance as
-   equivalence; shared human partners also limit independence in the main set.
-6. Follow the established R style. The relevant prior art is
-   `Plotting_and_analyses/boot_permute_metrics.R`; do not source its entire
-   analysis driver, which requires unrelated ignored inputs and writes canonical
-   results. Keep new scripts, figures, and summaries inside
-   `fly_human_conservation/`, e.g. `summaries/` and `figures/`.
+Run from the repository root:
 
-Statistical tests, confidence intervals, and plots have **not** been run yet.
-The user explicitly chose to leave potentially resolvable mapping exclusions
-excluded. Do not rescue them, match on conservation, adjust original outcomes,
-or change representative proteins in this follow-up.
+```bash
+Rscript Sup_plotting_and_analyses/figureS8_fly_human_conservation.R \
+  --alignment-dir fly_human_conservation/alignment_4935733
+```
 
-## Measured universes and preliminary means
+The alignment directory is an explicit input so the analysis can be rerun
+against a fresh, uniquely named HPC result without overwriting prior outputs.
+The script reads its main and full-graph one-to-one gene tables and writes:
 
-| Category | Canonical eligible | Aligned/measured | One-to-one measured |
+- `Sup_figures/FigS8_fly_human_conservation.png`
+- `Data/Summary_tables/FigS8_category_coverage.csv`
+- `Data/Summary_tables/FigS8_group_bootstrap_summaries.csv`
+- `Data/Summary_tables/FigS8_pairwise_permutation_tests.csv`
+- `side/fly_human_conservation/one_to_one_sensitivity.png` (exploratory)
+
+For whole-alignment identity, fly-protein coverage, and human-protein coverage,
+the tables report arithmetic means and 95% percentile bootstrap intervals
+(5,000 resamples, reproducible seeds). The plots show observed arithmetic
+means, intervals, and measured sample sizes. Each metric has three two-sided
+permutation tests of mean differences (10,000 permutations), with BH correction
+across the three comparisons within that metric. The one-to-one sensitivity is
+a separate analysis set with its own three-test BH family per metric.
+
+**The currently retained alignment is the initial filtered analysis, not the
+final FigS8 dataset.** Mapping recovery is now requested for genes excluded
+before alignment. Until the refreshed mapping/alignment outputs are available,
+the figure and results below describe only the initial 8,435 measured genes
+(527 SSDOs, 4,195 disease orthologues
+excluding SSDOs, and 3,713 orthologues excluding disease genes). All three
+metrics have these same denominators. The one-to-one subset has 2,299 measured
+genes (101, 750, and 1,448, respectively). The 657 mapping exclusions among
+9,092 eligible genes were initially omitted, not imputed as zero. The requested
+mapping review may recover some; regenerate these counts and all statistics
+from the refreshed alignment before treating FigS8 as final.
+
+### Results
+
+In the main analysis, disease orthologues excluding SSDOs had mean identity
+35.76%, compared with 34.90% in orthologues excluding disease genes. This
+difference was not significant after within-metric BH adjustment
+(two-sided permutation P = 0.0217; adjusted P = 0.0651). Mean fly coverage
+was 85.66% versus 84.97% in those two groups (P = 0.0446; adjusted P = 0.0549).
+The only main-analysis contrast passing BH adjustment was lower fly coverage
+for SSDOs (83.58%) than disease orthologues excluding SSDOs (85.66%;
+difference = -2.09 percentage points, adjusted P = 0.00750). No human-coverage
+contrast passed BH adjustment.
+
+In the one-to-one sensitivity, disease orthologues excluding SSDOs had higher
+identity than orthologues excluding disease genes (37.60% versus 35.91%;
+difference = 1.69 points, adjusted P = 0.0372) and higher fly coverage
+(90.25% versus 87.21%; difference = 3.04 points, adjusted P = 0.000300).
+No other one-to-one contrast passed its within-metric BH adjustment; no
+human-coverage contrast was significant after adjustment.
+
+The main-set pairwise comparisons share 69, 14, and 41 human gene/protein
+partners, respectively. Therefore, fly genes are not fully independent in the
+main analysis, and ordinary gene-level bootstrap intervals and gene-label
+permutation P-values may be overconfident. The one-to-one sensitivity has no
+shared human partners by construction and is an important check, but its SSDO
+sample is small (n = 101). These analyses compare average conservation; they
+do not establish that conservation explains differences in other outcomes.
+Non-significance is not evidence of equivalence.
+
+These are exploratory results for the initial filtered set, and must be
+recomputed after mapping recovery before reporting FigS8 results. The selected
+representative proteins, alignment definitions, and provenance are documented
+above and in the retained mapping/alignment tables. The requested recovery
+review does not authorize sequence-similarity partner selection, conservation
+matching, adjustment of original outcomes, or changes to the fixed alignment
+definitions.
+
+## Measured universes and mapping exclusions
+
+| Category | Canonical eligible | Initially aligned/measured | One-to-one measured |
 |---|---:|---:|---:|
 | SSDOs | 568 | 527 | 101 |
 | Disease excluding SSDOs | 4,512 | 4,195 | 750 |
 | Orthologues excluding disease | 4,012 | 3,713 | 1,448 |
 
-All three metrics currently have the same measured universe: 8,435 genes
+The initial filtered alignment has the same measured universe across all three
+metrics: 8,435 genes
 (2,299 one-to-one), with no additional alignment dropout. Report metric-specific
 universes if downstream filtering changes this; do not silently force a shared
-universe. All 9,092 eligible fly genes had valid representatives.
+universe. All 8,435 retained genes had valid fly and human representatives.
 
 Pre-alignment exclusions: 629 fly genes with multiple ENSG candidates, 18 with
 unmapped HGNC IDs, nine SSDOs without supplied pairs, and one missing human
 protein. The latter is FBgn0033337 / HGNC:13605 / ENSG00000125122. Separately,
 906 LRG xref rows were audited as a different reference namespace, not counted
-as ambiguous ENSG candidates. Of the 629 ambiguous observations, 618 had only
-one candidate with a valid protein, ten had two, and one had none; all remain
-excluded by the user's decision.
-
-| Category | Mean identity (%) | Mean fly coverage (%) | Mean human coverage (%) |
-|---|---:|---:|---:|
-| SSDOs | 34.9472 | 83.5753 | 88.7848 |
-| Disease excluding SSDOs | 35.7591 | 85.6610 | 89.1863 |
-| Orthologues excluding disease | 34.9032 | 84.9744 | 88.5492 |
-
-These are descriptive arithmetic means, not significance/equivalence results.
+as ambiguous ENSG candidates. Of the 629 ambiguous observations, 618 had only one candidate with a valid
+protein, ten had two, and one had none. These exclusions are under
+reference-aware review; a candidate's protein availability alone is not
+sufficient evidence to resolve a biological mapping.
 
 ## Fixed scientific definitions
 
@@ -142,9 +180,11 @@ These are descriptive arithmetic means, not significance/equivalence results.
 Human: GRCh38.p14 / GCA_000001405.29 / Ensembl genebuild 2026-04, using
 `pep.fa.bgz`, `genes.gtf.bgz`, and `xref.tsv.gz` from
 <https://ftp.ebi.ac.uk/pub/ensemblorganisms/GCA/000/001/405/29/ensembl/2026_04/geneset/>.
-Fly: BDGP6.54 / Ensembl release 115, using the peptide and GTF files named in
-`HPC_AGENT_PROMPT.md`. Original URLs, retrieval dates, provider MD5/BSD checks,
-and SHA-256 fingerprints are retained in reference manifests.
+Fly: BDGP6.54 / Ensembl release 115, using
+`Drosophila_melanogaster.BDGP6.54.pep.all.fa.gz` and
+`Drosophila_melanogaster.BDGP6.54.115.gtf.gz`. URLs, retrieval dates, provider
+MD5/BSD checks, and SHA-256 fingerprints are retained in reference manifests
+and `prepare_references.py`.
 
 | Job | Outcome |
 |---|---|
@@ -186,10 +226,11 @@ logs. It excludes:
   `Data/inputs/all_disease_orthologs.csv`, still ignored. The tracked full-pair
   table already preserves their pair content and source membership.
 
-**No untracked file is required for the local next analysis.** Only a raw-input
-rerun or an individual sequence-alignment investigation would need transfers or
-reference retrieval. Never copy the installed virtual environment to another
-machine; recreate it from `alignment_requirements.txt` if needed.
+After the compact refreshed tables are committed/pulled, the local R analysis
+needs no untracked files. A raw-input rerun or an individual alignment
+investigation requires the HPC-only references and alignment files. Never copy
+the installed virtual environment to another machine; recreate it from
+`alignment_requirements.txt` if needed.
 
 ## HPC reruns (not part of the local handoff)
 
@@ -208,9 +249,10 @@ These are alternatives/stages, not a chain to execute now. Default preparation
 refuses existing reference/table/provenance directories. Explicit reuse mode
 checks unchanged raw input hashes and revalidates existing references, writing
 a fresh `mapping_NEWJOBID/` directory. Alignment creates
-`alignment_NEWJOBID/`; it checks all selected sequence hashes and uses the
-fixed successful `mapping_4935338/` inputs. SLURM headers retain resources,
-email notifications, and new log paths. The current alignment wrapper uses the
-original ignored HPC environment path, creating it from pinned requirements
-only if absent. Bulk references and raw orthology inputs are needed for these
-HPC reruns, not for local summaries.
+`alignment_NEWJOBID/`; it checks all selected sequence hashes. For a refreshed
+mapping, configure the alignment step to consume that specific new
+`mapping_NEWJOBID/` output rather than the historical `mapping_4935338/`
+directory. SLURM headers retain resources, email notifications, and new log
+paths. The alignment wrapper uses the original ignored HPC environment path,
+creating it from pinned requirements only if absent. Bulk references and raw
+orthology inputs are needed for these HPC reruns, not for local summaries.

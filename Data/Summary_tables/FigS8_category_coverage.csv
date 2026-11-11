@@ -1,0 +1,4 @@
+"Category","Eligible","ExcludedBeforeAlignment","Measured","MissingPercent","OneToOneEligible","OneToOneExcludedBeforeAlignment","OneToOneMissingPercent","OneToOneMeasured"
+"SSDOs",568,41,527,7.21830985915493,NA,NA,NA,101
+"Disease orthologues excluding SSDOs",4512,317,4195,7.02570921985816,NA,NA,NA,750
+"Orthologues excluding disease genes",4012,299,3713,7.45264207377866,NA,NA,NA,1448
