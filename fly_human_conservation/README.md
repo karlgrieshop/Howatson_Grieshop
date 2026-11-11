@@ -6,10 +6,8 @@ the user requested moving the work from ignored `side/fly_human_conservation/`
 to this tracked directory. No sequences, metrics, categories, or exclusion rules
 were changed during that move.
 
-The current compact inputs are tracked; local statistics and plotting need no
-raw sequences, reference downloads, alignments, or Python environment. The
-requested mapping recovery requires a fresh HPC output set to be committed or
-otherwise made available locally before rerunning FigS8.
+The recovered compact inputs are tracked; local statistics and plotting need
+no raw sequences, reference downloads, alignments, or Python environment.
 
 From the local repository root, verify the handoff with standard Python only:
 
@@ -17,19 +15,22 @@ From the local repository root, verify the handoff with standard Python only:
 python3 fly_human_conservation/check_handoff.py
 ```
 
+This checks the original handoff, not the recovered job outputs. The recovered
+job's output manifest and completion record are in `alignment_4955609/provenance/`.
+
 ## Start here: retained inputs
 
 All paths below are repository-relative and tracked:
 
 | Purpose | File |
 |---|---|
-| Main analysis: one observation per measured fly gene | `fly_human_conservation/alignment_4935733/tables/gene_conservation.csv` |
-| Full-graph one-to-one sensitivity subset | `fly_human_conservation/alignment_4935733/tables/one_to_one_conservation.csv` |
-| Eligible, excluded, aligned, and per-metric denominators | `fly_human_conservation/alignment_4935733/tables/category_counts.csv` |
-| Every canonical gene, including mapping exclusions | `fly_human_conservation/mapping_4935338/tables/gene_mapping_audit.csv` |
-| All original orthology pairs, source flags, and selection | `fly_human_conservation/mapping_4935338/tables/all_pairs.csv` |
-| Selected pairs, representatives, xref and score audits | Other CSVs in `fly_human_conservation/mapping_4935338/tables/`, except the ignored `protein_candidates.csv` |
-| Reference releases/checksums, method, completion markers, output hashes | `fly_human_conservation/{provenance,mapping_4935338/provenance,alignment_4935733/provenance}/` |
+| Main analysis: one observation per measured fly gene | `fly_human_conservation/alignment_4955609/tables/gene_conservation.csv` |
+| Full-graph one-to-one sensitivity subset | `fly_human_conservation/alignment_4955609/tables/one_to_one_conservation.csv` |
+| Eligible, excluded, aligned, and per-metric denominators | `fly_human_conservation/alignment_4955609/tables/category_counts.csv` |
+| Every canonical gene, including mapping exclusions | `fly_human_conservation/mapping_4955446/tables/gene_mapping_audit.csv` |
+| All original orthology pairs, source flags, and selection | `fly_human_conservation/mapping_4955446/tables/all_pairs.csv` |
+| Selected pairs, representatives, recovery, xref and score audits | Other CSVs in `fly_human_conservation/mapping_4955446/tables/`, except the ignored `protein_candidates.csv` |
+| Reference releases/checksums, method, completion markers, output hashes | `fly_human_conservation/{provenance,mapping_4955446/provenance,alignment_4955609/provenance}/` |
 | Canonical categories and protein-coding reference | `Data/outputs/{sexspecific_disease_ids,all_disease_ortholog_ids,all_ortholog_ids,dmel_gene_reference}.csv` |
 
 The gene table includes category, HGNC/ENSG/protein IDs, DIOPT score,
@@ -43,11 +44,12 @@ Run from the repository root:
 
 ```bash
 Rscript Sup_plotting_and_analyses/figureS8_fly_human_conservation.R \
-  --alignment-dir fly_human_conservation/alignment_4935733
+  --alignment-dir fly_human_conservation/alignment_4955609
 ```
 
-The alignment directory is an explicit input so the analysis can be rerun
-against a fresh, uniquely named HPC result without overwriting prior outputs.
+The alignment directory is an explicit input. This command **overwrites** the
+existing FigS8 figure and summary-table outputs listed below; run only when
+ready to replace the initial analysis.
 The script reads its main and full-graph one-to-one gene tables and writes:
 
 - `Sup_figures/FigS8_fly_human_conservation.png`
@@ -64,17 +66,15 @@ permutation tests of mean differences (10,000 permutations), with BH correction
 across the three comparisons within that metric. The one-to-one sensitivity is
 a separate analysis set with its own three-test BH family per metric.
 
-**The currently retained alignment is the initial filtered analysis, not the
-final FigS8 dataset.** Mapping recovery is now requested for genes excluded
-before alignment. Until the refreshed mapping/alignment outputs are available,
-the figure and results below describe only the initial 8,435 measured genes
+**The existing FigS8 figure and results below still describe the initial
+filtered analysis, not the recovered alignment.** They include 8,435 measured genes
 (527 SSDOs, 4,195 disease orthologues
 excluding SSDOs, and 3,713 orthologues excluding disease genes). All three
 metrics have these same denominators. The one-to-one subset has 2,299 measured
 genes (101, 750, and 1,448, respectively). The 657 mapping exclusions among
-9,092 eligible genes were initially omitted, not imputed as zero. The requested
-mapping review may recover some; regenerate these counts and all statistics
-from the refreshed alignment before treating FigS8 as final.
+9,092 eligible genes were initially omitted, not imputed as zero. Regenerate
+these counts and all statistics from the recovered alignment before treating
+FigS8 as final.
 
 ### Results
 
@@ -115,17 +115,23 @@ definitions.
 ## Measured universes and mapping exclusions
 
 The recovery review completed on 2026-11-11. Mapping job 4955446 applied 628
-evidence-supported recoveries; 29 cases remain excluded. No new alignments
-have yet run. The recovered-alignment job awaits approval of its exact
-submission command. See
+evidence-supported recoveries; alignment job 4955609 measured all 9,063
+mapping-ready pairs. Twenty-nine cases remain excluded. See
 [`RECOVERY_REVIEW.md`](RECOVERY_REVIEW.md) for the per-gene evidence, residual
-exclusions, and job specification.
+exclusions, and completed jobs.
 
-| Category | Canonical eligible | Initially aligned/measured | One-to-one measured |
-|---|---:|---:|---:|
-| SSDOs | 568 | 527 | 101 |
-| Disease excluding SSDOs | 4,512 | 4,195 | 750 |
-| Orthologues excluding disease | 4,012 | 3,713 | 1,448 |
+| Category | Canonical eligible | Excluded | Aligned/measured | One-to-one eligible / excluded / measured |
+|---|---:|---:|---:|---|
+| SSDOs | 568 | 10 | 558 | 104 / 0 / 104 |
+| Disease excluding SSDOs | 4,512 | 14 | 4,498 | 796 / 0 / 796 |
+| Orthologues excluding disease | 4,012 | 5 | 4,007 | 1,552 / 1 / 1,551 |
+
+These denominators are identical across the three metrics, with no additional
+alignment dropout. The alignment category-count CSV does not include the two
+one-to-one eligibility/exclusion columns; the counts above come from the
+recovered mapping audit. The existing R script consequently reports those
+one-to-one denominators as `NA` unless the local analysis explicitly supplies
+them; do not infer them from the measured subset.
 
 The initial filtered alignment has the same measured universe across all three
 metrics: 8,435 genes
@@ -198,13 +204,17 @@ and `prepare_references.py`.
 | 4935248 preparation | Failed on an LRG namespace assumption, after all five reference files passed checksums; original scripts/logs retained |
 | 4935338 preparation recovery | Completed, exit 0, 77 seconds; reused/reverified references; fresh mapping outputs |
 | 4935733 global alignment | Completed, exit 0, 3m57s, about 1.36 GiB peak RSS; all 8,435 pairs aligned |
+| 4955170 recovery review | Completed, exit 0; identified 628 supported proposals and 29 remaining exclusions |
+| 4955385 recovery mapping | Failed on no-pair flag validation; partial outputs and logs retained |
+| 4955446 recovery mapping | Completed, exit 0; applied 628 approved mappings |
+| 4955609 recovered alignment | Completed, exit 0, 3m48s, about 1.36 GiB peak RSS; all 9,063 pairs aligned |
 
 Historical CSVs, JSONs, logs, completion markers, and manifests were moved
 **without rewriting bytes**. They intentionally record the original
 `side/fly_human_conservation/` paths. Resolve that prefix to
 `fly_human_conservation/` for the relocated files; `Data/` paths did not change.
-Relative alignment paths inside the gene table are relative to
-`alignment_4935733/`, and point to ignored HPC-only files.
+Relative alignment paths inside each gene table are relative to that job's
+alignment directory and point to ignored HPC-only files.
 The directory's `.gitattributes` preserves original CSV/TSV line endings,
 empty fields, and archived provenance bytes during checkout.
 

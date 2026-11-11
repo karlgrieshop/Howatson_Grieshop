@@ -1,0 +1,12 @@
+test_exact_identity_and_terminal_penalties (test_align_proteins.AlignmentTests.test_exact_identity_and_terminal_penalties) ... ok
+test_input_provenance_rejects_changed_inputs_or_references (test_align_proteins.AlignmentTests.test_input_provenance_rejects_changed_inputs_or_references) ... ok
+test_internal_indel_and_masked_identity (test_align_proteins.AlignmentTests.test_internal_indel_and_masked_identity) ... ok
+test_invalid_sequences_and_alignment_rows_fail (test_align_proteins.AlignmentTests.test_invalid_sequences_and_alignment_rows_fail) ... ok
+test_main_exports_metrics_audit_and_completion (test_align_proteins.AlignmentTests.test_main_exports_metrics_audit_and_completion) ... ok
+test_mapping_universe_and_disagreement_detection (test_align_proteins.AlignmentTests.test_mapping_universe_and_disagreement_detection) ... ok
+test_verified_fasta_reload_and_tamper_detection (test_align_proteins.AlignmentTests.test_verified_fasta_reload_and_tamper_detection) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 3.300s
+
+OK

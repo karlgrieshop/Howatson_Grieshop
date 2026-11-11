@@ -1,0 +1,4 @@
+category,eligible_genes,excluded_before_alignment,aligned_pairs,identity_measured,fly_coverage_measured,human_coverage_measured,pairs_with_masked_residues,one_to_one_measured
+SSDOs,568,10,558,558,558,558,33,104
+Disease orthologues excluding SSDOs,4512,14,4498,4498,4498,4498,158,796
+Orthologues excluding disease genes,4012,5,4007,4007,4007,4007,117,1551

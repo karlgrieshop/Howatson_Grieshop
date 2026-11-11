@@ -3,8 +3,7 @@
 This is a review of the original 657 exclusions, not a change to canonical
 categories, original pair ranking, protein rules, alignment definitions, or
 FigS8 statistics. Original mapping/alignment directories and logs are untouched.
-The review and recovered mapping jobs have completed; no new alignments have
-been run.
+The review, recovered mapping, and recovered alignment jobs have completed.
 
 ## Initial per-gene review
 
@@ -25,9 +24,9 @@ At preflight, no original exclusion had been recovered. Initial counts were:
 | Disease excluding SSDOs | 4,512 | 4,195 | 317 | 796 / 750 / 46 |
 | Orthologues excluding disease | 4,012 | 3,713 | 299 | 1,552 / 1,448 / 104 |
 
-`tables/category_attrition_review.csv` separates original measured counts,
-proposed additions, projected counts if approved, and residual exclusions.
-Proposed counts are not measured counts; no fresh alignments have run.
+The preflight `tables/category_attrition_review.csv` separates original
+measured counts, proposed additions, projected counts, and residual exclusions.
+Later mapping and alignment results are documented below.
 
 ## Findings and recovery criteria
 
@@ -224,8 +223,8 @@ Mapping-ready counts after the approved recoveries are 558/568 SSDOs,
 4,498/4,512 disease-only, and 4,007/4,012 orthologue-only (9,063/9,092 total).
 Among these proposals, 3, 46, and 103 respectively carry the original
 full-graph one-to-one flag; these flags have not been recomputed. The
-mapping-ready counts are not measured conservation results; no fresh alignments
-have run.
+mapping-ready counts are also the measured conservation counts in successful
+alignment job 4955609.
 
 ## Mapping job
 
@@ -254,9 +253,8 @@ sbatch fly_human_conservation/recover_mapping.sh
   recovery audit, input/reference/output manifests, and completion record;
   logs `logs/recover-map-JOBID.{out,err}`. It refuses to overwrite an existing
   job directory.
-- This job does **not** align proteins. After mapping completes and is
-  inspected, a separate alignment command and resource request will be
-  presented for approval.
+- This job does **not** align proteins. The separate alignment job is
+  documented below.
 
 Track compact tables/scripts/provenance only; do not push.
 
@@ -316,7 +314,7 @@ decisions are described above. Bulk `protein_candidates.csv` remains ignored;
 compact mapping tables and provenance are tracked. Logs for both the failed
 and successful jobs remain available.
 
-### Proposed alignment of recovered mapping
+### Recovered alignment job 4955609
 
 ```bash
 sbatch fly_human_conservation/align_recovered.sh
@@ -335,10 +333,15 @@ pairs using the same representative proteins, global Gotoh/BLOSUM62, affine
 gap penalties, nonstandard-residue masking, and metric definitions as job
 4935733. It writes fresh `alignment_JOBID/{tables,provenance,alignments}/`
 and `logs/recovered-align-JOBID.{out,err}`, refusing existing outputs.
-Individual alignments remain ignored; compact tables and provenance will be
-tracked after verification. The 2,451 one-to-one-ready pairs retain the
-original full-graph definition; these counts are not measured until alignment
-succeeds. The 29 excluded genes remain excluded, and shared human partners
-remain a limitation of the main-set statistical analysis.
+Individual alignments remain ignored; compact tables and provenance are tracked.
+The 2,451 measured one-to-one pairs retain the original full-graph definition.
+The 29 excluded genes remain excluded, and shared human partners remain a
+limitation of the main-set statistical analysis.
 
-This exact alignment command requires separate approval before submission.
+The user submitted the command. Job 4955609 completed (exit 0, 3:48, peak
+RSS 1,424,876 KiB), aligning all 9,063 pairs. Verified the compact output
+hashes and completion-manifest hash, all mapping-to-alignment IDs and metric
+denominators, exact one-to-one membership, and unchanged original 8,435
+alignment rows. The output manifest lists all 9,063 individual alignments;
+their individual files were not rehashed during this follow-up. Outputs are
+under `alignment_4955609/`; no statistical analyses or figures were rerun.
