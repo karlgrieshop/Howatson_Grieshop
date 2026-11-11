@@ -1,0 +1,56 @@
+{
+  "completed_utc": "2026-11-11T11:57:19.747704+00:00",
+  "mode": "full_reference_review",
+  "reviewed_excluded_fly_genes": 657,
+  "decisions": {
+    "propose_recovery_authoritative_identity": 628,
+    "manual_identifier_history_review_required": 18,
+    "pending_evidence_review": 9,
+    "retain_excluded_HGNC_nonprotein_locus": 2
+  },
+  "category_counts": [
+    {
+      "category": "SSDOs",
+      "canonical_eligible": 568,
+      "original_measured": 527,
+      "original_excluded": 41,
+      "proposed_additional_mappings_not_applied": 31,
+      "projected_mapped_if_approved": 558,
+      "remaining_unresolved_or_unsupported": 10,
+      "original_full_graph_one_to_one_eligible": 104,
+      "original_one_to_one_measured": 101,
+      "original_one_to_one_excluded": 3,
+      "proposed_one_to_one_additional": 3
+    },
+    {
+      "category": "Disease orthologues excluding SSDOs",
+      "canonical_eligible": 4512,
+      "original_measured": 4195,
+      "original_excluded": 317,
+      "proposed_additional_mappings_not_applied": 303,
+      "projected_mapped_if_approved": 4498,
+      "remaining_unresolved_or_unsupported": 14,
+      "original_full_graph_one_to_one_eligible": 796,
+      "original_one_to_one_measured": 750,
+      "original_one_to_one_excluded": 46,
+      "proposed_one_to_one_additional": 46
+    },
+    {
+      "category": "Orthologues excluding disease genes",
+      "canonical_eligible": 4012,
+      "original_measured": 3713,
+      "original_excluded": 299,
+      "proposed_additional_mappings_not_applied": 294,
+      "projected_mapped_if_approved": 4007,
+      "remaining_unresolved_or_unsupported": 5,
+      "original_full_graph_one_to_one_eligible": 1552,
+      "original_one_to_one_measured": 1448,
+      "original_one_to_one_excluded": 104,
+      "proposed_one_to_one_additional": 103
+    }
+  ],
+  "applied_mapping_changes": 0,
+  "alignments_run": 0,
+  "output_manifest_sha256": "4e974b160ce61b205a1f56f36f8e523b0a031ebefb86604e1ae4b18dd523cd08",
+  "note": "Proposed identities require review/approval; existing outputs are unchanged."
+}

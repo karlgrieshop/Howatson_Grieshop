@@ -3,7 +3,8 @@
 This is a review of the original 657 exclusions, not a change to canonical
 categories, original pair ranking, protein rules, alignment definitions, or
 FigS8 statistics. Original mapping/alignment directories and logs are untouched.
-No recovery job has been submitted.
+The review job has completed, but no mapping changes have been applied and no
+new alignments have been run.
 
 ## Initial per-gene review
 
@@ -129,7 +130,7 @@ review and approval. The review leaves these unpaired, with one-to-one status
 explicitly unassigned rather than treating the audit's False as proof of
 many-to-many orthology.
 
-## Proposed review-only SLURM job: awaiting approval
+## Completed review-only SLURM job: 4955170
 
 ```bash
 sbatch fly_human_conservation/review_mapping_recovery.sh
@@ -177,9 +178,55 @@ partial files/logs are retained. The successful baseline directories, local
 FigS8 summaries, and all old logs remain unchanged. No mapping is applied and
 no alignments or statistical analyses run in this review job.
 
-After review, report supported recoveries and residual exclusions, and obtain
-approval for a separate fresh `mapping_NEWJOBID/` and `alignment_NEWJOBID/`
-generation using unchanged selection/protein/alignment definitions. Preserve
-original flags; nine genuinely added pairs need an approved graph-sensitivity
-policy rather than silently redefining the existing one-to-one universe.
-Track compact tables/scripts/provenance only; do not push.
+Job `4955170` (`fly_human_review`) completed with exit code 0 in 1:23, using
+230,304 KiB maximum RSS. Its output manifest verifies all 11 listed files.
+The fixed human GRCh38.p14/Ensembl 2026-04 and fly Ensembl 115 reference
+fingerprints were revalidated; the current HGNC complete-set TSV was recorded
+as a separate, newer identity snapshot. The job did not apply mappings or run
+alignments.
+
+### Results
+
+The per-gene results are in
+`recovery_review_4955170/tables/per_gene_resolution.csv` (657 unique genes).
+The supporting compact audits are `candidate_gene_evidence.csv`,
+`candidate_reference_xrefs.csv`, and `authoritative_HGNC_records.csv`; all are
+alongside the table under `tables/`. Hashes, inputs, source snapshot, reference
+checks, execution, and completion record are under `provenance/`.
+The 17 MB downloaded HGNC snapshot and per-protein audit remain ignored bulk
+artifacts; they are hashed in the output manifest.
+
+The review proposes 628 mappings: 31 SSDOs, 303 disease-only orthologues, and
+294 orthologue-only genes. Each proposal is grounded in the selected,
+unchanged HGNC partner's Approved protein-coding record and unique ENSG
+assignment; that ENSG is an original candidate, and the fixed annotation
+corroborates coding status, current/previous approved symbol, chromosome, and
+unique direct HGNC xref. A valid representative protein was then confirmed
+under the original rule. This is stronger evidence than protein availability
+alone, but current HGNC identity records postdate the fixed annotation
+genebuild; proposals remain unapplied pending approval.
+
+The 29 residual exclusions are:
+
+- 18 `HGNC:0` placeholder cases: the current snapshot did not yield an exact,
+  unique approved-symbol assignment passing the reference checks. The
+  placeholder cannot establish partner identity; retain these as unresolved.
+- Nine SSDOs without supplied pairs: original source files are absent, and the
+  retained CTRC/F12 symbol leads do not preserve partner ranking or DIOPT
+  scores. No pairs are invented.
+- Two non-protein-coding loci: FBgn0033337 → HGNC:13605 / ENSG00000125122
+  (FBXL9P pseudogene), and FBgn0036997 → HGNC:15547 / ENSG00000154316 (TDH
+  locus classified non-protein-coding). Neither is substituted with a
+  historical or alternative protein.
+
+If all proposals are approved, projected mapped counts are 558/568 SSDOs,
+4,498/4,512 disease-only, and 4,007/4,012 orthologue-only (9,063/9,092 total).
+Among these proposals, 3, 46, and 103 respectively carry the original
+full-graph one-to-one flag; these flags have not been recomputed. The
+projections are not measured counts; no fresh alignments have run.
+
+Before any mapping-generation submission, review the 628 rows and exact
+supporting evidence in the tables above. Any approved generation must use a
+fresh mapping/alignment output directory, retain original selection/protein/
+alignment definitions and graph flags, and leave the nine unsupported pairs
+excluded. Track compact tables/scripts/provenance only; do not push.
