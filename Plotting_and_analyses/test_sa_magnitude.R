@@ -22,8 +22,8 @@ scripts <- c(
   "Sup_plotting_and_analyses/figureS2_sa_mag.R",
   "Sup_plotting_and_analyses/figureS3_context.R",
   "Tables/tableS2_candidate_context_docx.R",
-  "Sup_plotting_and_analyses/figureS7_resolution_stages.R",
-  "Sup_plotting_and_analyses/figureS9_conservation_adjusted_sa.R"
+  "Sup_plotting_and_analyses/figureS9_resolution_stages.R",
+  "Sup_plotting_and_analyses/figureS8_conservation_adjusted_sa.R"
 )
 
 for (script in scripts) {

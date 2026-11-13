@@ -2,7 +2,7 @@
 
 This is a review of the original 657 exclusions, not a change to canonical
 categories, original pair ranking, protein rules, alignment definitions, or
-FigS8 statistics. Original mapping/alignment directories and logs are untouched.
+then-FigS8 statistics (now FigS7). Original mapping/alignment directories and logs are untouched.
 The review, recovered mapping, and recovered alignment jobs have completed.
 
 **Historical record:** commands and resource descriptions below document the
@@ -207,7 +207,7 @@ It refuses an existing destination, and writes:
 
 Network, schema, checksum, annotation, and input-change errors stop explicitly;
 partial files/logs are retained. The successful baseline directories, local
-FigS8 summaries, and all old logs remain unchanged. No mapping is applied and
+then-FigS8 summaries (now FigS7), and all old logs remain unchanged. No mapping is applied and
 no alignments or statistical analyses run in this review job.
 
 Job `4955170` (`fly_human_review`) completed with exit code 0 in 1:23, using

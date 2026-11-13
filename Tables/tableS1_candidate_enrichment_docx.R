@@ -141,11 +141,6 @@ ft <- compose(
   j = "P_BH",
   value = as_paragraph(as_i("P"), " (BH)")
 )
-ft <- add_footer_lines(
-  ft,
-  values = "Raw two-sided Fisher P-values and BH-adjusted P-values across all nine focal-group by candidate-study tests."
-)
-
 doc <- read_docx() |>
   body_set_default_section(value = portrait_section) |>
   body_add_flextable(ft) |>

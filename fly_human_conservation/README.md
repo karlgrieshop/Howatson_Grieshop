@@ -2,7 +2,7 @@
 
 The current workflow runs locally with Bash and Python, without modules or a
 scheduler. It downloads fixed references, maps the existing human partners,
-aligns one protein pair per fly gene, and supplies FigS8/FigS9. Run commands
+aligns one protein pair per fly gene, and supplies FigS7/FigS8. Run commands
 from the repository root. Reference preparation and alignment take a few
 minutes after downloads; progress is printed to the terminal. Old mapping,
 alignment, and job records are retained unchanged as provenance.
@@ -37,8 +37,8 @@ from another machine.
 The sequence reconstruction needs the canonical `Data/outputs/` tables plus
 the original ignored `Data/inputs/all_orthologs.csv` and
 `Data/inputs/all_disease_orthologs.csv`. Downloads require public internet
-access. FigS8 can instead be rebuilt directly from retained compact tables,
-without those raw inputs, references, or Python packages. FigS9 additionally
+access. FigS7 can instead be rebuilt directly from retained compact tables,
+without those raw inputs, references, or Python packages. FigS8 additionally
 requires `Data/inputs/Assoc_Data.txt` and the existing R packages listed in its
 script.
 
@@ -81,27 +81,27 @@ representative-selection rules, one-to-one status, original sequence lengths and
 hashes, alignment score, masking counts, raw numerators/denominators, and three
 percentage metrics. Preserve these fields rather than remapping/reselecting.
 Full-graph one-to-one flags and the workflow's raw subset CSV remain as orthology
-provenance only; neither FigS8 nor FigS9 performs one-to-one filtered analyses.
+provenance only; neither FigS7 nor FigS8 performs one-to-one filtered analyses.
 
-## Local statistics and FigS8
+## Local statistics and FigS7
 
 Run from the repository root:
 
 ```bash
-Rscript Sup_plotting_and_analyses/figureS8_fly_human_conservation.R \
+Rscript Sup_plotting_and_analyses/figureS7_fly_human_conservation.R \
   --alignment-dir fly_human_conservation/alignment_local_20261112_local \
   --mapping-dir fly_human_conservation/mapping_local_20261112_local
 ```
 
 Both directories are explicit inputs. This command **overwrites** the existing
-FigS8 figure and summary-table outputs listed below. The script reads the main
+FigS7 figure and summary-table outputs listed below. The script reads the main
 gene table, checks category counts against the mapping attrition, and writes:
 
-- `Sup_figures/FigS8_fly_human_conservation.png`
-- `Data/Summary_tables/FigS8_category_coverage.csv`
-- `Data/Summary_tables/FigS8_group_bootstrap_summaries.csv`
-- `Data/Summary_tables/FigS8_pairwise_permutation_tests.csv`
-- `Data/Summary_tables/FigS8_input_manifest.csv`
+- `Sup_figures/FigS7_fly_human_conservation.png`
+- `Data/Summary_tables/FigS7_category_coverage.csv`
+- `Data/Summary_tables/FigS7_group_bootstrap_summaries.csv`
+- `Data/Summary_tables/FigS7_pairwise_permutation_tests.csv`
+- `Data/Summary_tables/FigS7_input_manifest.csv`
 
 For whole-alignment identity, fly-protein coverage, and human-protein coverage,
 the tables report arithmetic means and 95% percentile bootstrap intervals
@@ -110,7 +110,7 @@ means, intervals, and measured sample sizes. Each metric has three two-sided
 permutation tests of mean differences (10,000 permutations), with BH correction
 across the three comparisons within that metric.
 
-The updated FigS8 now uses 9,063 measured genes (558 SSDOs, 4,498 disease
+The updated FigS7 now uses 9,063 measured genes (558 SSDOs, 4,498 disease
 orthologues excluding SSDOs, and 4,007 orthologues excluding disease genes).
 The original 657 mapping exclusions were reviewed and 628
 recovered; the remaining 29 are listed in `RECOVERY_REVIEW.md`.
@@ -129,22 +129,22 @@ passed BH adjustment.
 
 The main-set pairwise comparisons share 73, 15, and 45 human gene/protein
 partners, respectively. This non-independence may make ordinary gene-level
-bootstrap intervals and permutation P-values overconfident. FigS9 accounts for
+bootstrap intervals and permutation P-values overconfident. FigS8 accounts for
 shared human partners directly through clustered inference. The results show
 that measured sequence conservation differs across some groups; they do not
 establish that conservation explains differences in other biological
 outcomes. Non-significance is not evidence of equivalence.
 
-## FigS9: conservation-adjusted SA comparison
+## FigS8: conservation-adjusted SA comparison
 
 From the repository root, using the completed local alignment directory:
 
 ```bash
-Rscript Sup_plotting_and_analyses/figureS9_conservation_adjusted_sa.R \
+Rscript Sup_plotting_and_analyses/figureS8_conservation_adjusted_sa.R \
   --alignment-dir fly_human_conservation/alignment_<run-id>
 ```
 
-FigS9 uses only genes with both a finite per-gene `max(abs(Wald_Stat))` from the
+FigS8 uses only genes with both a finite per-gene `max(abs(Wald_Stat))` from the
 original Ruzicka SNP mapping and measured conservation. Background has no
 defined fly-human conservation, so a four-category adjusted model is not
 identifiable without inventing values. It is excluded, not assigned zero.
@@ -153,7 +153,7 @@ SA effect is its per-gene maximum absolute value, matching Fig1: absolute values
 are taken before the gene maximum, without squaring.
 
 The models fit category alone or category plus whole-alignment identity and
-both protein coverage measures (common additive linear slopes). FigS9 plots
+both protein coverage measures (common additive linear slopes). FigS8 plots
 estimated means before/after adjustment on identical genes, at the relevant
 measured universe's pooled conservation means. Two hypotheses are tested before
 and after adjustment: a global effect across all three orthologue categories,
@@ -184,7 +184,7 @@ covariates.
 These are observational associations, not causal mediation results. Nonlinear
 conservation effects, SNP coverage effects on a maximum statistic, and
 gene-family structure beyond the retained human-partner clusters are not
-eliminated by this model. The exported `FigS9_*` audits retain the gene-level
+eliminated by this model. The exported `FigS8_*` audits retain the gene-level
 SA effect, SNP counts, included/excluded genes, fitted values, residuals,
 model coefficients, and exact input/script checksums.
 
@@ -284,7 +284,7 @@ downloaded fixed references, using CPython 3.12.16, Biopython 1.86, and NumPy
 1.26.4 on macOS ARM. `mapping_local_20261112_local/` took 123 seconds and
 `alignment_local_20261112_local/` took 101 seconds. All 9,063 alignment rows
 and biological mapping tables matched the recovered historical outputs
-exactly. FigS8 and FigS9 were then regenerated from these local outputs.
+exactly. FigS7 and FigS8 were then regenerated from these local outputs.
 
 A fresh full local review, `recovery_review_local_20261112_local_verify/`,
 independently reproduced all 657 review decisions and proposed IDs: 628
@@ -329,7 +329,7 @@ logs. It excludes:
   `Data/inputs/all_disease_orthologs.csv`, still ignored. The tracked full-pair
   table already preserves their pair content and source membership.
 
-Compact tables are sufficient for FigS8; FigS9 also reads the original SA
+Compact tables are sufficient for FigS7; FigS8 also reads the original SA
 SNP data. Sequence reconstruction needs the raw orthology inputs and reference
 downloads. Never copy installed environments between machines; recreate them
 from `alignment_requirements.txt`.

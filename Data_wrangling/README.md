@@ -14,7 +14,7 @@ This directory contains the **active build scripts** that create canonical inter
    Builds the Affymetrix Drosophila Genome 2.0 probe reference used to define the Innocenti and Morrow (2010) assay universe for FigS1.
 
 4. `build_sa_resolution_inputs.R`  
-   Assembles the study-matched Fig4 feature-membership table, feature-set table, and feature-universe table. FigS7 also uses the membership table to define Penultimate (MB or TS) and Ultimate (HMB or HTS) stages. This is the most involved wrangling step in the repository.
+   Assembles the study-matched Fig4 feature-membership table, feature-set table, and feature-universe table. FigS9 also uses the membership table to define Penultimate (MB or TS) and Ultimate (HMB or HTS) stages. This is the most involved wrangling step in the repository.
 
 ## Brief notes on the more involved transformations
 

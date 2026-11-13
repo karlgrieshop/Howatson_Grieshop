@@ -12,7 +12,7 @@ if (!file.exists(file.path(project_root, "Data", "outputs", "dmel_gene_reference
 arguments <- commandArgs(trailingOnly = TRUE)
 if (length(arguments) != 2L || arguments[1] != "--alignment-dir") {
   stop(paste(
-    "Usage: Rscript Sup_plotting_and_analyses/figureS9_conservation_adjusted_sa.R",
+    "Usage: Rscript Sup_plotting_and_analyses/figureS8_conservation_adjusted_sa.R",
     "--alignment-dir fly_human_conservation/alignment_<run-id>"
   ), call. = FALSE)
 }
@@ -111,8 +111,8 @@ coverage <- audit |>
     MissingSAWithConservation = sum(HasConservation & !HasSA),
     WithSAWithoutConservation = sum(HasSA & !HasConservation), .groups = "drop"
   )
-write.csv(audit, summary_path("FigS9_gene_inclusion_audit.csv"), row.names = FALSE)
-write.csv(coverage, summary_path("FigS9_category_coverage.csv"), row.names = FALSE)
+write.csv(audit, summary_path("FigS8_gene_inclusion_audit.csv"), row.names = FALSE)
+write.csv(coverage, summary_path("FigS8_category_coverage.csv"), row.names = FALSE)
 
 model_design <- function(data, adjusted) {
   groups <- droplevels(data$Category)
@@ -247,21 +247,21 @@ run_set <- function(data, analysis_set, seed_offset) {
 all_results <- run_set(values, "All measured orthologues", 9000L)
 for (component in c("tests", "summaries", "coefficients", "diagnostics", "gene_level_values")) {
   table <- all_results[[component]]
-  write.csv(table, summary_path(paste0("FigS9_", component, ".csv")), row.names = FALSE)
+  write.csv(table, summary_path(paste0("FigS8_", component, ".csv")), row.names = FALSE)
 }
 sources <- c(
   conservation_file, input_path("Assoc_Data.txt"), output_path("dmel_gene_reference.csv"),
   output_path("sexspecific_disease_ids.csv"), output_path("all_disease_ortholog_ids.csv"),
   output_path("all_ortholog_ids.csv"),
-  file.path(project_root, "Sup_plotting_and_analyses", "figureS9_conservation_adjusted_sa.R"),
+  file.path(project_root, "Sup_plotting_and_analyses", "figureS8_conservation_adjusted_sa.R"),
   file.path(project_root, "Sup_plotting_and_analyses", "conservation_sa_regression.R")
 )
 manifest <- data.frame(
   Input = substring(sources, nchar(project_root) + 2L),
   Bytes = file.info(sources)$size, MD5 = unname(tools::md5sum(sources))
 )
-write.csv(manifest, summary_path("FigS9_input_manifest.csv"), row.names = FALSE)
-writeLines(capture.output(sessionInfo()), summary_path("FigS9_R_session.txt"))
+write.csv(manifest, summary_path("FigS8_input_manifest.csv"), row.names = FALSE)
+writeLines(capture.output(sessionInfo()), summary_path("FigS8_R_session.txt"))
 
 plot_data <- all_results$summaries |>
   mutate(
@@ -277,20 +277,13 @@ figure <- ggplot(plot_data, aes(Model, Estimate, colour = Category, group = Cate
   geom_text(aes(y = CI95High, label = paste0("n=", N)), position = offset,
             colour = "black", size = 3, vjust = -0.8) +
   scale_colour_manual(values = palette, breaks = category_order, drop = FALSE,
-    labels = c("SSDOs", "Disease orthologues\n(excluding SSDOs)",
-               "Orthologues\n(excluding disease genes)")) +
+    labels = c("SSDOs", "Disease orthologues", "Orthologues")) +
   scale_x_discrete(labels = c(
     "Unadjusted (same genes)" = "Unadjusted\n(same genes)",
     "Conservation adjusted" = "Conservation\nadjusted"
   )) +
   scale_y_continuous(expand = expansion(mult = c(0.08, 0.18))) +
-  labs(
-    x = NULL, y = "SA effect", colour = NULL,
-    caption = paste(
-      "Adjusted means at pooled identity and fly/human coverage; 95% human-partner",
-      "cluster-bootstrap intervals.\nBackground lacks defined conservation and is excluded."
-    )
-  ) +
+  labs(x = NULL, y = "SA effect", colour = NULL) +
   theme_classic(base_size = 12) +
   theme(
     axis.text = element_text(colour = "black"),
@@ -298,9 +291,9 @@ figure <- ggplot(plot_data, aes(Model, Estimate, colour = Category, group = Cate
     strip.background = element_rect(fill = NA, colour = "black", linewidth = 0.4),
     strip.text = element_text(face = "bold"),
     panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.4),
-    axis.line = element_blank(), plot.caption = element_text(hjust = 0, size = 9)
+    axis.line = element_blank()
   ) +
   guides(colour = guide_legend(nrow = 1))
-ggsave(file.path(project_root, "Sup_figures", "FigS9_conservation_adjusted_sa.png"),
+ggsave(file.path(project_root, "Sup_figures", "FigS8_conservation_adjusted_sa.png"),
        figure, width = 8.2, height = 5.7, dpi = 300, bg = "white")
-message("Wrote FigS9, matched-universe estimates, clustered regression tests and input audits.")
+message("Wrote FigS8, matched-universe estimates, clustered regression tests and input audits.")

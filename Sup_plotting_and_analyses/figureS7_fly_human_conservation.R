@@ -27,7 +27,7 @@ if (length(arguments) != 4L ||
     arguments[[3]] != "--mapping-dir") {
   stop(
     paste(
-      "Usage: Rscript Sup_plotting_and_analyses/figureS8_fly_human_conservation.R",
+      "Usage: Rscript Sup_plotting_and_analyses/figureS7_fly_human_conservation.R",
       "--alignment-dir fly_human_conservation/alignment_<job-id>",
       "--mapping-dir fly_human_conservation/mapping_<job-id>"
     ),
@@ -58,8 +58,8 @@ category_order <- c(
 )
 category_labels <- c(
   "SSDOs",
-  "Disease orthologues\n(excluding SSDOs)",
-  "Orthologues\n(excluding disease genes)"
+  "Disease orthologues",
+  "Orthologues"
 )
 category_palette <- c(
   "SSDOs" = "#D55E00",
@@ -268,12 +268,12 @@ tests <- main_results$tests |>
 
 write.csv(
   summaries,
-  file.path(summary_dir, "FigS8_group_bootstrap_summaries.csv"),
+  file.path(summary_dir, "FigS7_group_bootstrap_summaries.csv"),
   row.names = FALSE
 )
 write.csv(
   tests,
-  file.path(summary_dir, "FigS8_pairwise_permutation_tests.csv"),
+  file.path(summary_dir, "FigS7_pairwise_permutation_tests.csv"),
   row.names = FALSE
 )
 category_coverage <- category_counts |>
@@ -286,7 +286,7 @@ category_coverage <- category_counts |>
   )
 write.csv(
   category_coverage,
-  file.path(summary_dir, "FigS8_category_coverage.csv"),
+  file.path(summary_dir, "FigS7_category_coverage.csv"),
   row.names = FALSE
 )
 inputs <- c(
@@ -294,18 +294,18 @@ inputs <- c(
     "gene_conservation.csv", "category_counts.csv"
   )),
   file.path(mapping_table_dir, "category_attrition.csv"),
-  file.path(project_root, "Sup_plotting_and_analyses", "figureS8_fly_human_conservation.R")
+  file.path(project_root, "Sup_plotting_and_analyses", "figureS7_fly_human_conservation.R")
 )
 write.csv(
   data.frame(
     Input = substring(inputs, nchar(project_root) + 2L),
     Bytes = file.info(inputs)$size, MD5 = unname(tools::md5sum(inputs))
   ),
-  file.path(summary_dir, "FigS8_input_manifest.csv"),
+  file.path(summary_dir, "FigS7_input_manifest.csv"),
   row.names = FALSE
 )
 
-plot_summaries <- function(summary_data, analysis_set, title) {
+plot_summaries <- function(summary_data, analysis_set) {
   plot_data <- summary_data |>
     filter(AnalysisSet == analysis_set) |>
     mutate(
@@ -330,7 +330,7 @@ plot_summaries <- function(summary_data, analysis_set, title) {
       limits = c(0, 100),
       expand = expansion(mult = c(0, 0.02))
     ) +
-    labs(x = NULL, title = title, colour = NULL) +
+    labs(x = NULL, colour = NULL) +
     theme_classic(base_size = 12) +
     theme(
       axis.text.x = element_text(colour = "black", angle = 20, hjust = 1, vjust = 1),
@@ -341,22 +341,20 @@ plot_summaries <- function(summary_data, analysis_set, title) {
       panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.4),
       axis.line = element_blank(),
       legend.position = "none",
-      plot.title = element_text(face = "bold", size = 14),
       plot.margin = margin(8, 8, 8, 8)
     )
 }
 
 main_plot <- plot_summaries(
   summaries,
-  "All mapped orthologues",
-  "Fly–human protein conservation"
+  "All mapped orthologues"
 )
 ggsave(
-  file.path(figure_dir, "FigS8_fly_human_conservation.png"),
+  file.path(figure_dir, "FigS7_fly_human_conservation.png"),
   main_plot,
   width = 12,
   height = 5.2,
   dpi = 300,
   bg = "white"
 )
-message("Wrote FigS8 and conservation summaries to Sup_figures/ and Data/Summary_tables/.")
+message("Wrote FigS7 and conservation summaries to Sup_figures/ and Data/Summary_tables/.")

@@ -1,0 +1,5 @@
+"Input","Bytes","MD5"
+"fly_human_conservation/alignment_local_20261112_local/tables/gene_conservation.csv",3888263,"c27a85069c408e6627662963c299a2b2"
+"fly_human_conservation/alignment_local_20261112_local/tables/category_counts.csv",359,"e445c65f65ab52092e1dd848e4a0e2e4"
+"fly_human_conservation/mapping_local_20261112_local/tables/category_attrition.csv",451,"acbbf926f73994eccdae1563a0f0186c"
+"Sup_plotting_and_analyses/figureS7_fly_human_conservation.R",12412,"cc4155dd5484470c88cd19ef536ef45e"

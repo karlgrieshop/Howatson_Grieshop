@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# FigS7: resolution-stage rMF and SA effects, with within-category overlap-aware tests.
+# FigS9: resolution-stage rMF and SA effects, with within-category overlap-aware tests.
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
   repeat {
@@ -207,11 +207,11 @@ build_panel <- function(metric_values, y_label, prefix, values_source) {
   list(figure = figure, audit = audit, plot_values = plot_values, summary_data = summary_data)
 }
 sa_panel <- build_panel(
-  gene_values, "SA effect", "FigS7_sa_effect_",
+  gene_values, "SA effect", "FigS9_sa_effect_",
   "Data/inputs/Assoc_Data.txt; Data/outputs/dmel_gene_reference.csv (protein-coding)"
 )
 rmf_panel <- build_panel(
-  rmf_values, expression(italic(r)[MF]), "FigS7_rmf_",
+  rmf_values, expression(italic(r)[MF]), "FigS9_rmf_",
   "Data/inputs/SBGEandSSSdataForMBE.csv (rmf); Data/outputs/dmel_gene_reference.csv (protein-coding)"
 )
 reference_means <- bind_rows(lapply(c("rMF", "SA effect"), function(metric) {
@@ -222,18 +222,18 @@ reference_means <- bind_rows(lapply(c("rMF", "SA effect"), function(metric) {
     Source = unique(values$Source), stringsAsFactors = FALSE
   )
 }))
-write.csv(reference_means, summary_path("FigS7_genome_wide_reference_means.csv"), row.names = FALSE)
+write.csv(reference_means, summary_path("FigS9_genome_wide_reference_means.csv"), row.names = FALSE)
 sa_tests <- stage_permutation_tests(
-  sa_panel$plot_values, "SA effect", "Data/Summary_tables/FigS7_sa_effect_gene_level_values.csv"
+  sa_panel$plot_values, "SA effect", "Data/Summary_tables/FigS9_sa_effect_gene_level_values.csv"
 )
 rmf_tests <- stage_permutation_tests(
-  rmf_panel$plot_values, "rMF", "Data/Summary_tables/FigS7_rmf_gene_level_values.csv"
+  rmf_panel$plot_values, "rMF", "Data/Summary_tables/FigS9_rmf_gene_level_values.csv"
 )
-write.csv(sa_tests, summary_path("FigS7_sa_effect_permutation_tests.csv"), row.names = FALSE)
-write.csv(rmf_tests, summary_path("FigS7_rmf_permutation_tests.csv"), row.names = FALSE)
+write.csv(sa_tests, summary_path("FigS9_sa_effect_permutation_tests.csv"), row.names = FALSE)
+write.csv(rmf_tests, summary_path("FigS9_rmf_permutation_tests.csv"), row.names = FALSE)
 figure <- (rmf_panel$figure + sa_panel$figure) +
   plot_layout(guides = "collect") + plot_annotation(tag_levels = "A") &
   theme(legend.position = "bottom")
-ggsave(sup_figure_path("FigS7_resolution_stages.png"), figure,
+ggsave(sup_figure_path("FigS9_resolution_stages.png"), figure,
        width = 12, height = 5.5, dpi = 300, bg = "white")
 message("Plotted rMF (A) and SA effects (B), with metric-specific genome-wide means.")

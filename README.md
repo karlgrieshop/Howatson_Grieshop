@@ -10,10 +10,10 @@ This repo includes the code to support Howatson and Grieshop (2026) Phil Trans B
 ## Contents
 
 - **Main figures:** `Figures/Fig1_SA_Magnitude.png`, `Figures/Fig2_rmf_tau.png`, `Figures/Fig3_rlns_tajD_DoS.png`, `Figures/Fig4_sa_res_radar.png`
-- **Supplementary figures:** `Sup_figures/FigS1_SA_Candidate_Enrichment.png`, `Sup_figures/FigS2_sa_mag.png`, `Sup_figures/FigS3_sa_mag_context.png`, `Sup_figures/FigS4_SA_Magnitude_Brigos5.png`, `Sup_figures/FigS5_rmf_tau.png`, `Sup_figures/FigS6_rlns_tajD_DoS.png`, `Sup_figures/FigS7_resolution_stages.png`, `Sup_figures/FigS8_fly_human_conservation.png`, `Sup_figures/FigS9_conservation_adjusted_sa.png`
+- **Supplementary figures:** `Sup_figures/FigS1_SA_Candidate_Enrichment.png`, `Sup_figures/FigS2_sa_mag.png`, `Sup_figures/FigS3_sa_mag_context.png`, `Sup_figures/FigS4_SA_Magnitude_Brigos5.png`, `Sup_figures/FigS5_rmf_tau.png`, `Sup_figures/FigS6_rlns_tajD_DoS.png`, `Sup_figures/FigS7_fly_human_conservation.png`, `Sup_figures/FigS8_conservation_adjusted_sa.png`, `Sup_figures/FigS9_resolution_stages.png`
 - **Tables and data frames:** `Data/outputs/`, `Data/Summary_tables/`, and generated Word tables in `Tables/`
 - **Code:** `Data_wrangling/`, `Plotting_and_analyses/`, and `Sup_plotting_and_analyses/`
-- **Fly-human conservation:** [`fly_human_conservation/`](fly_human_conservation/README.md) retains the local reference/mapping/alignment workflow, compact inputs, and provenance. The corresponding supplementary R scripts write FigS8 (conservation) and FigS9 (conservation-adjusted SA association statistics) to the standard publication directories.
+- **Fly-human conservation:** [`fly_human_conservation/`](fly_human_conservation/README.md) retains the local reference/mapping/alignment workflow, compact inputs, and provenance. The corresponding supplementary R scripts write FigS7 (conservation) and FigS8 (conservation-adjusted SA association statistics) to the standard publication directories.
 
 ## Repository layout
 
@@ -58,7 +58,7 @@ The repository keeps the summary tables needed for the **already-summarized pane
 
 This shortcut works directly from the kept plot-data tables in `Data/Summary_tables/`.
 
-**Still upstream-dependent:** `FigS1`, `FigS2`, `FigS3`, `Fig4`, `FigS4`, and `FigS7` are rebuilt from their active analysis scripts rather than from preassembled panel-summary tables alone.
+**Still upstream-dependent:** `FigS1`, `FigS2`, `FigS3`, `Fig4`, `FigS4`, and `FigS9` are rebuilt from their active analysis scripts rather than from preassembled panel-summary tables alone.
 
 ## Full active workflow
 
@@ -78,16 +78,17 @@ Run these from the repository root.
 12. `Rscript Plotting_and_analyses/sa_candidate_enrichment.R`
 13. `Rscript Data_wrangling/build_sa_resolution_inputs.R`
 14. `Rscript Plotting_and_analyses/figure4_sa_resolution.R`
-15. `Rscript Sup_plotting_and_analyses/figureS7_resolution_stages.R`
+15. `Rscript Sup_plotting_and_analyses/figureS9_resolution_stages.R`
 16. `Rscript Plotting_and_analyses/figureS4_figure1_with_brigos_5class.R`
 17. `Rscript Tables/table1_sa_magnitude_permutation_docx.R`
 18. `Rscript Tables/tableS1_candidate_enrichment_docx.R`
 19. `Rscript Tables/tableS2_candidate_context_docx.R`
+20. `Rscript Tables/tableS6_conservation_permutation_docx.R` *(after FigS7 summaries are available)*
 
-For the independent sequence workflow and the FigS8/FigS9 commands, see
+For the independent sequence workflow and the FigS7/FigS8 commands, see
 [`fly_human_conservation/README.md`](fly_human_conservation/README.md).
 Sequence reconstruction requires the orthology inputs and downloaded fixed
-references; plotting from retained compact alignments does not. FigS9 also
+references; plotting from retained compact alignments does not. FigS8 also
 requires the existing local `Data/inputs/Assoc_Data.txt` SA-association data.
 
 ## What each active area does
@@ -99,10 +100,11 @@ requires the existing local `Data/inputs/Assoc_Data.txt` SA-association data.
 - `Plotting_and_analyses/sa_candidate_enrichment.R` generates **FigS1** and **TableS1**, testing enrichment of Innocenti and Morrow, Ruzicka et al., and Brigos-Baril et al. (2026) candidate genes among SSDOs, disease orthologues, and orthologues. The first two tests use their study-matched assay universes; Brigos candidates are tested in the protein-coding-gene universe. TableS1 reports raw two-sided Fisher P-values and BH-adjusted P-values across all nine tests. FigS1 asterisks indicate BH-adjusted P < 0.05 across that same nine-test family.
 - `Sup_plotting_and_analyses/figureS3_context.R` generates **FigS3**, comparing SSDOs with Innocenti and Morrow (2010), Grieshop et al. (2025), and Ruzicka et al. (2019) candidates using per-gene maximum absolute Ruzicka Wald z-statistics. Of the 695 significant Grieshop DE genes, 530 have estimates in the current protein-coding/SNP-mapped universe (121 are outside the protein-coding reference; 44 more lack mapped estimates). Groups may overlap. Original Fig1 non-SSDO bootstrap means remain blue/green/grey reference lines. Gene-level values, bootstrap summaries, reference lines, and the Grieshop inclusion audit are exported to `Data/Summary_tables/FigS3_*.csv`.
 - `Tables/tableS2_candidate_context_docx.R` exports the three SSDO-versus-candidate SA-effect comparisons and builds TableS2 using the existing overlap-aware permutation procedure, with BH correction across these three comparisons.
+- `Tables/tableS6_conservation_permutation_docx.R` builds **TableS6** from the FigS7 conservation permutation tests, with BH correction across the three contrasts separately for each metric.
 - `Sup_plotting_and_analyses/figureS2_sa_mag.R` generates **FigS2**, the SA-effect comparison stratified by whole-body sex-biased gene expression.
 - `Data_wrangling/build_sa_resolution_inputs.R` assembles the study-matched SA-resolution feature tables for **Fig4** and the radar supplements, storing `TRUE`/`FALSE` only within each mechanism's source-study universe and `NA` outside it; it also exports the corresponding feature-universe summary. `SSS` now uses the locally supplied `Mishra.sig.SSS_filt25.txt` tested-gene frame together with the DsRed-restored final list in `dimorphic.subset.list_wDsRedgenes.txt`; `Dup` remains the only protein-coding-genome fallback denominator.
 - `Plotting_and_analyses/figure4_sa_resolution.R` generates **Fig4** and the kept SA-resolution statistical summaries using those study-matched per-feature denominators.
-- `Sup_plotting_and_analyses/figureS7_resolution_stages.R` generates **FigS7**: rMF (A) and SA effects (B) for Penultimate (MB or TS) versus Ultimate (HMB or HTS) genes in the four mutually exclusive gene categories. Grey lines are arithmetic means across all protein-coding genes with finite values for each metric, including genes outside either stage. The metric-specific universes are not restricted to genes measured for both metrics. Dots and whiskers show bootstrap medians of means and 95% percentile intervals (5,000 resamples). Each metric has four within-category, two-sided, overlap-aware permutation tests (10,000 permutations), with shared genes fixed in both groups and only exclusive memberships permuted. BH correction is applied separately within each metric's four tests. Gene values, inclusion audits, bootstrap summaries, reference means, and tests are exported as `Data/Summary_tables/FigS7_*.csv`. The former radar-overlay figure, generator, and multivariate test are archived in `side/archived_figS7_radar_context/`.
+- `Sup_plotting_and_analyses/figureS9_resolution_stages.R` generates **FigS9**: rMF (A) and SA effects (B) for Penultimate (MB or TS) versus Ultimate (HMB or HTS) genes in the four mutually exclusive gene categories. Grey lines are arithmetic means across all protein-coding genes with finite values for each metric, including genes outside either stage. The metric-specific universes are not restricted to genes measured for both metrics. Dots and whiskers show bootstrap medians of means and 95% percentile intervals (5,000 resamples). Each metric has four within-category, two-sided, overlap-aware permutation tests (10,000 permutations), with shared genes fixed in both groups and only exclusive memberships permuted. BH correction is applied separately within each metric's four tests. Gene values, inclusion audits, bootstrap summaries, reference means, and tests are exported as `Data/Summary_tables/FigS9_*.csv`. The former radar-overlay figure, generator, and multivariate test are archived in `side/archived_figS7_radar_context/`.
 - `Plotting_and_analyses/figureS4_figure1_with_brigos_5class.R` generates the single-panel **FigS4** Brigos-Baril et al. (2026) sensitivity figure from the Ruzicka SA-effect metric.
 
 ## Notes

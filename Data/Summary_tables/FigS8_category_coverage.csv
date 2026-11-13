@@ -1,4 +1,5 @@
-"Category","Eligible","ExcludedBeforeAlignment","Measured","MissingPercent"
-"SSDOs",568,10,558,1.76056338028169
-"Disease orthologues excluding SSDOs",4512,14,4498,0.310283687943262
-"Orthologues excluding disease genes",4012,5,4007,0.124626121635095
+"Category","ProteinCodingEligible","WithSA","WithConservation","IncludedMain","MissingSAWithConservation","WithSAWithoutConservation"
+"Background",4894,4373,0,0,0,4373
+"Disease orthologues excluding SSDOs",4512,4163,4498,4152,346,11
+"Orthologues excluding disease genes",4012,3697,4007,3693,314,4
+"SSDOs",568,540,558,530,28,10
