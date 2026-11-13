@@ -42,7 +42,7 @@ genes <- gene_reference |>
 snps <- fread(input_path("Assoc_Data.txt"), select = c("Chromosome", "Basepair", "Wald_Stat")) |>
   as_tibble() |>
   transmute(chromosome = normalise_chromosome(Chromosome), start = as.integer(Basepair),
-            end = as.integer(Basepair), Value = as.numeric(Wald_Stat)) |>
+            end = as.integer(Basepair), Value = abs(as.numeric(Wald_Stat))) |>
   filter(!is.na(chromosome), nzchar(chromosome), !is.na(start), is.finite(Value))
 genes_dt <- as.data.table(genes)
 snps_dt <- as.data.table(snps)
@@ -63,7 +63,7 @@ assign_gene_types <- function(values) {
 gene_values <- as_tibble(foverlaps(snps_dt, genes_dt, nomatch = 0L)) |>
   group_by(FlyBaseID) |>
   summarise(Value = max(Value), .groups = "drop") |>
-  mutate(Source = "Ruzicka et al. from Assoc_Data.txt (max Wald_Stat)") |>
+  mutate(Source = "Ruzicka et al. from Assoc_Data.txt (max(abs(Wald_Stat)))") |>
   assign_gene_types()
 rmf_source <- read.csv(input_path("SBGEandSSSdataForMBE.csv"), stringsAsFactors = FALSE)
 names(rmf_source)[2] <- "FlyBaseID"

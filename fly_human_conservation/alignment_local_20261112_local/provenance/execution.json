@@ -1,0 +1,41 @@
+{
+  "started_utc": "2026-11-12T10:28:51.869365+00:00",
+  "run_id": "20261112_local",
+  "command": [
+    "/Users/rpr23sxu/Library/CloudStorage/OneDrive-UniversityofEastAnglia/Documents/Projects/Howatson and Grieshop/SSDOs_Howatson_Grieshop/fly_human_conservation/.venv_local/bin/python",
+    "fly_human_conservation/align_proteins.py",
+    "--mapping-dir",
+    "fly_human_conservation/mapping_local_20261112_local",
+    "--run-id",
+    "20261112_local"
+  ],
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "wrapper_command": "fly_human_conservation/align_recovered.sh --mapping-dir fly_human_conservation/mapping_local_20261112_local --run-id 20261112_local ",
+  "python": "3.12.16 (main, Nov 11 2026, 00:09:12) [Clang 23.1.3 ]",
+  "biopython": "1.86",
+  "numpy": "1.26.4",
+  "python_executable": "/Users/rpr23sxu/Library/CloudStorage/OneDrive-UniversityofEastAnglia/Documents/Projects/Howatson and Grieshop/SSDOs_Howatson_Grieshop/fly_human_conservation/.venv_local/bin/python",
+  "mapping_directory": "fly_human_conservation/mapping_local_20261112_local",
+  "method": {
+    "mode": "global",
+    "substitution_matrix": "BLOSUM62",
+    "gap_open_score": -10.0,
+    "gap_extend_score": -0.5,
+    "score_epsilon": 1e-06,
+    "gap_cost": "10 + (gap_length - 1) * 0.5, including terminal gaps",
+    "tie_rule": "first optimal traceback from pinned Biopython, fly as target",
+    "masking": "nonstandard residues to X for scoring only; originals retained",
+    "identity": "100 * exact standard-residue matches / all alignment columns",
+    "fly_coverage": "100 * residue-residue columns / full fly protein length",
+    "human_coverage": "100 * residue-residue columns / full human protein length",
+    "coverage_masking": "masked residues count as present, not as gaps"
+  },
+  "algorithm": "Gotoh global alignment algorithm",
+  "aligner_parameters": "Pairwise sequence aligner with parameters\n  substitution_matrix: <Array object at 0x10969f770>\n  open_internal_insertion_score: -10.000000\n  extend_internal_insertion_score: -0.500000\n  open_left_insertion_score: -10.000000\n  extend_left_insertion_score: -0.500000\n  open_right_insertion_score: -10.000000\n  extend_right_insertion_score: -0.500000\n  open_internal_deletion_score: -10.000000\n  extend_internal_deletion_score: -0.500000\n  open_left_deletion_score: -10.000000\n  extend_left_deletion_score: -0.500000\n  open_right_deletion_score: -10.000000\n  extend_right_deletion_score: -0.500000\n  mode: global\n",
+  "source_documentation": "https://biopython.org/docs/1.86/Tutorial/chapter_pairwise.html",
+  "git_commit": "32b7fd863288abbfaf00fcd131a66dc92396030e",
+  "packages": [
+    "biopython==1.86",
+    "numpy==1.26.4"
+  ]
+}

@@ -17,7 +17,7 @@ import prepare_references as preparation
 class AlignmentTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        self.root = Path(self.tmp.name)
+        self.root = Path(self.tmp.name).resolve()
         self.addCleanup(self.tmp.cleanup)
 
     def test_exact_identity_and_terminal_penalties(self):
@@ -218,20 +218,19 @@ class AlignmentTests(unittest.TestCase):
             patch.object(analysis, "SIDE", self.root),
             patch.object(analysis, "MAPPING", mapping),
         ):
-            with patch.dict(os.environ, {"SLURM_JOB_ID": "123"}):
-                with patch.object(analysis, "validated_inputs", return_value=([], {"fly": "fly", "human": "human"})) as validate:
-                    with patch.object(analysis, "load_pairs", return_value=(pair, reps, audit)) as load:
-                        with patch.object(analysis, "load_sequences", side_effect=[
-                            {"FBpp1": "WUXW"}, {"ENSP1": "WUXWAA"},
-                        ]):
-                            with patch.object(analysis.subprocess, "run") as process:
-                                process.return_value.stdout = "test\n"
-                                analysis.main(mapping)
-                validate.assert_called_once_with(mapping)
-                load.assert_called_once_with(mapping)
-                with self.assertRaises(FileExistsError):
-                    analysis.main()
-        output = self.root / "alignment_123"
+            with patch.object(analysis, "validated_inputs", return_value=([], {"fly": "fly", "human": "human"})) as validate:
+                with patch.object(analysis, "load_pairs", return_value=(pair, reps, audit)) as load:
+                    with patch.object(analysis, "load_sequences", side_effect=[
+                        {"FBpp1": "WUXW"}, {"ENSP1": "WUXWAA"},
+                    ]):
+                        with patch.object(analysis.platform, "platform", return_value="test"), patch.object(analysis.subprocess, "run") as process:
+                            process.return_value.stdout = "test\n"
+                            analysis.main(mapping, run_id="123")
+            validate.assert_called_once_with(mapping)
+            load.assert_called_once_with(mapping)
+            with self.assertRaises(FileExistsError):
+                analysis.main(run_id="123")
+        output = self.root / "alignment_local_123"
         with (output / "tables/gene_conservation.csv").open(newline="") as handle:
             rows = list(csv.DictReader(handle))
         self.assertEqual(len(rows), 1)

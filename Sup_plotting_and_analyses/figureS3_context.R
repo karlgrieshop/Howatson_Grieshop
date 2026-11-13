@@ -192,14 +192,14 @@ build_ruzicka_magnitude_values <- function(gene_reference) {
     transmute(
       chromosome = as.character(Chromosome),
       position = as.integer(Basepair),
-      Value = as.numeric(Wald_Stat)
+      Value = abs(as.numeric(Wald_Stat))
     ) |>
     filter(!is.na(Value), is.finite(Value))
 
   map_snp_metric_to_genes(
     snp_values = assoc[, c("chromosome", "position", "Value")],
     gene_reference = gene_reference,
-    source_label = "Ruzicka et al. from Assoc_Data.txt (max Wald_Stat)"
+    source_label = "Ruzicka et al. from Assoc_Data.txt (max(abs(Wald_Stat)))"
   )
 }
 

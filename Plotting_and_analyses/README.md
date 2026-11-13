@@ -8,7 +8,7 @@ This directory contains the active main-text plotting scripts together with the 
    Writes the four-category quantitative-metric summaries and permutation tests for *r*<sub>*MF*</sub>, tissue specificity, *pi*<sub>*rN*</sub>, Tajima’s *D*, and *DoS*.
 
 2. `sa_magnitude_plots.R`
-   Writes the retained Ruzicka SA-effect summary table and within-study permutation tests used in Fig1 and Table1. The metric is the maximum SNP-level Wald chi-squared statistic per protein-coding gene; BH correction covers all six pairwise group contrasts.
+   Writes the Ruzicka SA-effect summary table and within-study permutation tests used in Fig1 and Table1. The metric is `max(abs(Wald_Stat))` over finite SNP statistics overlapping each protein-coding gene: take the absolute value of each signed Wald z-statistic (approximately `Effect / SD`) before the gene maximum, without squaring. BH correction covers all six pairwise group contrasts. `Rscript Plotting_and_analyses/test_sa_magnitude.R` checks this definition, allele-flip invariance, and missing-data handling in all eight active loaders.
 
 3. `figure1_sa_magnitude.R`
    Builds the single-panel `Figures/Fig1_SA_Magnitude.png` from the kept SA-effect summaries.

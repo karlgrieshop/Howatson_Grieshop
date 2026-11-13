@@ -1,7 +1,7 @@
 # SA magnitude plots
 #
 # This script rebuilds the Ruzicka et al. SA-magnitude summaries from
-# SNP-level Wald chi-squared statistics in `Assoc_Data.txt`, mapped to genes.
+# absolute SNP-level Wald z-statistics in `Assoc_Data.txt`, mapped to genes.
 
 find_project_root <- function(start = getwd()) {
   current <- normalizePath(start, winslash = "/", mustWork = TRUE)
@@ -270,14 +270,14 @@ build_ruzicka_values <- function(gene_reference) {
     transmute(
       chromosome = as.character(Chromosome),
       position = as.integer(Basepair),
-      Value = as.numeric(Wald_Stat)
+      Value = abs(as.numeric(Wald_Stat))
     ) |>
     filter(!is.na(Value), is.finite(Value))
 
   map_snp_metric_to_genes(
     snp_values = assoc[, c("chromosome", "position", "Value")],
     gene_reference = gene_reference,
-    source_label = "Ruzicka et al. from Assoc_Data.txt (max Wald_Stat)"
+    source_label = "Ruzicka et al. from Assoc_Data.txt (max(abs(Wald_Stat)))"
   )
 }
 
@@ -295,7 +295,7 @@ study_specs <- list(
   list(
     name = "Ruzicka et al.",
     values = build_ruzicka_values(protein_coding_gene_reference),
-    y_label = expression("SA effect (Wald " * chi^2 * ")")
+    y_label = "SA effect"
   )
 )
 

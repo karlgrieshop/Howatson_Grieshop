@@ -1,0 +1,7 @@
+"AnalysisSet","Model","Category","N","Estimate","CI95Low","CI95High","BootstrapReplicates","Seed","IdentityReferencePercent","FlyCoverageReferencePercent","HumanCoverageReferencePercent"
+"All measured orthologues","Unadjusted (same genes)","SSDOs",530,1.57873263962257,1.51068224571202,1.64699256399952,5000,9101,34.4939355757517,84.948785481594,88.8258657514103
+"All measured orthologues","Unadjusted (same genes)","Disease orthologues excluding SSDOs",4152,1.50887315052987,1.48383994594217,1.53444199237869,5000,9101,34.4939355757517,84.948785481594,88.8258657514103
+"All measured orthologues","Unadjusted (same genes)","Orthologues excluding disease genes",3693,1.38534176685621,1.36096131916473,1.41000922607653,5000,9101,34.4939355757517,84.948785481594,88.8258657514103
+"All measured orthologues","Conservation adjusted","SSDOs",530,1.57038723038318,1.50104107168031,1.6384335484424,5000,9103,34.4939355757517,84.948785481594,88.8258657514103
+"All measured orthologues","Conservation adjusted","Disease orthologues excluding SSDOs",4152,1.51167250823237,1.4862720094775,1.53684978944158,5000,9103,34.4939355757517,84.948785481594,88.8258657514103
+"All measured orthologues","Conservation adjusted","Orthologues excluding disease genes",3693,1.38339216862067,1.35971446637011,1.40792391733142,5000,9103,34.4939355757517,84.948785481594,88.8258657514103

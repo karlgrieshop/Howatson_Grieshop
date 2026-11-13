@@ -250,10 +250,15 @@ def verify_provider_checksum(refs, relative):
             if len(parts := line.split()) == 3
         }
         published = declared.get(path.name)
-        result = subprocess.run(
-            ["sum", "-r", str(path)], check=True, text=True, capture_output=True,
-        )
-        actual = " ".join(result.stdout.split()[:2])
+        checksum = 0
+        size = 0
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                size += len(chunk)
+                for byte in chunk:
+                    checksum = ((checksum >> 1) | ((checksum & 1) << 15))
+                    checksum = (checksum + byte) & 0xffff
+        actual = f"{checksum} {(size + 1023) // 1024}"
         method = "BSD sum -r (checksum, 1KiB blocks)"
     if published != EXPECTED[relative] or actual != published:
         raise ValueError(
@@ -292,6 +297,10 @@ def reuse_references(source_side, output_side, inputs):
     old_inputs = read_rows(
         source_side / "provenance/input_manifest.csv", ["path", "bytes", "sha256"]
     )
+    old_inputs = [
+        row for row in old_inputs
+        if row["path"] != "fly_human_conservation/recovery_review_4955170/tables/per_gene_resolution.csv"
+    ]
     if (
         len(old_inputs) != len(inputs)
         or {row["path"] for row in old_inputs} != {row["path"] for row in inputs}
@@ -332,6 +341,23 @@ def reuse_references(source_side, output_side, inputs):
         rows, list(rows[0]),
     )
     return source_side / "references"
+
+
+def verify_approved_reference_snapshot(refs):
+    rows = read_rows(SIDE / "provenance/reference_manifest.tsv", ["path", "sha256", "bytes"])
+    archived = {row["path"].removeprefix("references/"): row for row in rows}
+    for relative in EXPECTED:
+        path = refs / relative
+        row = archived[relative]
+        if path.stat().st_size != int(row["bytes"]) or sha256(path) != row["sha256"]:
+            raise ValueError(f"Reference differs from approved recovery snapshot: {path}")
+
+
+def local_run_id(run_id):
+    run_id = run_id or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", run_id):
+        raise ValueError(f"Invalid local run ID: {run_id}")
+    return run_id
 
 
 def hgnc_mapping(path, requested):
@@ -645,17 +671,14 @@ def approved_recovery_rows(
     return proposals, rows
 
 
-def main(reuse_verified_references=False, recovery_review=None):
-    if not os.environ.get("SLURM_JOB_ID"):
-        raise RuntimeError("Reference preparation must run through SLURM")
-    job_id = os.environ["SLURM_JOB_ID"]
-    if not re.fullmatch(r"[A-Za-z0-9_-]+", job_id):
-        raise ValueError(f"Invalid SLURM job ID: {job_id}")
-    side = SIDE / f"mapping_{job_id}" if reuse_verified_references else SIDE
-    if recovery_review and not reuse_verified_references:
-        raise ValueError("Applying recovery proposals requires verified-reference reuse mode")
-    if reuse_verified_references and side.exists():
+def main(reuse_verified_references=False, recovery_review=None, run_id=None, reference_source=None):
+    run_id = local_run_id(run_id)
+    side = SIDE / f"mapping_local_{run_id}"
+    if side.exists():
         raise FileExistsError(f"Refusing to overwrite existing {side}")
+    source = Path(reference_source).resolve() if reference_source else SIDE
+    if not source.is_relative_to(ROOT):
+        raise ValueError("Reference source must be within the repository")
     for relative in INPUTS:
         if not (ROOT / relative).is_file():
             raise FileNotFoundError(ROOT / relative)
@@ -666,11 +689,8 @@ def main(reuse_verified_references=False, recovery_review=None):
     for name in output_dirs:
         if (side / name).exists():
             raise FileExistsError(f"Refusing to overwrite existing {side / name}")
-    if shutil.which("sum") is None:
-        raise RuntimeError("Missing BSD checksum utility: sum")
     categories, tables, selected = prepare_pairs(ROOT)
-    if reuse_verified_references:
-        side.mkdir()
+    side.mkdir()
     for name in output_dirs:
         (side / name).mkdir()
     table_dir = side / "tables"
@@ -692,7 +712,8 @@ def main(reuse_verified_references=False, recovery_review=None):
     write_rows(side / "provenance/input_manifest.csv", inputs, ["path", "bytes", "sha256"])
     execution = {
         "started_utc": now(), "python": sys.version, "platform": platform.platform(),
-        "slurm_job_id": os.environ["SLURM_JOB_ID"],
+        "run_id": run_id, "command": [sys.executable, *sys.argv],
+        "wrapper_command": os.environ.get("WORKFLOW_WRAPPER_COMMAND"),
         "git_commit": subprocess.run(
             ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
             check=True, capture_output=True, text=True,
@@ -706,7 +727,9 @@ def main(reuse_verified_references=False, recovery_review=None):
         },
         "stage": "reference_preparation_and_mapping_only",
         "reuse_verified_references": reuse_verified_references,
-        "reference_manifest_source_directory": str(SIDE.relative_to(ROOT)),
+        "reference_manifest_source_directory": str(
+            (source if reuse_verified_references else side).relative_to(ROOT)
+        ),
     }
     if recovery_review:
         execution["approved_recovery_review"] = inputs[-1]
@@ -716,9 +739,11 @@ def main(reuse_verified_references=False, recovery_review=None):
         handle.write("\n")
     log(f"Canonical genes={len(categories)}, selected pairs={len(selected)}")
     refs = (
-        reuse_references(SIDE, side, canonical_inputs)
+        reuse_references(source, side, canonical_inputs)
         if reuse_verified_references else reference_files(side)
     )
+    if recovery_review:
+        verify_approved_reference_snapshot(refs)
     requested = {human for fly, human in tables["all_orthologs"]}
     log("Reading full human HGNC xref")
     hgnc, xref_counts, excluded_xrefs = hgnc_mapping(refs / "human/xref.tsv.gz", requested)
@@ -899,16 +924,17 @@ def main(reuse_verified_references=False, recovery_review=None):
     }
     if recovery_review:
         completion["recovery_proposals_applied"] = len(approved_recoveries)
-        output_files = [
+    output_files = [
             {"path": str(path.relative_to(side)), "bytes": path.stat().st_size,
              "sha256": sha256(path)}
             for path in sorted(side.rglob("*")) if path.is_file()
+            and not path.is_relative_to(side / "references")
         ]
-        write_rows(
+    write_rows(
             side / "provenance/output_manifest.csv", output_files,
             ["path", "bytes", "sha256"],
         )
-        completion["output_manifest_sha256"] = sha256(
+    completion["output_manifest_sha256"] = sha256(
             side / "provenance/output_manifest.csv"
         )
     with (side / "provenance/PREPARATION_COMPLETE.json").open("x") as handle:
@@ -920,14 +946,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--reuse-verified-references", action="store_true",
-        help="Reverify original downloads; write fresh mapping_JOBID outputs without overwriting.",
+        help="Reverify existing downloads from --reference-source instead of downloading.",
     )
     parser.add_argument(
         "--apply-reviewed-recoveries", type=Path,
         help="Apply only the pinned 628 proposals from the completed per-gene review.",
     )
+    parser.add_argument("--run-id", help="Unique local run identifier (default: UTC timestamp).")
+    parser.add_argument("--reference-source", type=Path,
+                        help="Directory containing references/ and provenance/reference_manifest.tsv.")
     arguments = parser.parse_args()
     main(
         reuse_verified_references=arguments.reuse_verified_references,
         recovery_review=arguments.apply_reviewed_recoveries,
+        run_id=arguments.run_id, reference_source=arguments.reference_source,
     )

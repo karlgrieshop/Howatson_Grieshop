@@ -1,0 +1,54 @@
+{
+  "completed_utc": "2026-11-12T10:30:32.639829+00:00",
+  "aligned_pairs": 9063,
+  "category_counts": [
+    {
+      "category": "SSDOs",
+      "eligible_genes": 568,
+      "excluded_before_alignment": 10,
+      "aligned_pairs": 558,
+      "identity_measured": 558,
+      "fly_coverage_measured": 558,
+      "human_coverage_measured": 558,
+      "pairs_with_masked_residues": 33,
+      "one_to_one_measured": 104
+    },
+    {
+      "category": "Disease orthologues excluding SSDOs",
+      "eligible_genes": 4512,
+      "excluded_before_alignment": 14,
+      "aligned_pairs": 4498,
+      "identity_measured": 4498,
+      "fly_coverage_measured": 4498,
+      "human_coverage_measured": 4498,
+      "pairs_with_masked_residues": 158,
+      "one_to_one_measured": 796
+    },
+    {
+      "category": "Orthologues excluding disease genes",
+      "eligible_genes": 4012,
+      "excluded_before_alignment": 5,
+      "aligned_pairs": 4007,
+      "identity_measured": 4007,
+      "fly_coverage_measured": 4007,
+      "human_coverage_measured": 4007,
+      "pairs_with_masked_residues": 117,
+      "one_to_one_measured": 1551
+    }
+  ],
+  "method": {
+    "mode": "global",
+    "substitution_matrix": "BLOSUM62",
+    "gap_open_score": -10.0,
+    "gap_extend_score": -0.5,
+    "score_epsilon": 1e-06,
+    "gap_cost": "10 + (gap_length - 1) * 0.5, including terminal gaps",
+    "tie_rule": "first optimal traceback from pinned Biopython, fly as target",
+    "masking": "nonstandard residues to X for scoring only; originals retained",
+    "identity": "100 * exact standard-residue matches / all alignment columns",
+    "fly_coverage": "100 * residue-residue columns / full fly protein length",
+    "human_coverage": "100 * residue-residue columns / full human protein length",
+    "coverage_masking": "masked residues count as present, not as gaps"
+  },
+  "output_manifest_sha256": "5e5c00afb9d86c3320a8b3c63b65f7a372f08bddb141f959e5f8d94b02fbea04"
+}

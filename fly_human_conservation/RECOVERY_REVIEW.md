@@ -5,6 +5,17 @@ categories, original pair ranking, protein rules, alignment definitions, or
 FigS8 statistics. Original mapping/alignment directories and logs are untouched.
 The review, recovered mapping, and recovered alignment jobs have completed.
 
+**Historical record:** commands and resource descriptions below document the
+original 2026-11-11 jobs, not the current entry points. The active workflow now
+runs locally with Bash; see `README.md`. On 2026-11-12, fresh local reference
+preparation and alignment reproduced all 9,063 recovered records exactly.
+The independent full review in
+`recovery_review_local_20261112_local_verify/` reproduced all 657 decisions and
+proposed IDs, using a newly downloaded HGNC snapshot with the same hash.
+The remaining cases are 18 unresolved identifiers, nine unsupplied primary
+pairs, and two classified non-protein-coding loci; the three source-specific
+pair leads below are still unapplied.
+
 ## Initial per-gene review
 
 Read `recovery_review_preflight_20261111/tables/per_gene_resolution.csv`:
@@ -128,6 +139,28 @@ retained human-symbol row. Any proposed added pair requires separate source
 review and approval. The review leaves these unpaired, with one-to-one status
 explicitly unassigned rather than treating the audit's False as proof of
 many-to-many orthology.
+
+### Local source-file follow-up discovered after HPC recovery
+
+The HPC clone did not contain `Data/inputs/ssdo_inputs/`, but the local clone
+does. Two ignored, disease-specific orthology CSVs contain source rows for
+three of the nine currently unpaired SSDOs:
+
+| Fly gene | Human partner | Source record |
+|---|---|---|
+| FBgn0035670 / CG10472 | CTRC / HGNC:2523 | `orthology_sources/alzheimer_disease_orthologs.csv`: DIOPT 3, weighted 2.76, high rank, best both directions. The same pair is repeated for search terms CTRC and CLCR. |
+| FBgn0036612 / CG4998 | F12 / HGNC:3530 | `orthology_sources/coronary_artery_disease_orthologs.csv`: DIOPT 3, weighted 2.91, high rank, best both directions. The same pair is repeated for F12, HAF, and HAE3 search terms. |
+| FBgn0036287 / CG10663 | F7 / HGNC:3544 | `orthology_sources/coronary_artery_disease_orthologs.csv`: DIOPT 2, weighted 1.91, moderate rank, best forward but not reverse. |
+
+These are source-specific candidate records, not pairs in the original
+all-orthologues table, and have not been added to the recovered mapping or
+analyses. A follow-up should verify the source provenance, current human
+identifier/protein mapping, and whether the existing pair-selection rule can
+be extended without privileging these candidates. De-duplicate repeated
+search-term rows. Because these genes have no edge in the original full
+orthology graph, keep their one-to-one status unassigned and exclude them from
+the one-to-one sensitivity unless that graph membership is independently
+established. Do not apply these records without separate approval.
 
 ## Completed review-only SLURM job: 4955170
 

@@ -223,11 +223,11 @@ assign_gene_types_5class <- function(raw_values, ssdo_ids, disease_ids, ortholog
 # Study-specific builders (same logic as your current scripts)
 build_ruzicka_magnitude_values <- function(gene_reference) {
   assoc <- read.delim(input_path("Assoc_Data.txt"), stringsAsFactors = FALSE, check.names = FALSE) |>
-    transmute(chromosome = as.character(Chromosome), position = as.integer(Basepair), Value = as.numeric(Wald_Stat)) |>
+    transmute(chromosome = as.character(Chromosome), position = as.integer(Basepair), Value = abs(as.numeric(Wald_Stat))) |>
     filter(!is.na(Value), is.finite(Value))
   
   map_snp_metric_to_genes(assoc[, c("chromosome", "position", "Value")], gene_reference,
-                          "Ruzicka et al. from Assoc_Data.txt (max Wald_Stat)")
+                          "Ruzicka et al. from Assoc_Data.txt (max(abs(Wald_Stat)))")
 }
 
 plot_metric_panel <- function(summary_data, y_label = NULL, show_x_axis = TRUE, show_y_title = TRUE, title = NULL, tag = NULL) {

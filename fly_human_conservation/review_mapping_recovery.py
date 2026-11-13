@@ -5,6 +5,7 @@ import csv
 import gzip
 import json
 import os
+import platform
 import re
 import subprocess
 import urllib.request
@@ -275,20 +276,21 @@ def scan_xrefs(path, genes, symbols):
     return direct, selected
 
 
-def verify_references():
+def verify_references(reference_source=None):
+    reference_source = reference_source or BASE
     sources = prep.read_rows(
-        ORIGINAL / "provenance/reference_manifest.tsv",
+        reference_source / "provenance/reference_manifest.tsv",
         ["path", "bytes", "sha256", "verified", "provider_checksum"],
     )
     for row in sources:
-        path = BASE / row["path"]
+        path = reference_source / row["path"]
         if path.stat().st_size != int(row["bytes"]) or prep.sha256(path) != row["sha256"]:
             raise ValueError(f"Reference differs from successful preparation: {path}")
         relative = row["path"].removeprefix("references/")
         if relative in prep.EXPECTED:
             if row["verified"] != "True" or row["provider_checksum"] != prep.EXPECTED[relative]:
                 raise ValueError(f"Original reference checksum validation missing: {relative}")
-            prep.verify_provider_checksum(BASE / "references", relative)
+            prep.verify_provider_checksum(reference_source / "references", relative)
     return sources
 
 
@@ -317,8 +319,9 @@ def category_counts(audit, reviews):
     return rows
 
 
-def full_review(output, rows):
-    references = verify_references()
+def full_review(output, rows, reference_source=None):
+    reference_source = reference_source or BASE
+    references = verify_references(reference_source)
     source_manifest = [fetch(HGNC_URL, output / "downloads/hgnc_complete_set.tsv")]
     by_id, by_symbol = hgnc_documents(output / "downloads/hgnc_complete_set.tsv")
     documents = {}
@@ -333,17 +336,17 @@ def full_review(output, rows):
     wanted = {
         gene for row in rows for gene in row["original_candidate_ENSGs"].split(";") if gene
     } | {official_gene(doc) for doc in documents.values() if official_gene(doc)}
-    gtf = BASE / "references/human/genes.gtf.bgz"
+    gtf = reference_source / "references/human/genes.gtf.bgz"
     genes = scan_gene_metadata(gtf, wanted)
     symbols = {row["selected_human_symbol"] for row in rows if row["selected_HGNC_ID"] == "HGNC:0"}
-    direct, xrefs = scan_xrefs(BASE / "references/human/xref.tsv.gz", wanted, symbols)
+    direct, xrefs = scan_xrefs(reference_source / "references/human/xref.tsv.gz", wanted, symbols)
     prep.write_rows(output / "tables/candidate_reference_xrefs.csv", xrefs, list(xrefs[0]) if xrefs else [
         "gene_stable_id", "transcript_stable_id", "protein_stable_id", "xref_id",
         "xref_label", "description", "db_name", "info_type", "source", "ensembl_identity", "xref_identity",
     ])
     proteins, canonical, coding, header = prep.annotation(gtf, wanted, "human")
     reps, protein_audit = prep.representative_proteins(
-        BASE / "references/human/pep.fa.bgz", proteins, canonical, coding, "human",
+        reference_source / "references/human/pep.fa.bgz", proteins, canonical, coding, "human",
     )
     prep.write_rows(output / "tables/candidate_proteins.csv", protein_audit, [
         "species", "gene_id", "protein_id", "canonical", "status", "length_aa", "selected",
@@ -403,11 +406,12 @@ def full_review(output, rows):
     return resolved, source_manifest
 
 
-def main(preflight=False):
-    job = os.environ.get("SLURM_JOB_ID", "")
-    if not preflight and not re.fullmatch(r"[0-9]+", job):
-        raise RuntimeError("Run full reference/HGNC review through SLURM")
-    name = "recovery_review_preflight_20261111" if preflight else f"recovery_review_{job}"
+def main(preflight=False, run_id=None, reference_source=None):
+    run_id = prep.local_run_id(run_id)
+    reference_source = Path(reference_source).resolve() if reference_source else BASE
+    if not reference_source.is_relative_to(ROOT):
+        raise ValueError("Reference source must be within the repository")
+    name = f"recovery_review_local_{run_id}"
     output = BASE / name
     if output.exists():
         raise FileExistsError(f"Refusing to overwrite {output}")
@@ -431,8 +435,12 @@ def main(preflight=False):
     prep.write_rows(output / "provenance/input_manifest.csv", inputs, list(inputs[0]))
     with (output / "provenance/execution.json").open("x") as handle:
         json.dump({
-            "started_utc": prep.now(), "preflight": preflight, "slurm_job_id": job,
-            "python": os.sys.version, "fixed_reference_release": FIXED_RELEASE,
+            "started_utc": prep.now(), "preflight": preflight, "run_id": run_id,
+            "python": os.sys.version, "platform": platform.platform(),
+            "command": [os.sys.executable, *os.sys.argv],
+            "wrapper_command": os.environ.get("WORKFLOW_WRAPPER_COMMAND"),
+            "reference_source": str(reference_source.relative_to(ROOT)),
+            "fixed_reference_release": FIXED_RELEASE,
             "HGNC_source_documentation": HGNC_HELP,
             "git_commit": subprocess.run(
                 ["git", "-C", str(ROOT), "rev-parse", "HEAD"],
@@ -466,7 +474,7 @@ def main(preflight=False):
                 else:
                     row["decision"] = "authoritative_ENSG_lead_pending_fixed_annotation"
     else:
-        rows, remote = full_review(output, rows)
+        rows, remote = full_review(output, rows, reference_source)
     prep.write_rows(output / "tables/per_gene_resolution.csv", rows, TABLE_COLUMNS)
     counts = category_counts(audit, rows)
     prep.write_rows(output / "tables/category_attrition_review.csv", counts, list(counts[0]))
@@ -505,5 +513,8 @@ def main(preflight=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--preflight", action="store_true", help="Compact audits and two bounded HGNC samples only.")
+    parser.add_argument("--run-id", help="Unique local run identifier (default: UTC timestamp).")
+    parser.add_argument("--reference-source", type=Path,
+                        help="Directory containing references/ and provenance/reference_manifest.tsv.")
     args = parser.parse_args()
-    main(preflight=args.preflight)
+    main(preflight=args.preflight, run_id=args.run_id, reference_source=args.reference_source)

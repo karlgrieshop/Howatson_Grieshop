@@ -1,3 +1,3 @@
 "Metric","Mean","NGenes","Universe","Source"
 "rMF",0.402340425633721,10380,"All protein-coding genes with finite metric values; all gene categories; no resolution-stage restriction","SBGEandSSSdataForMBE.csv (rmf)"
-"SA effect",0.964679857198779,12773,"All protein-coding genes with finite metric values; all gene categories; no resolution-stage restriction","Ruzicka et al. from Assoc_Data.txt (max Wald_Stat)"
+"SA effect",1.42791065943788,12773,"All protein-coding genes with finite metric values; all gene categories; no resolution-stage restriction","Ruzicka et al. from Assoc_Data.txt (max(abs(Wald_Stat)))"

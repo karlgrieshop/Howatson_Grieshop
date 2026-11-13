@@ -22,27 +22,34 @@ suppressPackageStartupMessages({
 
 project_root <- find_project_root()
 arguments <- commandArgs(trailingOnly = TRUE)
-if (length(arguments) != 2L || arguments[[1]] != "--alignment-dir") {
+if (length(arguments) != 4L ||
+    arguments[[1]] != "--alignment-dir" ||
+    arguments[[3]] != "--mapping-dir") {
   stop(
     paste(
       "Usage: Rscript Sup_plotting_and_analyses/figureS8_fly_human_conservation.R",
-      "--alignment-dir fly_human_conservation/alignment_<job-id>"
+      "--alignment-dir fly_human_conservation/alignment_<job-id>",
+      "--mapping-dir fly_human_conservation/mapping_<job-id>"
     ),
     call. = FALSE
   )
 }
 alignment_dir <- arguments[[2]]
+mapping_dir <- arguments[[4]]
 if (!grepl("^(/|[A-Za-z]:[/\\\\])", alignment_dir)) {
   alignment_dir <- file.path(project_root, alignment_dir)
 }
+if (!grepl("^(/|[A-Za-z]:[/\\\\])", mapping_dir)) {
+  mapping_dir <- file.path(project_root, mapping_dir)
+}
 alignment_dir <- normalizePath(alignment_dir, winslash = "/", mustWork = TRUE)
+mapping_dir <- normalizePath(mapping_dir, winslash = "/", mustWork = TRUE)
 alignment_table_dir <- file.path(alignment_dir, "tables")
+mapping_table_dir <- file.path(mapping_dir, "tables")
 summary_dir <- file.path(project_root, "Data", "Summary_tables")
 figure_dir <- file.path(project_root, "Sup_figures")
-side_figure_dir <- file.path(project_root, "side", "fly_human_conservation")
 dir.create(summary_dir, showWarnings = FALSE, recursive = TRUE)
 dir.create(figure_dir, showWarnings = FALSE, recursive = TRUE)
-dir.create(side_figure_dir, showWarnings = FALSE, recursive = TRUE)
 
 category_order <- c(
   "SSDOs",
@@ -79,25 +86,19 @@ main_values <- read.csv(
   stringsAsFactors = FALSE,
   check.names = FALSE
 )
-one_to_one_values <- read.csv(
-  file.path(alignment_table_dir, "one_to_one_conservation.csv"),
-  stringsAsFactors = FALSE,
-  check.names = FALSE
-)
-one_to_one_flag <- tolower(trimws(as.character(one_to_one_values$one_to_one)))
-if (any(!one_to_one_flag %in% c("true", "false"))) {
-  stop("One-to-one flags must be TRUE/FALSE.", call. = FALSE)
-}
-one_to_one_values$one_to_one <- one_to_one_flag == "true"
 category_counts <- read.csv(
   file.path(alignment_table_dir, "category_counts.csv"),
+  stringsAsFactors = FALSE
+)
+mapping_attrition <- read.csv(
+  file.path(mapping_table_dir, "category_attrition.csv"),
   stringsAsFactors = FALSE
 )
 
 validate_values <- function(data, label) {
   required <- c(
     "FlyBaseID", "category", "human_gene_id", "human_protein_id",
-    "one_to_one", metric_order
+    metric_order
   )
   if (!all(required %in% names(data))) {
     stop(label, " is missing required columns.", call. = FALSE)
@@ -112,59 +113,43 @@ validate_values <- function(data, label) {
 }
 
 validate_values(main_values, "Main gene table")
-validate_values(one_to_one_values, "One-to-one gene table")
-if (!all(one_to_one_values$one_to_one %in% TRUE) ||
-    !all(one_to_one_values$FlyBaseID %in% main_values$FlyBaseID)) {
-  stop("One-to-one table is not a subset of the main table.", call. = FALSE)
-}
-main_match <- match(one_to_one_values$FlyBaseID, main_values$FlyBaseID)
-for (metric in metric_order) {
-  if (!isTRUE(all.equal(
-    one_to_one_values[[metric]],
-    main_values[[metric]][main_match],
-    check.attributes = FALSE
-  ))) {
-    stop("One-to-one values differ from the main table for ", metric, ".", call. = FALSE)
-  }
-}
-
 required_count_columns <- c(
   "category", "eligible_genes", "excluded_before_alignment", "aligned_pairs",
-  "identity_measured", "fly_coverage_measured", "human_coverage_measured",
-  "one_to_one_measured"
-)
-one_to_one_count_columns <- c(
-  "one_to_one_eligible", "one_to_one_excluded_before_alignment"
+  "identity_measured", "fly_coverage_measured", "human_coverage_measured"
 )
 if (!all(required_count_columns %in% names(category_counts)) ||
     anyDuplicated(category_counts$category) ||
     !setequal(category_counts$category, category_order)) {
   stop("Category-count table is missing required categories or columns.", call. = FALSE)
 }
-if (xor(
-  one_to_one_count_columns[1] %in% names(category_counts),
-  one_to_one_count_columns[2] %in% names(category_counts)
-)) {
-  stop("One-to-one eligibility counts must be provided together.", call. = FALSE)
+required_attrition_columns <- c("category", "eligible_genes", "ready_for_alignment")
+if (!all(required_attrition_columns %in% names(mapping_attrition)) ||
+    anyDuplicated(mapping_attrition$category) ||
+    !setequal(mapping_attrition$category, category_order)) {
+  stop("Mapping attrition table is missing required category counts.", call. = FALSE)
 }
-has_one_to_one_counts <- all(one_to_one_count_columns %in% names(category_counts))
 category_counts <- category_counts[
   match(category_order, category_counts$category),
   ,
   drop = FALSE
 ]
+mapping_attrition <- mapping_attrition[
+  match(category_order, mapping_attrition$category),
+  ,
+  drop = FALSE
+]
 observed_main <- as.integer(table(factor(main_values$category, levels = category_order)))
-observed_one_to_one <- as.integer(table(factor(
-  one_to_one_values$category,
-  levels = category_order
-)))
 if (!identical(observed_main, as.integer(category_counts$aligned_pairs)) ||
-    !identical(observed_one_to_one, as.integer(category_counts$one_to_one_measured)) ||
+    !identical(
+      as.integer(category_counts$eligible_genes),
+      as.integer(mapping_attrition$eligible_genes)
+    ) ||
+    !identical(
+      as.integer(category_counts$aligned_pairs),
+      as.integer(mapping_attrition$ready_for_alignment)
+    ) ||
     any(category_counts$eligible_genes !=
       category_counts$excluded_before_alignment + category_counts$aligned_pairs) ||
-    (has_one_to_one_counts && any(category_counts$one_to_one_eligible !=
-      category_counts$one_to_one_excluded_before_alignment +
-        category_counts$one_to_one_measured)) ||
     any(category_counts$identity_measured != category_counts$aligned_pairs) ||
     any(category_counts$fly_coverage_measured != category_counts$aligned_pairs) ||
     any(category_counts$human_coverage_measured != category_counts$aligned_pairs)) {
@@ -179,23 +164,8 @@ summarise_groups <- function(data, analysis_set) {
       values <- data[[metric]][data$category == group]
       seed <- base_seed + metric_index * 100L + group_index
       counts <- category_counts[category_counts$category == group, , drop = FALSE]
-      is_main_set <- identical(analysis_set, "All mapped orthologues")
-      has_eligible_count <- is_main_set ||
-        (identical(analysis_set, "One-to-one sensitivity") && has_one_to_one_counts)
-      eligible <- if (is_main_set) {
-        counts$eligible_genes
-      } else if (has_eligible_count) {
-        counts$one_to_one_eligible
-      } else {
-        NA_integer_
-      }
-      excluded <- if (is_main_set) {
-        counts$excluded_before_alignment
-      } else if (has_eligible_count) {
-        counts$one_to_one_excluded_before_alignment
-      } else {
-        NA_integer_
-      }
+      eligible <- counts$eligible_genes
+      excluded <- counts$excluded_before_alignment
       set.seed(seed)
       bootstrap_means <- replicate(
         n_boot,
@@ -208,7 +178,7 @@ summarise_groups <- function(data, analysis_set) {
         N = length(values),
         Eligible = eligible,
         ExcludedBeforeAlignment = excluded,
-        MissingPercent = if (has_eligible_count) 100 * excluded / eligible else NA_real_,
+        MissingPercent = 100 * excluded / eligible,
         MeanPercent = mean(values),
         CI95Low = unname(quantile(bootstrap_means, 0.025)),
         CI95High = unname(quantile(bootstrap_means, 0.975)),
@@ -286,14 +256,13 @@ run_analysis_set <- function(data, analysis_set) {
 }
 
 main_results <- run_analysis_set(main_values, "All mapped orthologues")
-one_to_one_results <- run_analysis_set(one_to_one_values, "One-to-one sensitivity")
-summaries <- bind_rows(main_results$summaries, one_to_one_results$summaries) |>
+summaries <- main_results$summaries |>
   mutate(
     Metric = factor(Metric, levels = metric_order),
     Category = factor(Category, levels = category_order)
   ) |>
   arrange(AnalysisSet, Metric, Category)
-tests <- bind_rows(main_results$tests, one_to_one_results$tests) |>
+tests <- main_results$tests |>
   mutate(Metric = factor(Metric, levels = metric_order)) |>
   arrange(AnalysisSet, Metric, ContrastOrder)
 
@@ -313,23 +282,26 @@ category_coverage <- category_counts |>
     Eligible = eligible_genes,
     ExcludedBeforeAlignment = excluded_before_alignment,
     Measured = aligned_pairs,
-    MissingPercent = 100 * excluded_before_alignment / eligible_genes,
-    OneToOneEligible = if (has_one_to_one_counts) one_to_one_eligible else NA_integer_,
-    OneToOneExcludedBeforeAlignment = if (has_one_to_one_counts) {
-      one_to_one_excluded_before_alignment
-    } else {
-      NA_integer_
-    },
-    OneToOneMissingPercent = if (has_one_to_one_counts) {
-      100 * one_to_one_excluded_before_alignment / one_to_one_eligible
-    } else {
-      NA_real_
-    },
-    OneToOneMeasured = one_to_one_measured
+    MissingPercent = 100 * excluded_before_alignment / eligible_genes
   )
 write.csv(
   category_coverage,
   file.path(summary_dir, "FigS8_category_coverage.csv"),
+  row.names = FALSE
+)
+inputs <- c(
+  file.path(alignment_table_dir, c(
+    "gene_conservation.csv", "category_counts.csv"
+  )),
+  file.path(mapping_table_dir, "category_attrition.csv"),
+  file.path(project_root, "Sup_plotting_and_analyses", "figureS8_fly_human_conservation.R")
+)
+write.csv(
+  data.frame(
+    Input = substring(inputs, nchar(project_root) + 2L),
+    Bytes = file.info(inputs)$size, MD5 = unname(tools::md5sum(inputs))
+  ),
+  file.path(summary_dir, "FigS8_input_manifest.csv"),
   row.names = FALSE
 )
 
@@ -379,11 +351,6 @@ main_plot <- plot_summaries(
   "All mapped orthologues",
   "Fly–human protein conservation"
 )
-one_to_one_plot <- plot_summaries(
-  summaries,
-  "One-to-one sensitivity",
-  "Fly–human protein conservation: one-to-one sensitivity"
-)
 ggsave(
   file.path(figure_dir, "FigS8_fly_human_conservation.png"),
   main_plot,
@@ -392,13 +359,4 @@ ggsave(
   dpi = 300,
   bg = "white"
 )
-ggsave(
-  file.path(side_figure_dir, "one_to_one_sensitivity.png"),
-  one_to_one_plot,
-  width = 12,
-  height = 5.2,
-  dpi = 300,
-  bg = "white"
-)
-
 message("Wrote FigS8 and conservation summaries to Sup_figures/ and Data/Summary_tables/.")

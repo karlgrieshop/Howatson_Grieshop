@@ -5,6 +5,7 @@ import csv
 import hashlib
 import json
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -224,6 +225,10 @@ def load_pairs(mapping):
 
 def validated_inputs(mapping=None):
     mapping = mapping or MAPPING
+    execution = json.loads((mapping / "provenance/execution.json").read_text())
+    source = (ROOT / execution.get("reference_manifest_source_directory", str(SIDE.relative_to(ROOT)))).resolve()
+    if not source.is_relative_to(ROOT):
+        raise ValueError("Reference source must be within the repository")
     paths = [
         mapping / "tables" / name
         for name in ("selected_pairs.csv", "representative_proteins.csv", "gene_mapping_audit.csv")
@@ -268,7 +273,7 @@ def validated_inputs(mapping=None):
         if len(entries) != 1:
             raise ValueError(f"Missing/duplicate reference manifest entry: {relative}")
         row = entries[0]
-        path = SIDE / relative
+        path = source / relative
         if (
             row["verified"] != "True"
             or row["provider_checksum"] != preparation.EXPECTED[relative.removeprefix("references/")]
@@ -299,11 +304,9 @@ def save_alignment(path, pair, fly, human, fly_aligned, human_aligned, alignment
         handle.write("\n")
 
 
-def main(mapping=None):
-    job_id = os.environ.get("SLURM_JOB_ID", "")
-    if not re.fullmatch(r"[0-9]+", job_id):
-        raise RuntimeError("Run biological alignments through SLURM")
-    output = SIDE / f"alignment_{job_id}"
+def main(mapping=None, run_id=None):
+    run_id = preparation.local_run_id(run_id)
+    output = SIDE / f"alignment_local_{run_id}"
     if output.exists():
         raise FileExistsError(f"Refusing to overwrite {output}")
     aligner = create_aligner()
@@ -319,7 +322,9 @@ def main(mapping=None):
     import Bio
     import numpy
     execution = {
-        "started_utc": preparation.now(), "slurm_job_id": job_id,
+        "started_utc": preparation.now(), "run_id": run_id,
+        "command": [sys.executable, *sys.argv], "platform": platform.platform(),
+        "wrapper_command": os.environ.get("WORKFLOW_WRAPPER_COMMAND"),
         "python": sys.version, "biopython": Bio.__version__, "numpy": numpy.__version__,
         "python_executable": sys.executable,
         "mapping_directory": str(mapping.relative_to(ROOT)), "method": METHOD,
@@ -439,12 +444,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--mapping-dir", type=Path,
-        help="Repository-relative completed mapping directory (default: mapping_4935338).",
+        required=True, help="Repository-relative completed mapping directory.",
     )
+    parser.add_argument("--run-id", help="Unique local run identifier (default: UTC timestamp).")
     arguments = parser.parse_args()
     mapping = None
     if arguments.mapping_dir is not None:
         mapping = (ROOT / arguments.mapping_dir).resolve()
-        if mapping.parent != SIDE.resolve() or not re.fullmatch(r"mapping_[0-9]+", mapping.name):
-            parser.error("--mapping-dir must name a job-specific mapping directory under fly_human_conservation")
-    main(mapping)
+        if mapping.parent != SIDE.resolve() or not re.fullmatch(r"mapping_[A-Za-z0-9_-]+", mapping.name):
+            parser.error("--mapping-dir must name a mapping directory under fly_human_conservation")
+    main(mapping, run_id=arguments.run_id)

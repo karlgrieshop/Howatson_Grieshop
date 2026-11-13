@@ -1,0 +1,61 @@
+source,category,score,count
+all_orthologs,all_input_rows,3,10010
+all_orthologs,all_input_rows,4,5253
+all_orthologs,all_input_rows,5,3493
+all_orthologs,all_input_rows,6,2608
+all_orthologs,all_input_rows,7,1952
+all_orthologs,all_input_rows,8,1473
+all_orthologs,all_input_rows,9,1260
+all_orthologs,all_input_rows,10,1341
+all_orthologs,all_input_rows,11,1899
+all_orthologs,all_input_rows,12,1677
+all_orthologs,all_input_rows,13,1915
+all_orthologs,all_input_rows,14,2226
+all_disease_orthologs,all_input_rows,3,3124
+all_disease_orthologs,all_input_rows,4,1533
+all_disease_orthologs,all_input_rows,5,1019
+all_disease_orthologs,all_input_rows,6,708
+all_disease_orthologs,all_input_rows,7,546
+all_disease_orthologs,all_input_rows,8,434
+all_disease_orthologs,all_input_rows,9,335
+all_disease_orthologs,all_input_rows,10,356
+all_disease_orthologs,all_input_rows,11,440
+all_disease_orthologs,all_input_rows,12,558
+all_disease_orthologs,all_input_rows,13,650
+all_disease_orthologs,all_input_rows,14,871
+selected_pairs,SSDOs,3,37
+selected_pairs,SSDOs,4,30
+selected_pairs,SSDOs,5,14
+selected_pairs,SSDOs,6,19
+selected_pairs,SSDOs,7,25
+selected_pairs,SSDOs,8,31
+selected_pairs,SSDOs,9,31
+selected_pairs,SSDOs,10,29
+selected_pairs,SSDOs,11,45
+selected_pairs,SSDOs,12,67
+selected_pairs,SSDOs,13,105
+selected_pairs,SSDOs,14,126
+selected_pairs,Disease orthologues excluding SSDOs,3,214
+selected_pairs,Disease orthologues excluding SSDOs,4,260
+selected_pairs,Disease orthologues excluding SSDOs,5,270
+selected_pairs,Disease orthologues excluding SSDOs,6,298
+selected_pairs,Disease orthologues excluding SSDOs,7,271
+selected_pairs,Disease orthologues excluding SSDOs,8,262
+selected_pairs,Disease orthologues excluding SSDOs,9,239
+selected_pairs,Disease orthologues excluding SSDOs,10,250
+selected_pairs,Disease orthologues excluding SSDOs,11,334
+selected_pairs,Disease orthologues excluding SSDOs,12,447
+selected_pairs,Disease orthologues excluding SSDOs,13,668
+selected_pairs,Disease orthologues excluding SSDOs,14,999
+selected_pairs,Orthologues excluding disease genes,3,226
+selected_pairs,Orthologues excluding disease genes,4,175
+selected_pairs,Orthologues excluding disease genes,5,147
+selected_pairs,Orthologues excluding disease genes,6,160
+selected_pairs,Orthologues excluding disease genes,7,175
+selected_pairs,Orthologues excluding disease genes,8,183
+selected_pairs,Orthologues excluding disease genes,9,214
+selected_pairs,Orthologues excluding disease genes,10,246
+selected_pairs,Orthologues excluding disease genes,11,328
+selected_pairs,Orthologues excluding disease genes,12,411
+selected_pairs,Orthologues excluding disease genes,13,655
+selected_pairs,Orthologues excluding disease genes,14,1092

@@ -22,7 +22,7 @@ SPEC.loader.exec_module(prepare)
 class PreparationTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        self.root = Path(self.tmp.name)
+        self.root = Path(self.tmp.name).resolve()
         self.addCleanup(self.tmp.cleanup)
 
     def csv(self, relative, rows, columns):
@@ -327,13 +327,7 @@ class PreparationTests(unittest.TestCase):
         }
         md5s = {name: hashlib.md5(data[name]).hexdigest()
                 for name in ("pep.fa.bgz", "genes.gtf.bgz", "xref.tsv.gz")}
-        sums = {}
-        for name in (prepare.FLY_PEP, prepare.FLY_GTF):
-            temp = self.root / name
-            temp.write_bytes(data[name])
-            sums[name] = " ".join(subprocess.check_output(
-                ["sum", "-r", str(temp)], text=True,
-            ).split()[:2])
+        sums = {prepare.FLY_PEP: "45388 1", prepare.FLY_GTF: "18539 1"}
         pinned = {
             **{"human/" + name: checksum for name, checksum in md5s.items()},
             **{"fly/" + name: checksum for name, checksum in sums.items()},
@@ -399,18 +393,35 @@ class PreparationTests(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.touch()
         side = self.root / "side/fly_human_conservation"
-        (side / "tables").mkdir(parents=True)
+        (side / "mapping_local_test").mkdir(parents=True)
         with patch.object(prepare, "ROOT", self.root), patch.object(prepare, "SIDE", side):
-            with patch.dict(os.environ, {"SLURM_JOB_ID": "test"}):
-                with patch.object(prepare, "download") as download:
-                    with self.assertRaisesRegex(FileExistsError, "Refusing to overwrite"):
-                        prepare.main()
-                    download.assert_not_called()
-        (side / "mapping_test").mkdir()
-        with patch.object(prepare, "ROOT", self.root), patch.object(prepare, "SIDE", side):
-            with patch.dict(os.environ, {"SLURM_JOB_ID": "test"}):
+            with patch.object(prepare, "download") as download:
                 with self.assertRaisesRegex(FileExistsError, "Refusing to overwrite"):
-                    prepare.main(reuse_verified_references=True)
+                    prepare.main(run_id="test")
+                download.assert_not_called()
+        with patch.object(prepare, "ROOT", self.root), patch.object(prepare, "SIDE", side):
+            with self.assertRaisesRegex(FileExistsError, "Refusing to overwrite"):
+                prepare.main(reuse_verified_references=True, run_id="test")
+        with self.assertRaisesRegex(ValueError, "Invalid local run ID"):
+            prepare.local_run_id("../escape")
+
+    def test_approved_references_require_exact_archived_fingerprint(self):
+        side = self.root / "workflow"
+        (side / "provenance").mkdir(parents=True)
+        refs = self.root / "downloads"
+        (refs / "fly").mkdir(parents=True)
+        path = refs / "fly/test.gz"
+        path.write_bytes(b"approved")
+        prepare.write_rows(
+            side / "provenance/reference_manifest.tsv",
+            [{"path": "references/fly/test.gz", "bytes": path.stat().st_size,
+              "sha256": prepare.sha256(path)}], ["path", "bytes", "sha256"],
+        )
+        with patch.object(prepare, "SIDE", side), patch.object(prepare, "EXPECTED", {"fly/test.gz": "pinned"}):
+            prepare.verify_approved_reference_snapshot(refs)
+            path.write_bytes(b"modified")
+            with self.assertRaisesRegex(ValueError, "approved recovery snapshot"):
+                prepare.verify_approved_reference_snapshot(refs)
 
     def test_main_exports_ready_missing_and_ambiguous_genes(self):
         for name, ids in (
@@ -472,12 +483,12 @@ class PreparationTests(unittest.TestCase):
             return refs
 
         with patch.object(prepare, "ROOT", self.root), patch.object(prepare, "SIDE", side):
-            with patch.dict(os.environ, {"SLURM_JOB_ID": "test"}):
-                with patch.object(prepare, "reference_files", fake_references):
-                    with patch.object(prepare.subprocess, "run") as git:
-                        git.return_value.stdout = "synthetic-commit\n"
-                        prepare.main()
-        with (side / "tables/gene_mapping_audit.csv").open(newline="") as handle:
+            with patch.object(prepare, "reference_files", fake_references):
+                with patch.object(prepare.platform, "platform", return_value="test"), patch.object(prepare.subprocess, "run") as git:
+                    git.return_value.stdout = "synthetic-commit\n"
+                    prepare.main(run_id="test")
+        first = side / "mapping_local_test"
+        with (first / "tables/gene_mapping_audit.csv").open(newline="") as handle:
             mapped = list(csv.DictReader(handle))
         self.assertEqual([row["status"] for row in mapped], [
             "ready_for_alignment", "no_supplied_orthology_pair", "HGNC_ambiguous", "HGNC_unmapped",
@@ -486,36 +497,36 @@ class PreparationTests(unittest.TestCase):
             ("all_pairs", 3), ("selected_pairs", 3), ("one_to_one_pairs", 3),
             ("gene_mapping_audit", 4), ("category_attrition", 3),
         ):
-            with (side / f"tables/{name}.csv").open(newline="") as handle:
+            with (first / f"tables/{name}.csv").open(newline="") as handle:
                 self.assertEqual(len(list(csv.DictReader(handle))), n)
-        self.assertTrue((side / "provenance/PREPARATION_COMPLETE.json").is_file())
-        with (side / "tables/excluded_human_xrefs.csv").open(newline="") as handle:
+        self.assertTrue((first / "provenance/PREPARATION_COMPLETE.json").is_file())
+        with (first / "tables/excluded_human_xrefs.csv").open(newline="") as handle:
             excluded = list(csv.DictReader(handle))
         self.assertEqual(excluded[0]["gene_stable_id"], "LRG_10")
         self.assertEqual(len(excluded), 1)
-        original_input_hash = prepare.sha256(side / "provenance/input_manifest.csv")
+        original_input_hash = prepare.sha256(first / "provenance/input_manifest.csv")
 
         def fake_reuse(source, destination, inputs):
-            self.assertEqual(source, side)
-            self.assertEqual(destination, side / "mapping_recovery_test")
+            self.assertEqual(source, first)
+            self.assertEqual(destination, side / "mapping_local_recovery_test")
             self.assertEqual(len(inputs), len(prepare.INPUTS))
             return source / "references"
 
         with patch.object(prepare, "ROOT", self.root), patch.object(prepare, "SIDE", side):
-            with patch.dict(os.environ, {"SLURM_JOB_ID": "recovery_test"}):
-                with patch.object(prepare, "reuse_references", fake_reuse):
-                    with patch.object(prepare, "reference_files") as downloads:
-                        with patch.object(prepare.subprocess, "run") as git:
-                            git.return_value.stdout = "synthetic-commit\n"
-                            prepare.main(reuse_verified_references=True)
-                        downloads.assert_not_called()
+            with patch.object(prepare, "reuse_references", fake_reuse):
+                with patch.object(prepare, "reference_files") as downloads:
+                    with patch.object(prepare.platform, "platform", return_value="test"), patch.object(prepare.subprocess, "run") as git:
+                        git.return_value.stdout = "synthetic-commit\n"
+                        prepare.main(reuse_verified_references=True, run_id="recovery_test",
+                                     reference_source=first)
+                    downloads.assert_not_called()
         self.assertTrue(
-            (side / "mapping_recovery_test/provenance/PREPARATION_COMPLETE.json").is_file()
+            (side / "mapping_local_recovery_test/provenance/PREPARATION_COMPLETE.json").is_file()
         )
         self.assertEqual(
-            prepare.sha256(side / "provenance/input_manifest.csv"), original_input_hash,
+            prepare.sha256(first / "provenance/input_manifest.csv"), original_input_hash,
         )
-        self.assertFalse((side / "mapping_recovery_test/references").exists())
+        self.assertFalse((side / "mapping_local_recovery_test/references").exists())
 
 
 if __name__ == "__main__":

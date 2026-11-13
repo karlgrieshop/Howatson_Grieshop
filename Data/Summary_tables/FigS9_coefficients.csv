@@ -1,0 +1,17 @@
+"AnalysisSet","Model","Hypothesis","Term","Estimate","ClusterRobustSE","NGenes","NHumanClusters"
+"All measured orthologues","Unadjusted (same genes)","All three orthologue categories","(Intercept)",1.57873263962257,0.035330495575401,8375,6292
+"All measured orthologues","Unadjusted (same genes)","All three orthologue categories","CategoryDisease orthologues excluding SSDOs",-0.0698594890927038,0.0371956621784118,8375,6292
+"All measured orthologues","Unadjusted (same genes)","All three orthologue categories","CategoryOrthologues excluding disease genes",-0.193390872766362,0.0374765202073259,8375,6292
+"All measured orthologues","Unadjusted (same genes)","Disease-only vs other orthologues","(Intercept)",1.50887315052986,0.0130402015546639,7845,5933
+"All measured orthologues","Unadjusted (same genes)","Disease-only vs other orthologues","CategoryOrthologues excluding disease genes",-0.123531383673651,0.0180601024917085,7845,5933
+"All measured orthologues","Conservation adjusted","All three orthologue categories","(Intercept)",1.57038723038318,0.0348610738730333,8375,6292
+"All measured orthologues","Conservation adjusted","All three orthologue categories","identity_percent",-0.00764600389509166,0.0128196377636651,8375,6292
+"All measured orthologues","Conservation adjusted","All three orthologue categories","fly_coverage_percent",-0.105727363577244,0.0115042358465865,8375,6292
+"All measured orthologues","Conservation adjusted","All three orthologue categories","human_coverage_percent",0.00525684404664038,0.0110776967880449,8375,6292
+"All measured orthologues","Conservation adjusted","All three orthologue categories","CategoryDisease orthologues excluding SSDOs",-0.0587147221508153,0.0367189563186024,8375,6292
+"All measured orthologues","Conservation adjusted","All three orthologue categories","CategoryOrthologues excluding disease genes",-0.186995061762516,0.0369525717531333,8375,6292
+"All measured orthologues","Conservation adjusted","Disease-only vs other orthologues","(Intercept)",1.51111748184818,0.0129171366185362,7845,5933
+"All measured orthologues","Conservation adjusted","Disease-only vs other orthologues","identity_percent",-0.00883258414601004,0.0129997739413272,7845,5933
+"All measured orthologues","Conservation adjusted","Disease-only vs other orthologues","fly_coverage_percent",-0.100905983373196,0.0116235677329635,7845,5933
+"All measured orthologues","Conservation adjusted","Disease-only vs other orthologues","human_coverage_percent",0.00286179676267794,0.0113187287593585,7845,5933
+"All measured orthologues","Conservation adjusted","Disease-only vs other orthologues","CategoryOrthologues excluding disease genes",-0.128298992444887,0.0178390712674871,7845,5933

@@ -1,0 +1,5 @@
+"Category","ProteinCodingEligible","WithSA","WithConservation","IncludedMain","MissingSAWithConservation","WithSAWithoutConservation"
+"Background",4894,4373,0,0,0,4373
+"Disease orthologues excluding SSDOs",4512,4163,4498,4152,346,11
+"Orthologues excluding disease genes",4012,3697,4007,3693,314,4
+"SSDOs",568,540,558,530,28,10

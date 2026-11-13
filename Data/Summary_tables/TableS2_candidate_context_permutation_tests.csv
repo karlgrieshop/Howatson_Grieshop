@@ -1,4 +1,4 @@
 "Metric","Comparison","group_1","group_2","obs_diff","group_1_mean","group_2_mean","n_group_1","n_group_2","n_shared","n_group_1_only","n_group_2_only","p_value","p_adjust_bh"
-"Ruzicka SA effect","SSDOs vs Innocenti and Morrow candidates","SSDOs","Innocenti and Morrow candidates",0.166278511867501,1.17798274074074,1.01170422887324,540,852,41,499,811,0.0020997900209979,0.00314968503149685
-"Ruzicka SA effect","SSDOs vs Ruzicka et al. candidates","SSDOs","Ruzicka et al. candidates",-1.23869016558244,1.17798274074074,2.41667290632319,540,427,22,518,405,9.99900009999e-05,0.0002999700029997
-"Ruzicka SA effect","SSDOs vs Grieshop et al. (2025) candidates","SSDOs","Grieshop et al. (2025) candidates",0.0342989709294201,1.17798274074074,1.14368376981132,540,530,20,520,510,0.562543745625437,0.562543745625437
+"Ruzicka SA effect","SSDOs vs Innocenti and Morrow candidates","SSDOs","Innocenti and Morrow candidates",0.131399222769953,1.58813198333333,1.45673276056338,540,852,41,499,811,0.0022997700229977,0.00344965503449655
+"Ruzicka SA effect","SSDOs vs Ruzicka et al. candidates","SSDOs","Ruzicka et al. candidates",-1.57191653423107,1.58813198333333,3.1600485175644,540,427,22,518,405,9.99900009999e-05,0.0002999700029997
+"Ruzicka SA effect","SSDOs vs Grieshop et al. (2025) candidates","SSDOs","Grieshop et al. (2025) candidates",0.0245044757861634,1.58813198333333,1.56362750754717,540,530,20,520,510,0.584641535846415,0.584641535846415

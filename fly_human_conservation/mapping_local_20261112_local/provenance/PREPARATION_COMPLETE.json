@@ -1,0 +1,52 @@
+{
+  "completed_utc": "2026-11-12T10:28:35.627128+00:00",
+  "category_attrition": [
+    {
+      "category": "SSDOs",
+      "eligible_genes": 568,
+      "selected_pairs": 559,
+      "no_supplied_pair": 9,
+      "HGNC_unmapped": 1,
+      "HGNC_ambiguous": 0,
+      "missing_valid_fly_protein": 0,
+      "unique_HGNC_missing_valid_human_protein": 0,
+      "ready_for_alignment": 558,
+      "excluded_before_alignment": 10,
+      "top_score_ties": 162,
+      "one_to_one_selected": 104,
+      "one_to_one_ready": 104
+    },
+    {
+      "category": "Disease orthologues excluding SSDOs",
+      "eligible_genes": 4512,
+      "selected_pairs": 4512,
+      "no_supplied_pair": 0,
+      "HGNC_unmapped": 14,
+      "HGNC_ambiguous": 0,
+      "missing_valid_fly_protein": 0,
+      "unique_HGNC_missing_valid_human_protein": 0,
+      "ready_for_alignment": 4498,
+      "excluded_before_alignment": 14,
+      "top_score_ties": 1185,
+      "one_to_one_selected": 796,
+      "one_to_one_ready": 796
+    },
+    {
+      "category": "Orthologues excluding disease genes",
+      "eligible_genes": 4012,
+      "selected_pairs": 4012,
+      "no_supplied_pair": 0,
+      "HGNC_unmapped": 3,
+      "HGNC_ambiguous": 1,
+      "missing_valid_fly_protein": 0,
+      "unique_HGNC_missing_valid_human_protein": 1,
+      "ready_for_alignment": 4007,
+      "excluded_before_alignment": 5,
+      "top_score_ties": 502,
+      "one_to_one_selected": 1552,
+      "one_to_one_ready": 1551
+    }
+  ],
+  "recovery_proposals_applied": 628,
+  "output_manifest_sha256": "cab313fb07dc765b972f760a4a4a26977600e2496a2a193d9f62d8c120f74bab"
+}
