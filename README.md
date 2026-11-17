@@ -1,9 +1,14 @@
 # SSDO evolutionary genetics analyses
 
+[![DOI](https://zenodo.org/badge/1461563491.svg)](https://doi.org/10.5281/zenodo.24318170)
+
 This repository contains analysis scripts and retained results for the study of
 sex-specific disease orthologues (SSDOs) in *Drosophila melanogaster*. Analyses
 compare SSDOs, other disease orthologues, other orthologues, and background
 genes.
+
+The archived v1.0.0 code release is available at
+[10.5281/zenodo.24318171](https://doi.org/10.5281/zenodo.24318171).
 
 ## Repository contents
 
