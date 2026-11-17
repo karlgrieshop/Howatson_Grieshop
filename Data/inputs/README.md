@@ -1,14 +1,33 @@
-# Data/inputs
+# Input data
 
-This directory is **intentionally untracked**. Populate it locally from the public accession described in the top-level `README.md`.
+Input files are excluded from Git. Place required files in this directory using
+the filenames below. The source data and curated study-specific files should be
+identified in the associated public data record.
 
-## Active input groups
+## Gene sets and references
 
-- **SSDO compilation inputs:** curated SSDO / disease-orthologue source files under `ssdo_inputs/` plus the local orthologue tables.
-- **Main metric and SA inputs:** `SBGEandSSSdataForMBE.csv`, `FileS7.txt`, `Assoc_Data.txt`, `Ruzicka_et_al_pbio.3000244.s008.csv`, `Innocenti_and_Morrow_ANTAGONISTIC.csv`.
-- **Grieshop et al. (2025) FigS3/TableS2 candidates:** copy `DE.summary.tsv` here with its original `FlyBaseID` and `Sig` columns. The shared loader selects the 695 unique FBgn IDs with `Sig == TRUE`; plotting/testing then retains protein-coding genes with mapped Ruzicka estimates.
-- **Mishra / SBGE / ASE inputs:** `DifferentialGeneExpression.whole.bodies.tsv`, `Sex.Reversed.AI.test.tsv`, `Heads.FDR.test.for.AI.tsv`, `Gonads.FDR.test.for.AI.tsv`, `Genes.with.Sex.Reversed.AI.tsv`, `Genes.for.analysis.final.tsv`.
-- **Fig4 auxiliary inputs:** `dimorphic.subset.list.txt`, `all_paralogs_correct.csv`.
-- **Reference annotation:** `Drosophila_melanogaster.BDGP6.54.115.gtf`.
+- `ssdo_inputs/sex_specific_diseases/*.txt`
+- `ssdo_inputs/orthology_sources/diopt_results_PCOS_genes.csv`
+- `ssdo_inputs/orthology_sources/diopt_results.csv`
+- `ssdo_inputs/orthology_sources/coronary_artery_disease_orthologs.csv`
+- `ssdo_inputs/orthology_sources/osteoporosis_orthologs.csv`
+- `ssdo_inputs/orthology_sources/alzheimer_disease_orthologs.csv`
+- `ssdo_inputs/orthology_sources/parkinsons_orthologs.csv`
+- `all_disease_orthologs.csv`, `all_orthologs.csv`
+- `Drosophila_melanogaster.BDGP6.54.115.gtf`
 
-Keep the filenames unchanged so the active scripts can discover them without further editing.
+## Expression, population-genetic, and association data
+
+- `SBGEandSSSdataForMBE.csv` (Singh and Agrawal, 2023) (doi:10.1093/molbev/msad091)
+- `FileS7.txt` (Fraïsse et al., 2019) (doi:10.1093/molbev/msy246)
+- `Assoc_Data.txt`, `Ruzicka_et_al_pbio.3000244.s008.csv` (Ruzicka et al., 2019) (doi:10.1371/journal.pbio.3000244)
+- `Innocenti_and_Morrow_ANTAGONISTIC.csv` (Innocenti and Morrow, 2010) (doi:10.1371/journal.pbio.1000335)
+- `DE.summary.tsv` (Grieshop et al., 2025) (doi:10.1093/molbev/msaf099)
+- `dimorphic.subset.list_wDsRedgenes.txt` `all.exclude.txt` (modified from Grieshop et al., 2025) (doi:10.1093/molbev/msaf099)
+- `DifferentialGeneExpression.whole.bodies.tsv`, `Sex.Reversed.AI.test.tsv`, `Heads.FDR.test.for.AI.tsv`,
+  `Gonads.FDR.test.for.AI.tsv`, `Genes.with.Sex.Reversed.AI.tsv`, `Genes.for.analysis.final.tsv` (Mishra et al., 2024a) (doi:10.1093/gbe/evae234)
+- `Mishra.sig.SSS_filt25.txt` (Mishra et al., 2024b) (doi:10.1093/evolut/qpae004)
+- `all_paralogs_correct.csv` (Harper and Morrow, 2025) (doi:10.1098/rspb.2024.2629)
+
+Keep the original filenames and file contents. The scripts use these names to
+locate inputs.
