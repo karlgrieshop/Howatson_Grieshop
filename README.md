@@ -21,6 +21,8 @@ genes.
 
 ## Reproduction
 
+Input data are available at [10.5281/zenodo.20162756](https://doi.org/10.5281/zenodo.20162756).
+Extract `input_data.zip` into the repository root to populate `Data/inputs/`.
 Run R scripts from the repository root. Required input filenames and source
 studies are listed in [`Data/inputs/README.md`](Data/inputs/README.md).
 Directory-specific READMEs describe each analysis and its outputs.

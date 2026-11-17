@@ -1,8 +1,9 @@
 # Input data
 
-Input files are excluded from Git. Place required files in this directory using
-the filenames below. The source data and curated study-specific files should be
-identified in the associated public data record.
+Input files are excluded from Git and available at
+[10.5281/zenodo.20162756](https://doi.org/10.5281/zenodo.20162756).
+Extract `input_data.zip` into the repository root to populate this directory.
+Input filenames and source studies are listed below.
 
 ## Gene sets and references
 
